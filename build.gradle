@@ -1,0 +1,38 @@
+subprojects {
+    apply plugin: "io.micronaut.build.internal.module"
+
+    repositories {
+        mavenCentral()
+    }
+
+    micronautBuild {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    dependencies {
+        implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
+        testImplementation platform("io.micronaut:micronaut-bom:$micronautVersion")
+        annotationProcessor platform("io.micronaut:micronaut-bom:$micronautVersion")
+        testAnnotationProcessor platform("io.micronaut:micronaut-bom:$micronautVersion")
+
+        implementation platform("org.jboss.arquillian:arquillian-bom:$arquillianVersion")
+        testImplementation platform("org.jboss.arquillian:arquillian-bom:$arquillianVersion")
+    }
+
+    group = 'odi'
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Test) {
+        if (!it.path.contains("tck")) {
+            if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
+                jvmArgs "--enable-preview"
+            }
+            useJUnitPlatform()
+        }
+    }
+
+}

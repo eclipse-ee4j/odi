@@ -1,0 +1,15 @@
+description = 'ODI Processor CDI'
+
+dependencies {
+    implementation project(':odi-core')
+    implementation 'io.micronaut:micronaut-inject-java'
+    implementation "jakarta.enterprise:jakarta.enterprise.cdi-api:$cdiApiVersion"
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'io.micronaut:micronaut-context'
+    testImplementation 'org.spockframework:spock-core'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testImplementation 'io.micronaut:micronaut-inject-java-test'
+    testImplementation 'io.helidon.config:helidon-config-mp:2.3.2'
+    testImplementation 'io.smallrye:smallrye-fault-tolerance:5.1.0'
+    testImplementation 'javax.enterprise:cdi-api:2.0.SP1'
+}

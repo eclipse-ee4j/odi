@@ -1,0 +1,10 @@
+com.oracle.odi.cdi.processor.ProducesVisitor
+com.oracle.odi.cdi.processor.InjectVisitor
+com.oracle.odi.cdi.processor.NamedVisitor
+com.oracle.odi.cdi.processor.AlternativeVisitor
+com.oracle.odi.cdi.processor.ClassStereotypeValidator
+com.oracle.odi.cdi.processor.SpecializesVisitor
+com.oracle.odi.cdi.processor.DisposesMethodVisitor
+com.oracle.odi.cdi.processor.InterceptorVisitor
+com.oracle.odi.cdi.processor.ObservesMethodVisitor
+com.oracle.odi.cdi.processor.extensions.BuildTimeExtensionVisitor

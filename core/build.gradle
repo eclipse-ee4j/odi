@@ -1,0 +1,7 @@
+description = 'ODI Core'
+
+dependencies {
+    implementation "jakarta.enterprise:jakarta.enterprise.cdi-api:$cdiApiVersion"
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'io.micronaut:micronaut-inject'
+}

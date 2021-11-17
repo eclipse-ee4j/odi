@@ -1,0 +1,8 @@
+description = 'ODI Processor MP'
+
+dependencies {
+    implementation project(':odi-processor-cdi')
+    implementation 'org.eclipse.microprofile.config:microprofile-config-api:2.0'
+    testImplementation 'org.spockframework:spock-core'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="CDI TCK" verbose="0" configfailurepolicy="continue">
+
+    <test name="CDI TCK">
+
+        <classes>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.returnValueIgnored.AroundConstructInterceptorReturnValueTest"/>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.withAroundInvoke.SingleInterceptorInstanceTest"/>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest"/>
+            <class name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierNotDeclaredTest"/>
+            <class name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierNotInheritedTest"/>
+            <class name="org.jboss.cdi.tck.tests.context.GetOnInactiveContextTest"/>
+            <class name="org.jboss.cdi.tck.tests.definition.scope.inOtherBda.ScopeDefinedInOtherBDATest"/>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.interceptor.StereotypeWithMultipleInterceptorBindingsTest"/>
+            <class name="org.jboss.cdi.tck.tests.event.fires.sync.FireSyncEventTest"/>
+            <class name="org.jboss.cdi.tck.tests.event.observer.abortProcessing.orderedObservers.ExceptionInOrderedObserversAbortsProcessingTest"/>
+            <class name="org.jboss.cdi.tck.tests.event.observer.async.executor.FireAsyncWithCustomExecutorTest"/>
+            <class name="org.jboss.cdi.tck.tests.event.observer.inheritance.ObserverInheritanceTest"/>
+            <class name="org.jboss.cdi.tck.tests.event.observer.param.modification.SyncEventModificationTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.context.passivating.producer.ProducerMethodWithPrimitiveReturnTypePassivationTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.context.passivating.producer.ProducerWithPrimitiveFieldTypePassivationTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.context.passivating.transientreference.TransientReferenceParameterTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.extensions.interceptors.custom.CustomInterceptorRegistrationTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest"/>
+            <class name="org.jboss.cdi.tck.tests.full.implementation.simple.lifecycle.SimpleBeanLifecycleTest"/>
+            <class name="org.jboss.cdi.tck.tests.implementation.initializer.InitializerMethodTest"/>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.nonDependentWithPublicStaticField.NonDependentWithPublicStaticFieldTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.binding.members.annotation.BindingAnnotationWithMemberTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.ambiguous.AmbiguousELNamesTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PrivateFinalMethodTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.StaticFinalMethodTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.dependency.resolution.AmbiguousDependencyResolutionTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.injection.any.AnyInjectionTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithActualTypeTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithTypeVariableTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithTypeVariableUpperBoundTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithWildcardTest"/>
+            <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.named.NamedAtInjectionPointTest"/>
+        </classes>
+
+    </test>
+
+</suite>

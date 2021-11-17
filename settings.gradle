@@ -1,0 +1,25 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'io.micronaut.build.shared.settings' version '4.2.0'
+}
+
+rootProject.name = 'odi-project'
+
+include(':odi-core')
+include(':odi-processor-cdi')
+include(':odi-test-junit5')
+include(':tck-runner')
+include(':odi-cdi')
+include(':odi-processor-mp')
+
+project(":odi-core").projectDir = file('core')
+project(":odi-processor-cdi").projectDir = file('processor-cdi')
+project(":odi-test-junit5").projectDir = file('test-junit5')
+project(":odi-cdi").projectDir = file('cdi')
+project(":odi-processor-mp").projectDir = file('processor-mp')

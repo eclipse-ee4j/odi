@@ -1,0 +1,80 @@
+/*
+ * Copyright (c) 2021 Oracle and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.oracle.odi.cdi.processor.extensions;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.lang.model.AnnotationInfo;
+import jakarta.enterprise.lang.model.AnnotationMember;
+import jakarta.enterprise.lang.model.declarations.ClassInfo;
+
+class AnnotationInfoImpl implements AnnotationInfo {
+    private final AnnotationValue<?> annotationValue;
+
+    protected AnnotationInfoImpl(AnnotationValue<?> annotationValue) {
+        this.annotationValue = annotationValue;
+    }
+
+    @Override
+    public ClassInfo declaration() {
+        VisitorContext visitorContext = ActiveVisitorContext.currentVisitorContext();
+        ClassElement classElement = visitorContext.getClassElement(annotationValue.getAnnotationName()).orElse(null);
+        if (classElement == null) {
+            final String message = "The declaration for annotation ["
+                    + annotationValue.getAnnotationName()
+                    + "] cannot be retrieved because the type does not exist on the application classpath";
+            throw new IllegalStateException(message);
+        }
+        return new ClassInfoImpl(
+                classElement,
+                new TypesImpl(visitorContext),
+                visitorContext
+        );
+    }
+
+    @Override
+    public String name() {
+        return annotationValue.getAnnotationName();
+    }
+
+    @Override
+    public boolean hasMember(String name) {
+        return annotationValue.contains(name);
+    }
+
+    @Override
+    public AnnotationMember member(String name) {
+        final Object v = annotationValue.getValues().get(name);
+        return new AnnotationMemberImpl(v);
+    }
+
+    @Override
+    public Map<String, AnnotationMember> members() {
+        return annotationValue.getValues().entrySet()
+                .stream().collect(Collectors.toMap(
+                        (entry) -> entry.getKey().toString(),
+                        (entry) -> new AnnotationMemberImpl(entry.getValue())
+                ));
+    }
+
+    public AnnotationValue<?> getAnnotationValue() {
+        return annotationValue;
+    }
+}
