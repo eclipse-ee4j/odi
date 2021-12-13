@@ -16,11 +16,8 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.core.annotation.AnnotationUtil;

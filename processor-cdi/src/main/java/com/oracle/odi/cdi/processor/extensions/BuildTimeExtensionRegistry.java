@@ -53,10 +53,11 @@ import jakarta.enterprise.inject.build.compatible.spi.Validation;
 final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRegistry> {
     public static final BuildTimeExtensionRegistry INSTANCE = new BuildTimeExtensionRegistry();
     private List<BuildCompatibleExtensionEntry> buildTimeExtensions;
+    private final List<String> loadErrors = new ArrayList<>();
+
     private BuildTimeExtensionRegistry() {
         buildTimeExtensions = loadExtensions();
     }
-    private final List<String> loadErrors = new ArrayList<>();
 
     private List<BuildCompatibleExtensionEntry> loadExtensions() {
         final List<BuildCompatibleExtensionEntry> buildTimeExtensions;
@@ -80,6 +81,7 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
     /**
      * Runs the discovery phase.
      *
+     * @param visitorContext The visitor context
      * @return The discovery implementation
      */
     public DiscoveryImpl runDiscovery(VisitorContext visitorContext) {
