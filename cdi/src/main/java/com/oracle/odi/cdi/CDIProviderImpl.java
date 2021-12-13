@@ -31,11 +31,7 @@ public class CDIProviderImpl implements CDIProvider {
     public CDI<Object> getCDI() {
         final Map<ApplicationContext, OdiSeContainer> runningContainers = OdiSeContainer.RUNNING_CONTAINERS;
         if (!runningContainers.isEmpty()) {
-            if (runningContainers.size() == 1) {
-                return runningContainers.values().iterator().next();
-            } else {
-                throw new IllegalStateException("Multiple running SeContainers present");
-            }
+            return runningContainers.values().iterator().next();
         }
         throw new IllegalStateException("No running SeContainer present");
     }

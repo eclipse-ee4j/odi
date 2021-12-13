@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -58,7 +59,7 @@ import org.slf4j.LoggerFactory;
 @Factory
 final class OdiSeContainer extends CDI<Object>
         implements SeContainer, ApplicationContextProvider, ExecutableMethodProcessor<DisposerMethod> {
-    static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = Collections.synchronizedMap(new HashMap<>(5));
+    static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = Collections.synchronizedMap(new LinkedHashMap<>(5));
     private static final Logger LOG = LoggerFactory.getLogger(OdiSeContainer.class);
     private final ApplicationContext context;
     private final OdiBeanManager beanManager;
