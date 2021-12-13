@@ -42,6 +42,7 @@ tasks.register('fullTckTest', Test) {
             }.asPath
             suites new File(testSuiteLocation)
         }
+        excludeGroups("cdi-full", "javaee-full")
         systemProperties = [
                 'org.jboss.cdi.tck.libraryDirectory': "${buildDir}/tck-lib",
         ]
@@ -52,6 +53,7 @@ test {
     scanForTestClasses false
     useTestNG {
         suites file("passingTests.xml")
+        excludeGroups("cdi-full", "javaee-full")
         systemProperties = [
                 'org.jboss.cdi.tck.libraryDirectory': "${buildDir}/tck-lib",
         ]
