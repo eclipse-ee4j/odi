@@ -15,11 +15,14 @@
  */
 package com.oracle.odi.cdi.processor;
 
+import java.util.Set;
+
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.Order;
 import io.micronaut.core.order.Ordered;
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
@@ -31,6 +34,11 @@ import jakarta.enterprise.inject.Alternative;
 public class AlternativeVisitor implements TypeElementVisitor<Alternative, Object> {
     private static final AnnotationClassValue<Object> SELECTED_ALTERNATIVE_CONDITION =
             new AnnotationClassValue<>("com.oracle.odi.cdi.condition.SelectedAlternativeCondition");
+
+    @Override
+    public Set<String> getSupportedAnnotationNames() {
+        return CollectionUtils.setOf(jakarta.enterprise.inject.Alternative.class.getName());
+    }
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {

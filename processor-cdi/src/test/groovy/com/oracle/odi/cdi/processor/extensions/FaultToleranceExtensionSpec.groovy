@@ -31,6 +31,8 @@ package testft;
 import io.micronaut.context.annotation.*;
 import io.micronaut.inject.ArgumentInjectionPoint;
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.inject.Singleton;
 import org.eclipse.microprofile.faulttolerance.Retry;
@@ -68,30 +70,19 @@ class MyService {
 class MockBeanFactory {
     @Bean
     @Any
+    <T> Instance<Object> getBean() {
+        return new MockInstance();
+    }
+    
+    @Bean
+    @Any
     <T> javax.enterprise.inject.spi.Bean<T> getBean(ArgumentInjectionPoint<?, ?> injectionPoint) {
         return new MockBeanImpl<>(injectionPoint.asArgument().getType());
     }
     
-    @Bean
-    @Any
-    <T> CreationalContext<T> creationalContext() {
-        return new CreationalContext<T>() {
-            @Override public void push(T incompleteInstance) {
-    
-            }
-            @Override public void release() {
-            }
-        };
-    }
     
     @Bean
-    @Any
-    InjectionPoint injectionPoint() {
-        return new MockInjectionPoint();
-    }
-    
-    @Bean
-    java.util.Map<java.lang.String,java.lang.Object> config(
+    Parameters config(
             ArgumentInjectionPoint<?, ?> argumentInjectionPoint
     ) {
         return MockParamCreator.create(argumentInjectionPoint);

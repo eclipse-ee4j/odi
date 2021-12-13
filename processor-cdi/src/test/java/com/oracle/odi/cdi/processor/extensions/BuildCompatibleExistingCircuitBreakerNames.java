@@ -8,6 +8,8 @@ import java.util.Set;
 
 import io.smallrye.faulttolerance.ExistingCircuitBreakerNames;
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 
@@ -25,12 +27,8 @@ public class BuildCompatibleExistingCircuitBreakerNames implements ExistingCircu
 
     public static class Creator implements SyntheticBeanCreator<BuildCompatibleExistingCircuitBreakerNames> {
         @Override
-        public BuildCompatibleExistingCircuitBreakerNames create(
-                CreationalContext<BuildCompatibleExistingCircuitBreakerNames> creationalContext,
-                InjectionPoint injectionPoint, Map<String, Object> map) {
-
-            String[] existingCircuitBreakerNames = (String[]) map.get("names");
-
+        public BuildCompatibleExistingCircuitBreakerNames create(Instance<Object> lookup, Parameters params) {
+            String[] existingCircuitBreakerNames = params.get("names", String[].class);
             BuildCompatibleExistingCircuitBreakerNames result = new BuildCompatibleExistingCircuitBreakerNames();
             result.init(new HashSet<>(Arrays.asList(existingCircuitBreakerNames)));
             return result;

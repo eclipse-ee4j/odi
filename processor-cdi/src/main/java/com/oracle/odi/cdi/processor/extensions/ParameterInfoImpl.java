@@ -38,6 +38,10 @@ final class ParameterInfoImpl extends AnnotationTargetImpl implements ParameterI
         this.visitorContext = visitorContext;
     }
 
+    public VisitorContext getVisitorContext() {
+        return visitorContext;
+    }
+
     @Override
     public String name() {
         return parameterElement.getName();

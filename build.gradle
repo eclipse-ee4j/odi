@@ -3,6 +3,7 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
     }
 
     micronautBuild {
@@ -28,9 +29,6 @@ subprojects {
 
     tasks.withType(Test) {
         if (!it.path.contains("tck")) {
-            if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
-                jvmArgs "--enable-preview"
-            }
             useJUnitPlatform()
         }
     }

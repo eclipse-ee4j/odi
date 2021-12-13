@@ -17,34 +17,71 @@ package com.oracle.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
+import io.micronaut.context.annotation.Bean;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.context.spi.AlterableContext;
+import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
 
 @Internal
 final class MetaAnnotationsImpl implements MetaAnnotations {
 //    private List<ContextConfig> contextBuilders = new ArrayList<>();
-    private final List<AnnotationClassConfig<?>> interceptorBindings = new ArrayList<>();
-    private final List<AnnotationClassConfig<?>> qualifiers = new ArrayList<>();
-    private final List<AnnotationClassConfig<?>> stereotypes = new ArrayList<>();
+    private final Set<Class<? extends Annotation>> interceptorBindings = new HashSet<>();
+    private final Set<Class<? extends Annotation>> qualifiers = new HashSet<>();
+    private final Set<Class<? extends Annotation>> stereotypes = new HashSet<>();
+    private final VisitorContext visitorContext;
 
-    @Override
-    public void addQualifier(Class<? extends Annotation> annotation, Consumer<ClassConfig> config) {
-        registerMapper(annotation, config, this.qualifiers);
+    public MetaAnnotationsImpl(VisitorContext visitorContext) {
+        this.visitorContext = visitorContext;
     }
 
     @Override
-    public void addInterceptorBinding(Class<? extends Annotation> annotation, Consumer<ClassConfig> config) {
-        registerMapper(annotation, config, this.interceptorBindings);
+    public ClassConfig addQualifier(Class<? extends Annotation> annotation) {
+        final ClassElement classElement = visitorContext.getClassElement(annotation)
+                .orElseThrow(() -> new RuntimeException("Qualifier type [" + annotation.getName() + "] must be on the application classpath"));
+        qualifiers.add(annotation);
+        classElement.annotate(AnnotationUtil.QUALIFIER);
+        return new ClassConfigImpl(
+                classElement,
+                new TypesImpl(visitorContext),
+                visitorContext
+        );
     }
 
     @Override
-    public void addStereotype(Class<? extends Annotation> annotation, Consumer<ClassConfig> config) {
-        registerMapper(annotation, config, this.stereotypes);
+    public ClassConfig addInterceptorBinding(Class<? extends Annotation> annotation) {
+        final ClassElement classElement = visitorContext.getClassElement(annotation)
+                .orElseThrow(() -> new RuntimeException("InterceptorBinding type [" + annotation.getName() + "] must be on the application classpath"));
+        interceptorBindings.add(annotation);
+        classElement.annotate(AnnotationUtil.ANN_INTERCEPTOR_BINDING);
+        return new ClassConfigImpl(
+                classElement,
+                new TypesImpl(visitorContext),
+                visitorContext
+        );
+    }
+
+    @Override
+    public ClassConfig addStereotype(Class<? extends Annotation> annotation) {
+        final ClassElement classElement = visitorContext.getClassElement(annotation)
+                .orElseThrow(() -> new RuntimeException("Stereotype [" + annotation.getName() + "] must be on the application classpath"));
+        stereotypes.add(annotation);
+        classElement.annotate(Stereotype.class);
+        classElement.annotate(Bean.class);
+        return new ClassConfigImpl(
+                classElement,
+                new TypesImpl(visitorContext),
+                visitorContext
+        );
     }
 
     @Override
@@ -61,39 +98,16 @@ final class MetaAnnotationsImpl implements MetaAnnotations {
         // TODO
     }
 
-    public List<AnnotationClassConfig<?>> getInterceptorBindings() {
+    public Set<Class<? extends Annotation>> getInterceptorBindings() {
         return interceptorBindings;
     }
 
-    public List<AnnotationClassConfig<?>> getQualifiers() {
+    public Set<Class<? extends Annotation>> getQualifiers() {
         return qualifiers;
     }
 
-    public List<AnnotationClassConfig<?>> getStereotypes() {
+    public Set<Class<? extends Annotation>> getStereotypes() {
         return stereotypes;
     }
 
-    private void registerMapper(Class<? extends Annotation> annotation,
-                                Consumer<ClassConfig> config,
-                                List<MetaAnnotationsImpl.AnnotationClassConfig<?>> list) {
-        final AnnotationClassConfig<Annotation> mapper =
-                new AnnotationClassConfig<>() {
-
-                    @Override
-                    public void accept(ClassConfig classConfig) {
-                        config.accept(classConfig);
-                    }
-
-                    @Override
-                    public Class<Annotation> annotationType() {
-                        return (Class<Annotation>) annotation;
-                    }
-                };
-
-        list.add(mapper);
-    }
-
-    public interface AnnotationClassConfig<T extends Annotation> extends Consumer<ClassConfig> {
-        Class<T> annotationType();
-    }
 }

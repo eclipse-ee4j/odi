@@ -28,7 +28,7 @@ import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 
 /**
- * A {@link io.micronaut.inject.visitor.BeanElementVisitor} that runs the {@link jakarta.enterprise.inject.build.compatible.spi.Processing} phase.
+ * A {@link io.micronaut.inject.visitor.BeanElementVisitor} that runs the {@link jakarta.enterprise.inject.build.compatible.spi.Synthesis} phase.
  */
 public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<Annotation> {
     private BeanElement firstBean;
@@ -39,7 +39,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
             firstBean = beanElement;
         }
         final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.INSTANCE;
-        registry.runProcessing(beanElement, visitorContext);
+        registry.runRegistration(beanElement, visitorContext);
         return beanElement;
     }
 
@@ -71,7 +71,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                             } else {
                                 final ElementQuery<MethodElement> creatorMethods = ElementQuery.ALL_METHODS
                                         .named((name) -> name.equals("create"))
-                                        .filter((method) -> method.getParameters().length == 3);
+                                        .filter((method) -> method.getParameters().length == 2);
                                 beanElement.addAssociatedBean(creatorElement, visitorContext).inject()
                                         .produceBeans(
                                                 creatorMethods, (builder) -> {

@@ -32,6 +32,7 @@ import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.declarations.PackageInfo;
+import jakarta.enterprise.lang.model.declarations.RecordComponentInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.TypeVariable;
 
@@ -141,6 +142,11 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
     }
 
     @Override
+    public boolean isRecord() {
+        return classElement.isRecord();
+    }
+
+    @Override
     public boolean isAbstract() {
         return classElement.isAbstract();
     }
@@ -178,6 +184,12 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
         return classElement.getEnclosedElements(ElementQuery.ALL_FIELDS)
                     .stream().map(fieldElement -> new FieldInfoImpl(this, fieldElement, types, visitorContext))
                 .collect(Collectors.toUnmodifiableList());
+    }
+
+    @Override
+    public Collection<RecordComponentInfo> recordComponents() {
+        // TODO
+        return Collections.emptyList();
     }
 
     @Override

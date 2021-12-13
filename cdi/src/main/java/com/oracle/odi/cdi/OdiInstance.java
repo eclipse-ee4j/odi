@@ -16,7 +16,10 @@
 package com.oracle.odi.cdi;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.micronaut.context.BeanContext;
@@ -28,10 +31,12 @@ import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.util.ArrayUtils;
+import io.micronaut.inject.BeanDefinition;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.CreationException;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.util.TypeLiteral;
 
 final class OdiInstance<T> implements Instance<T> {
@@ -95,6 +100,61 @@ final class OdiInstance<T> implements Instance<T> {
     @Override
     public void destroy(T instance) {
         beanContext.destroyBean(instance);
+    }
+
+    @Override
+    public Handle<T> getHandle() {
+        try {
+            final BeanDefinition<T> beanDefinition = beanContext.getBeanDefinition(beanType, resolveQualifier());
+            final OdiBeanImpl<T> odiBean = new OdiBeanImpl<>(beanContext, beanDefinition);
+            final Qualifier<T> qualifier = resolveQualifier();
+            final Argument<T> beanType = this.beanType;
+            return toHandle(odiBean, qualifier, beanType);
+        } catch (NonUniqueBeanException e) {
+            throw new AmbiguousResolutionException(e.getMessage(), e);
+        } catch (NoSuchBeanException e) {
+            throw new UnsatisfiedResolutionException(e.getMessage(), e);
+        } catch (Throwable e) {
+            throw new CreationException(e.getMessage(), e);
+        }
+    }
+
+    private Handle<T> toHandle(OdiBeanImpl<T> odiBean, Qualifier<T> qualifier, Argument<T> beanType) {
+        return new Handle<>() {
+            @Override
+            public T get() {
+                return beanContext.getBean(beanType, qualifier);
+            }
+
+            @Override
+            public Bean<T> getBean() {
+                return odiBean;
+            }
+
+            @Override
+            public void destroy() {
+                beanContext.destroyBean(beanType, qualifier);
+            }
+
+            @Override
+            public void close() {
+                destroy();
+            }
+        };
+    }
+
+    @Override
+    public Iterable<Handle<T>> handles() {
+        final Qualifier<T> qualifier = resolveQualifier();
+        final Argument<T> beanType = this.beanType;
+        final Collection<BeanDefinition<T>> beanDefinitions = beanContext.getBeanDefinitions(beanType, qualifier);
+        if (beanDefinitions.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return beanDefinitions.stream()
+                    .map(def -> toHandle(new OdiBeanImpl<>(beanContext, def), qualifier, beanType))
+                    .collect(Collectors.toList());
+        }
     }
 
     @Override

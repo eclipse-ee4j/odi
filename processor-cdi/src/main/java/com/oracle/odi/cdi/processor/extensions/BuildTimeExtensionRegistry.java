@@ -36,18 +36,16 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.beans.BeanElement;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.build.compatible.spi.ClassConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Discovery;
 import jakarta.enterprise.inject.build.compatible.spi.Enhancement;
-import jakarta.enterprise.inject.build.compatible.spi.ExactType;
-import jakarta.enterprise.inject.build.compatible.spi.ExtensionPriority;
 import jakarta.enterprise.inject.build.compatible.spi.Messages;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
-import jakarta.enterprise.inject.build.compatible.spi.Processing;
+import jakarta.enterprise.inject.build.compatible.spi.Registration;
 import jakarta.enterprise.inject.build.compatible.spi.ScannedClasses;
-import jakarta.enterprise.inject.build.compatible.spi.SubtypesOf;
 import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 import jakarta.enterprise.inject.build.compatible.spi.Validation;
@@ -55,11 +53,10 @@ import jakarta.enterprise.inject.build.compatible.spi.Validation;
 final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRegistry> {
     public static final BuildTimeExtensionRegistry INSTANCE = new BuildTimeExtensionRegistry();
     private List<BuildCompatibleExtensionEntry> buildTimeExtensions;
-    private final DiscoveryImpl discovery = new DiscoveryImpl();
-
     private BuildTimeExtensionRegistry() {
         buildTimeExtensions = loadExtensions();
     }
+    private final List<String> loadErrors = new ArrayList<>();
 
     private List<BuildCompatibleExtensionEntry> loadExtensions() {
         final List<BuildCompatibleExtensionEntry> buildTimeExtensions;
@@ -73,7 +70,7 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
                 }
             }
         } catch (Exception e) {
-            this.discovery.getMessages().error("Error loading CDI build time extensions: " + e.getMessage());
+            loadErrors.add("Error loading CDI build time extensions: " + e.getMessage());
         }
 
         OrderUtil.sort(buildTimeExtensions);
@@ -85,8 +82,14 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
      *
      * @return The discovery implementation
      */
-    public DiscoveryImpl runDiscovery() {
-        if (!this.discovery.hasErrors()) {
+    public DiscoveryImpl runDiscovery(VisitorContext visitorContext) {
+        final DiscoveryImpl discovery = new DiscoveryImpl(visitorContext);
+        if (!loadErrors.isEmpty()) {
+            for (String loadError : loadErrors) {
+                discovery.getMessages().error(loadError);
+            }
+        }
+        if (!discovery.hasErrors()) {
             for (BuildCompatibleExtensionEntry buildTimeExtension : buildTimeExtensions) {
                 final List<Method> discoveryMethods = buildTimeExtension.discoveryMethods;
                 final BuildCompatibleExtension extension = buildTimeExtension.extension;
@@ -145,64 +148,44 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
         for (BuildCompatibleExtensionEntry buildTimeExtension : buildTimeExtensions) {
             final List<Method> enhanceMethods = buildTimeExtension.enhanceMethods;
             final BuildCompatibleExtension extension = buildTimeExtension.extension;
+            outer:
             for (Method enhanceMethod : enhanceMethods) {
-                final ExactType et = enhanceMethod.getAnnotation(ExactType.class);
-                if (et != null && et.type().getName().equals(typeToEnhance.getName())) {
-                    final Class<? extends Annotation>[] aw = et.annotatedWith();
-                    if (ArrayUtils.isEmpty(aw) || (aw.length == 1 && aw[0] == Annotation.class) || Arrays.stream(aw)
-                            .anyMatch(typeToEnhance::hasAnnotation)) {
-                        runEnhancement(originatingElement, typeToEnhance, visitorContext, extension, enhanceMethod);
-                    }
-                    continue;
-                }
-
-                final SubtypesOf so = enhanceMethod.getAnnotation(SubtypesOf.class);
-                if (so != null) {
-                    final Class<?> type = so.type();
-                    if (typeToEnhance.isAssignable(type)) {
-                        final Class<? extends Annotation>[] aw = so.annotatedWith();
-                        if (ArrayUtils.isEmpty(aw) || (aw.length == 1 && aw[0] == Annotation.class) || Arrays.stream(aw)
+                final Enhancement enhancement = enhanceMethod.getAnnotation(Enhancement.class);
+                final boolean includeSubtypes = enhancement.withSubtypes();
+                final Class<? extends Annotation>[] aw = enhancement.withAnnotations();
+                final Class<?>[] types = enhancement.types();
+                for (Class<?> type : types) {
+                    if (type.getName().equals(typeToEnhance.getName()) || (includeSubtypes && typeToEnhance.isAssignable(type))) {
+                        if (ArrayUtils.isEmpty(aw) || (aw.length == 1 && aw[0] == Enhancement.BeanDefiningAnnotations.class) || Arrays.stream(aw)
                                 .anyMatch(typeToEnhance::hasAnnotation)) {
                             runEnhancement(originatingElement, typeToEnhance, visitorContext, extension, enhanceMethod);
+                            continue outer;
                         }
                     }
                 }
+
             }
         }
     }
 
     /**
-     * Runs the {@link jakarta.enterprise.inject.build.compatible.spi.Processing} phase.
+     * Runs the {@link jakarta.enterprise.inject.build.compatible.spi.Registration} phase.
      *
      * @param beanElement    The bean element
      * @param visitorContext The visitor context
      */
-    public void runProcessing(BeanElement beanElement, VisitorContext visitorContext) {
+    public void runRegistration(BeanElement beanElement, VisitorContext visitorContext) {
         final Set<ClassElement> beanTypes = beanElement.getBeanTypes();
         for (BuildCompatibleExtensionEntry entry : buildTimeExtensions) {
             final BuildCompatibleExtension extension = entry.extension;
-            final List<Method> processingMethods = entry.processingMethods;
+            final List<Method> processingMethods = entry.registrationMethods;
+            methods:
             for (Method processingMethod : processingMethods) {
-                final ExactType et = processingMethod.getAnnotation(ExactType.class);
-
-                if (et != null && beanTypes.stream().anyMatch(ce -> ce.getName().equals(et.type().getName()))) {
-                    final Class<? extends Annotation>[] aw = et.annotatedWith();
-                    if (ArrayUtils.isEmpty(aw) || (aw.length == 1 && aw[0] == Annotation.class) || Arrays.stream(aw)
-                            .anyMatch(beanElement::hasAnnotation)) {
-                        runProcessing(extension, processingMethod, beanElement, visitorContext);
-                    }
-                    continue;
-                }
-
-                final SubtypesOf so = processingMethod.getAnnotation(SubtypesOf.class);
-                if (so != null) {
-                    final Class<?> type = so.type();
-                    if (beanTypes.stream().anyMatch(ce -> ce.isAssignable(type))) {
-                        final Class<? extends Annotation>[] aw = so.annotatedWith();
-                        if (ArrayUtils.isEmpty(aw) || (aw.length == 1 && aw[0] == Annotation.class) || Arrays.stream(aw)
-                                .anyMatch(beanElement::hasAnnotation)) {
-                            runProcessing(extension, processingMethod, beanElement, visitorContext);
-                        }
+                final Class<?>[] types = processingMethod.getAnnotation(Registration.class).types();
+                for (Class<?> et : types) {
+                    if (et != null && beanTypes.stream().anyMatch(ce -> ce.isAssignable(et))) {
+                        runRegistration(extension, processingMethod, beanElement, visitorContext);
+                        continue methods;
                     }
                 }
             }
@@ -274,7 +257,7 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
         }
     }
 
-    private void runProcessing(BuildCompatibleExtension extension,
+    private void runRegistration(BuildCompatibleExtension extension,
                                Method processingMethod,
                                BeanElement beanElement,
                                VisitorContext visitorContext) {
@@ -389,7 +372,7 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
         // phase 2
         private final List<Method> enhanceMethods;
         // phase 3
-        private final List<Method> processingMethods;
+        private final List<Method> registrationMethods;
         // phase 4
         private final List<Method> synthesisMethods;
         // phase 5
@@ -401,7 +384,7 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
             final Method[] methods = type.getDeclaredMethods();
             List<Method> discoveryMethods = new ArrayList<>(3);
             List<Method> enhanceMethods = new ArrayList<>(3);
-            List<Method> processingMethods = new ArrayList<>(3);
+            List<Method> registrationMethods = new ArrayList<>(3);
             List<Method> synthesisMethods = new ArrayList<>(3);
             List<Method> validationMethods = new ArrayList<>(3);
             for (Method method : methods) {
@@ -415,8 +398,8 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
                         discoveryMethods.add(method);
                     } else if (method.isAnnotationPresent(Enhancement.class)) {
                         enhanceMethods.add(method);
-                    } else if (method.isAnnotationPresent(Processing.class)) {
-                        processingMethods.add(method);
+                    } else if (method.isAnnotationPresent(Registration.class)) {
+                        registrationMethods.add(method);
                     } else if (method.isAnnotationPresent(Synthesis.class)) {
                         synthesisMethods.add(method);
                     } else if (method.isAnnotationPresent(Validation.class)) {
@@ -426,7 +409,7 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
             }
             this.discoveryMethods = immutableListOf(discoveryMethods);
             this.enhanceMethods = immutableListOf(enhanceMethods);
-            this.processingMethods = immutableListOf(processingMethods);
+            this.registrationMethods = immutableListOf(registrationMethods);
             this.synthesisMethods = immutableListOf(synthesisMethods);
             this.validationMethods = immutableListOf(validationMethods);
         }
@@ -437,7 +420,7 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
 
         @Override
         public int getOrder() {
-            final ExtensionPriority priority = extension.getClass().getAnnotation(ExtensionPriority.class);
+            final Priority priority = extension.getClass().getAnnotation(Priority.class);
             if (priority != null) {
                 return -priority.value();
             }

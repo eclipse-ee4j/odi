@@ -55,16 +55,21 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
         app.add(CircuitBreakerMaintenanceImpl.class.getName());
         app.add(TestRequestContextIntegration.class.getName());
 
-        meta.addInterceptorBinding(Asynchronous.class, clazz -> clazz.addAnnotation(FaultToleranceBinding.class));
-        meta.addInterceptorBinding(Bulkhead.class, clazz -> clazz.addAnnotation(FaultToleranceBinding.class));
-        meta.addInterceptorBinding(CircuitBreaker.class, clazz -> clazz.addAnnotation(FaultToleranceBinding.class));
-        meta.addInterceptorBinding(Fallback.class, clazz -> clazz.addAnnotation(FaultToleranceBinding.class));
-        meta.addInterceptorBinding(Retry.class, clazz -> clazz.addAnnotation(FaultToleranceBinding.class));
-        meta.addInterceptorBinding(Timeout.class, clazz -> clazz.addAnnotation(FaultToleranceBinding.class));
+        meta.addInterceptorBinding(Asynchronous.class)
+                .addAnnotation(FaultToleranceBinding.class);
+        meta.addInterceptorBinding(Bulkhead.class)
+                .addAnnotation(FaultToleranceBinding.class);
+        meta.addInterceptorBinding(CircuitBreaker.class)
+                .addAnnotation(FaultToleranceBinding.class);
+        meta.addInterceptorBinding(Fallback.class)
+                .addAnnotation(FaultToleranceBinding.class);
+        meta.addInterceptorBinding(Retry.class)
+                .addAnnotation(FaultToleranceBinding.class);
+        meta.addInterceptorBinding(Timeout.class)
+                .addAnnotation(FaultToleranceBinding.class);
     }
 
-    @Enhancement
-    @ExactType(type = FaultToleranceInterceptor.class)
+    @Enhancement(types = FaultToleranceInterceptor.class)
     void changeInterceptorPriority(ClassConfig clazz) {
         ConfigProvider.getConfig()
                 .getOptionalValue("mp.fault.tolerance.interceptor.priority", Integer.class)
@@ -74,8 +79,7 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
                 });
     }
 
-    @Processing
-    @SubtypesOf(type = Object.class)
+    @Registration(types = Object.class)
     void collectFaultToleranceOperations(BeanInfo bean) {
         if (!bean.isClassBean()) {
             return;

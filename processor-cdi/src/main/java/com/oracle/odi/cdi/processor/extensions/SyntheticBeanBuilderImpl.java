@@ -16,6 +16,7 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.stream.Stream;
 
 import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import io.micronaut.context.annotation.Property;
+import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -248,6 +250,24 @@ final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements 
     }
 
     @Override
+    public SyntheticBeanBuilder<T> withParam(String key, Enum<?> value) {
+        getElement().annotate(Property.class, builder -> {
+            builder.member("name", key);
+            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
+        });
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withParam(String key, Enum<?>[] value) {
+        getElement().annotate(Property.class, builder -> {
+            builder.member("name", key);
+            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
+        });
+        return this;
+    }
+
+    @Override
     public SyntheticBeanBuilder<T> withParam(String key, Class<?> value) {
         getElement().annotate(Property.class, builder -> {
             builder.member("name", key);
@@ -257,10 +277,28 @@ final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements 
     }
 
     @Override
+    public SyntheticBeanBuilder<T> withParam(String key, ClassInfo value) {
+        getElement().annotate(Property.class, builder -> {
+            builder.member("name", key);
+            builder.member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(value.name()));
+        });
+        return this;
+    }
+
+    @Override
     public SyntheticBeanBuilder<T> withParam(String key, Class<?>[] value) {
         getElement().annotate(Property.class, builder -> {
             builder.member("name", key);
             builder.member(AnnotationMetadata.VALUE_MEMBER, value);
+        });
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withParam(String key, ClassInfo[] value) {
+        getElement().annotate(Property.class, builder -> {
+            builder.member("name", key);
+            builder.member(AnnotationMetadata.VALUE_MEMBER, Arrays.stream(value).map(ci -> new AnnotationClassValue<>(ci.name())).toArray(AnnotationClassValue[]::new));
         });
         return this;
     }
