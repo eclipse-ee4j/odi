@@ -21,24 +21,18 @@ import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.inject.spi.CDIProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the {@link CDIProvider} interface.
  */
 @Internal
 public class CDIProviderImpl implements CDIProvider {
-    private static final Logger LOG = LoggerFactory.getLogger(CDIProviderImpl.class);
     @Override
     public CDI<Object> getCDI() {
-        LOG.trace("Resolving CDI Provider");
         final Map<ApplicationContext, OdiSeContainer> runningContainers = OdiSeContainer.RUNNING_CONTAINERS;
         if (!runningContainers.isEmpty()) {
             if (runningContainers.size() == 1) {
-                final OdiSeContainer container = runningContainers.values().iterator().next();
-                LOG.trace("Resolved CDI container. Running: {}", container.isRunning());
-                return container;
+                return runningContainers.values().iterator().next();
             } else {
                 throw new IllegalStateException("Multiple running SeContainers present");
             }

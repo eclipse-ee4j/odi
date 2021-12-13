@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 @Factory
 final class OdiSeContainer extends CDI<Object>
         implements SeContainer, ApplicationContextProvider, ExecutableMethodProcessor<DisposerMethod> {
-    static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = new ConcurrentHashMap<>();
+    static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = Collections.synchronizedMap(new HashMap<>(5));
     private static final Logger LOG = LoggerFactory.getLogger(OdiSeContainer.class);
     private final ApplicationContext context;
     private final OdiBeanManager beanManager;
