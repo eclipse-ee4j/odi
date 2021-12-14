@@ -19,12 +19,15 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.oracle.odi.cdi.annotation.DisposerMethod;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextProvider;
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.annotation.Any;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
@@ -56,7 +59,7 @@ import org.slf4j.LoggerFactory;
 @Factory
 final class OdiSeContainer extends CDI<Object>
         implements SeContainer, ApplicationContextProvider, ExecutableMethodProcessor<DisposerMethod> {
-    static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = new ConcurrentHashMap<>();
+    static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = Collections.synchronizedMap(new LinkedHashMap<>(5));
     private static final Logger LOG = LoggerFactory.getLogger(OdiSeContainer.class);
     private final ApplicationContext context;
     private final OdiBeanManager beanManager;
@@ -125,6 +128,49 @@ final class OdiSeContainer extends CDI<Object>
     @Override
     public void destroy(Object instance) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Handle<Object> getHandle() {
+        return new Handle<>() {
+            @Override
+            public Object get() {
+                return OdiSeContainer.this;
+            }
+
+            @Override
+            public jakarta.enterprise.inject.spi.Bean<Object> getBean() {
+                return new OdiBeanImpl(OdiSeContainer.this.context, new BeanDefinition() {
+
+                    @Override
+                    public boolean isEnabled(BeanContext context, BeanResolutionContext resolutionContext) {
+                        return true;
+                    }
+
+                    @Override
+                    public Class getBeanType() {
+                        return SeContainer.class;
+                    }
+                });
+            }
+
+            @Override
+            public void destroy() {
+                close();
+            }
+
+            @Override
+            public void close() {
+                if (OdiSeContainer.this.context.isRunning()) {
+                    OdiSeContainer.this.close();
+                }
+            }
+        };
+    }
+
+    @Override
+    public Iterable<Handle<Object>> handles() {
+        return Collections.singletonList(getHandle());
     }
 
     @Override

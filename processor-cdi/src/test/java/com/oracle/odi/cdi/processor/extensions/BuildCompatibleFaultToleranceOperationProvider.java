@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.smallrye.faulttolerance.FaultToleranceOperationProvider;
 import io.smallrye.faulttolerance.config.FaultToleranceOperation;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.spi.DefinitionException;
 import org.eclipse.microprofile.faulttolerance.exceptions.FaultToleranceDefinitionException;
@@ -70,10 +72,8 @@ public class BuildCompatibleFaultToleranceOperationProvider implements FaultTole
         }
 
         @Override
-        public BuildCompatibleFaultToleranceOperationProvider create(jakarta.enterprise.context.spi.CreationalContext<BuildCompatibleFaultToleranceOperationProvider> creationalContext,
-                                                                     jakarta.enterprise.inject.spi.InjectionPoint injectionPoint,
-                                                                     Map<String, Object> params) {
-            String[] faultToleranceClasses = (String[]) params.get("classes");
+        public BuildCompatibleFaultToleranceOperationProvider create(Instance<Object> lookup, Parameters params) {
+            String[] faultToleranceClasses = params.get("classes", String[].class);
 
             List<Throwable> allExceptions = new ArrayList<>();
             Map<CacheKey, FaultToleranceOperation> operationCache = new HashMap<>(faultToleranceClasses.length);

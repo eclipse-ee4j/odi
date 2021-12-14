@@ -16,11 +16,14 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
+import jakarta.enterprise.inject.build.compatible.spi.ParameterConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
@@ -75,6 +78,13 @@ final class MethodConfigImpl implements MethodConfig, ElementAnnotationConfig {
     @Override
     public MethodConfig removeAllAnnotations() {
         return (MethodConfig) ElementAnnotationConfig.super.removeAllAnnotations();
+    }
+
+    @Override
+    public List<ParameterConfig> parameters() {
+        return methodInfo.parameters().stream()
+                .map(info -> new ParameterConfigImpl((ParameterInfoImpl) info))
+                .collect(Collectors.toList());
     }
 
     @Override

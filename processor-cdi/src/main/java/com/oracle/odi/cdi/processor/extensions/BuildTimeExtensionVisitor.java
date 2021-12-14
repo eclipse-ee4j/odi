@@ -15,18 +15,16 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
+import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.oracle.odi.cdi.processor.InterceptorVisitor;
-import io.micronaut.aop.InterceptorBinding;
 import io.micronaut.context.annotation.Executable;
-import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.beans.BeanElementBuilder;
@@ -43,9 +41,9 @@ import jakarta.interceptor.Interceptor;
 public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Object, Object> {
 
     private final BuildTimeExtensionRegistry registry;
-    private final DiscoveryImpl discovery;
+    private DiscoveryImpl discovery;
     private final Set<String> supportedAnnotationNames = new HashSet<>();
-    private final boolean hasErrors;
+    private boolean hasErrors;
 
     private ClassElement rootClassElement = null;
     private boolean finished = false;
@@ -58,7 +56,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
      */
     public BuildTimeExtensionVisitor() {
         this.registry = BuildTimeExtensionRegistry.INSTANCE.start();
-        this.discovery = registry.runDiscovery();
+
         this.supportedAnnotationNames.add("jakarta.inject.*");
         this.supportedAnnotationNames.add("jakarta.interceptor.*");
         this.supportedAnnotationNames.add("jakarta.annotation.*");
@@ -67,15 +65,18 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         this.supportedAnnotationNames.add("javax.annotation.*");
         this.supportedAnnotationNames.add("javax.interceptor.*");
         this.supportedAnnotationNames.add("javax.enterprise.*");
+
+    }
+
+    @Override
+    public void start(VisitorContext visitorContext) {
+        this.discovery = registry.runDiscovery(visitorContext);
         final MetaAnnotationsImpl metaAnnotations = this.discovery.getMetaAnnotations();
         registeredSupportedAnnotations(metaAnnotations.getInterceptorBindings());
         registeredSupportedAnnotations(metaAnnotations.getQualifiers());
         registeredSupportedAnnotations(metaAnnotations.getStereotypes());
         this.hasErrors = this.discovery.hasErrors();
-    }
 
-    @Override
-    public void start(VisitorContext visitorContext) {
         ActiveVisitorContext.setVisitorContext(visitorContext);
         if (hasErrors) {
             for (String error : discovery.getMessages().getErrors()) {
@@ -97,14 +98,8 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
             if (rootClassElement == null) {
                 rootClassElement = element;
             }
-            handleInterceptorBindings(element);
             this.registry.runEnhancement(element, element, context);
         }
-    }
-
-    @Override
-    public void visitMethod(MethodElement element, VisitorContext context) {
-        handleInterceptorBindings(element);
     }
 
     @Override
@@ -170,43 +165,24 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
     }
 
     private void buildDiscoveryConfig(VisitorContext visitorContext,
-                                      List<MetaAnnotationsImpl.AnnotationClassConfig<?>> annotationClassConfigs,
+                                      Set<Class<? extends Annotation>> annotationClassConfigs,
                                       Set<ClassElement> targetElements) {
-        for (MetaAnnotationsImpl.AnnotationClassConfig<?> annotationConfig : annotationClassConfigs) {
-            visitorContext.getClassElement(annotationConfig.annotationType())
-                    .ifPresent((qualifierElement) -> {
-                        annotationConfig.accept(new ClassConfigImpl(
-                                qualifierElement,
-                                new TypesImpl(visitorContext),
-                                visitorContext
-                        ));
-                        targetElements.add(qualifierElement);
-                    });
+        for (Class<? extends Annotation> annotationConfig : annotationClassConfigs) {
+            visitorContext.getClassElement(annotationConfig)
+                    .ifPresent(targetElements::add);
         }
     }
 
     private void buildInterceptorBindingConfig(VisitorContext visitorContext, MetaAnnotationsImpl meta) {
-        final List<MetaAnnotationsImpl.AnnotationClassConfig<?>> interceptorBindings = meta
+        final Set<Class<? extends Annotation>> interceptorBindings = meta
                 .getInterceptorBindings();
 
         buildDiscoveryConfig(visitorContext, interceptorBindings, this.interceptorBindings);
     }
 
-    private void handleInterceptorBindings(Element element) {
-        for (ClassElement interceptorBinding : this.interceptorBindings) {
-            if (element.hasAnnotation(interceptorBinding.getName())) {
-                final List<AnnotationValue<InterceptorBinding>> bindings = interceptorBinding
-                        .getAnnotationValuesByType(InterceptorBinding.class);
-                for (AnnotationValue<InterceptorBinding> binding : bindings) {
-                    element.annotate(binding.getAnnotationName(), (builder) -> builder.members(binding.getValues()));
-                }
-            }
-        }
-    }
-
-    private void registeredSupportedAnnotations(List<MetaAnnotationsImpl.AnnotationClassConfig<?>> interceptorBindings) {
-        for (MetaAnnotationsImpl.AnnotationClassConfig<?> interceptorBinding : interceptorBindings) {
-            this.supportedAnnotationNames.add(interceptorBinding.annotationType().getName());
+    private void registeredSupportedAnnotations(Set<Class<? extends Annotation>> interceptorBindings) {
+        for (Class<? extends Annotation> interceptorBinding : interceptorBindings) {
+            this.supportedAnnotationNames.add(interceptorBinding.getName());
         }
     }
 

@@ -22,6 +22,7 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.ParameterizedType;
 import jakarta.enterprise.lang.model.types.Type;
 
@@ -43,6 +44,11 @@ final class ParameterizedTypeImpl extends AnnotationTargetImpl implements Parame
                         .orElseThrow(() -> new IllegalStateException("Class not found on classpath: " + getElement().getName())),
                 getTypes(),
                 visitorContext);
+    }
+
+    @Override
+    public ClassType genericClass() {
+        return declaration().asType().asClass();
     }
 
     @Override

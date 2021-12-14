@@ -23,6 +23,7 @@ import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserverBuilder;
+import jakarta.enterprise.lang.model.types.Type;
 
 final class SyntheticComponentsImpl implements SyntheticComponents {
     private final VisitorContext visitorContext;
@@ -51,6 +52,12 @@ final class SyntheticComponentsImpl implements SyntheticComponents {
 
     @Override
     public <T> SyntheticObserverBuilder<T> addObserver(Class<T> eventType) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public <T> SyntheticObserverBuilder<T> addObserver(Type eventType) {
         // TODO
         throw new UnsupportedOperationException();
     }

@@ -16,13 +16,18 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.visitor.VisitorContext;
 
 @Internal
 final class DiscoveryImpl {
 
     private final DiscoveryMessagesImpl messages = new DiscoveryMessagesImpl();
-    private final MetaAnnotationsImpl metaAnnotations = new MetaAnnotationsImpl();
+    private final MetaAnnotationsImpl metaAnnotations;
     private final ScannedClassesImpl scannedClasses = new ScannedClassesImpl();
+
+    public DiscoveryImpl(VisitorContext visitorContext) {
+        this.metaAnnotations = new MetaAnnotationsImpl(visitorContext);
+    }
 
     public MetaAnnotationsImpl getMetaAnnotations() {
         return metaAnnotations;

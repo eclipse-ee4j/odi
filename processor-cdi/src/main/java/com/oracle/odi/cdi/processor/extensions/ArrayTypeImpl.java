@@ -32,12 +32,7 @@ final class ArrayTypeImpl extends AnnotationTargetImpl implements ArrayType {
     }
 
     @Override
-    public int dimensions() {
-        return arrayElement.getArrayDimensions();
-    }
-
-    @Override
-    public Type elementType() {
+    public Type componentType() {
         return TypeFactory.createType(
                 arrayElement.fromArray(),
                 getTypes(),

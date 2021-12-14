@@ -192,7 +192,7 @@ final class BeanInfoImpl implements BeanInfo {
     }
 
     @Override
-    public String getName() {
+    public String name() {
         return beanElement.stringValue(AnnotationUtil.NAMED).orElse(null);
     }
 
