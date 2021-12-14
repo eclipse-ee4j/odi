@@ -4,6 +4,7 @@
     <test name="CDI TCK">
 
         <classes>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.returnValueIgnored.AroundConstructInterceptorReturnValueTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.withAroundInvoke.SingleInterceptorInstanceTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest"/>
