@@ -111,7 +111,7 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
 
     @Override
     public void visitMethod(MethodElement element, VisitorContext context) {
-        if (currentBuilder != null && currentClass != null) {
+        if (currentBuilder != null && currentClass != null && element.getDeclaringType().hasDeclaredAnnotation(Interceptor.class)) {
             visitAroundMethod(element, context, AroundInvoke.class, "setAroundInvoke");
             visitAroundMethod(element, context, AroundConstruct.class, "setAroundConstruct");
             remap(element, context, PostConstruct.class, "setPostConstruct");
