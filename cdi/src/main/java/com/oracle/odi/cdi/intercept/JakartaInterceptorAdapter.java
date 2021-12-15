@@ -166,7 +166,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
 
     @Override
     public int getOrder() {
-        return -priority;
+        return priority;
     }
 
     @Override

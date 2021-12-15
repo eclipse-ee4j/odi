@@ -26,6 +26,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.DefaultBeanContext;
 import io.micronaut.context.Qualifier;
+import io.micronaut.context.exceptions.BeanInstantiationException;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.Nullable;
@@ -165,8 +166,19 @@ final class OdiInstance<T> implements Instance<T> {
             throw new AmbiguousResolutionException(e.getMessage(), e);
         } catch (NoSuchBeanException e) {
             throw new UnsatisfiedResolutionException(e.getMessage(), e);
+        } catch (BeanInstantiationException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new CreationException(e.getMessage(), e);
+            }
         } catch (Throwable e) {
-            throw new CreationException(e.getMessage(), e);
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                throw new CreationException(e.getMessage(), e);
+            }
         }
     }
 
