@@ -2,12 +2,14 @@ name: Full TCK run
 on:
   push:
     branches:
-      - main
-      - '[1-9]+.[0-9]+.x'
+      - disabled
+#      - main
+#      - '[1-9]+.[0-9]+.x'
   pull_request:
     branches:
-      - main
-      - '[1-9]+.[0-9]+.x'
+      - disabled
+#      - main
+#      - '[1-9]+.[0-9]+.x'
 jobs:
   build:
     if: github.repository != 'micronaut-projects/micronaut-project-template'
