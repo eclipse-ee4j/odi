@@ -16,6 +16,7 @@
 package com.oracle.odi.cdi.intercept;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,17 +45,18 @@ import jakarta.interceptor.InterceptorBinding;
  * @param <B> The bean type. The target bean type
  */
 @Internal
-public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implements ConstructorInterceptor<Object>,
+public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implements
+        ConstructorInterceptor<Object>,
         MethodInterceptor<Object, Object>,
         Interceptor<B> {
 
     private final BeanDefinition<B> beanDefinition;
     private final BeanContext beanContext;
     private final int priority;
-    private ExecutableMethod<B, Object> aroundConstruct;
-    private ExecutableMethod<B, Object> aroundInvoke;
-    private ExecutableMethod<B, Object> preDestroy;
-    private ExecutableMethod<B, Object> postConstruct;
+    private ExecutableMethod<B, Object>[] aroundConstruct;
+    private ExecutableMethod<B, Object>[] aroundInvoke;
+    private ExecutableMethod<B, Object>[] preDestroy;
+    private ExecutableMethod<B, Object>[] postConstruct;
     private Set<Annotation> interceptorBindings;
 
     /**
@@ -77,11 +79,9 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
      *
      * @param aroundConstructMethod The name of the method.
      */
-    public void setAroundConstruct(String aroundConstructMethod) {
-        this.aroundConstruct = beanDefinition.getRequiredMethod(
-                aroundConstructMethod,
-                jakarta.interceptor.InvocationContext.class
-        );
+    @SuppressWarnings("unchecked")
+    public void setAroundConstruct(List<String> aroundConstructMethod) {
+        this.aroundConstruct = toMethodArray(aroundConstructMethod);
     }
 
     /**
@@ -89,11 +89,8 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
      *
      * @param aroundInvokeMethod The name of the method.
      */
-    public void setAroundInvoke(String aroundInvokeMethod) {
-        this.aroundInvoke = beanDefinition.getRequiredMethod(
-                aroundInvokeMethod,
-                jakarta.interceptor.InvocationContext.class
-        );
+    public void setAroundInvoke(List<String> aroundInvokeMethod) {
+        this.aroundInvoke = toMethodArray(aroundInvokeMethod);
     }
 
     /**
@@ -101,11 +98,8 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
      *
      * @param preDestroyMethod The name of the method.
      */
-    public void setPreDestroy(String preDestroyMethod) {
-        this.preDestroy = beanDefinition.getRequiredMethod(
-                preDestroyMethod,
-                jakarta.interceptor.InvocationContext.class
-        );
+    public void setPreDestroy(List<String> preDestroyMethod) {
+        this.preDestroy = toMethodArray(preDestroyMethod);
     }
 
     /**
@@ -113,11 +107,8 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
      *
      * @param postConstructMethod The name of the method
      */
-    public void setPostConstruct(String postConstructMethod) {
-        this.postConstruct = beanDefinition.getRequiredMethod(
-                postConstructMethod,
-                jakarta.interceptor.InvocationContext.class
-        );
+    public void setPostConstruct(List<String> postConstructMethod) {
+        this.postConstruct = toMethodArray(postConstructMethod);
     }
 
     @Override
@@ -137,13 +128,11 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
     @Override
     public Object intercept(ConstructorInvocationContext<Object> context) {
         if (aroundConstruct != null) {
-            ConstructorInvocationContextAdapter constructorInvocationContextAdapter =
-                    new ConstructorInvocationContextAdapter(context);
-            aroundConstruct.invoke(
-                    resolveTarget(),
-                    constructorInvocationContextAdapter
+            ConstructorInvocationContextAdapter<B> constructorInvocationContextAdapter =
+                    new ConstructorInvocationContextAdapter<>(context, aroundConstruct);
+            return constructorInvocationContextAdapter.invoke(
+                    resolveInterceptorBean()
             );
-            return constructorInvocationContextAdapter.getConstructorTarget();
         } else {
             return context.proceed();
         }
@@ -151,17 +140,20 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
 
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
-        ExecutableMethod<B, Object> executableMethod = selectMethod(context.getKind());
-        if (executableMethod == null) {
+        final ExecutableMethod<B, Object>[] executableMethods = selectMethod(context.getKind());
+
+        if (executableMethods == null) {
             return context.proceed();
         }
-        B target = resolveTarget();
-        InvocationContextAdapter ctx = new InvocationContextAdapter(context);
+        ExecutableMethod<B, Object> executableMethod = executableMethods[0];
+        B target = resolveInterceptorBean();
+        InvocationContextAdapter<B> ctx = new InvocationContextAdapter<>(context, executableMethods);
+
         if (executableMethod.getReturnType().isVoid()) {
-            executableMethod.invoke(target, ctx);
+            ctx.invoke(target);
             return target;
         }
-        return executableMethod.invoke(target, ctx);
+        return ctx.invoke(target);
     }
 
     @Override
@@ -187,15 +179,15 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
 
     @Override
     public Object intercept(InterceptionType type, B instance, jakarta.interceptor.InvocationContext ctx) {
-        ExecutableMethod<B, Object> executableMethod = selectMethod(type);
-        if (executableMethod != null) {
-            return executableMethod.invoke(instance, ctx);
+        final ExecutableMethod<B, Object>[] executableMethods = selectMethod(type);
+        if (executableMethods != null) {
+            return executableMethods[0].invoke(instance, ctx);
         }
         throw new IllegalStateException("Not supported intercept type: " + type);
     }
 
     @Nullable
-    private ExecutableMethod<B, Object> selectMethod(@NonNull InterceptionType type) {
+    private ExecutableMethod<B, Object>[] selectMethod(@NonNull InterceptionType type) {
         try {
             final InterceptorKind kind = InterceptorKind.valueOf(type.name());
             return selectMethod(kind);
@@ -205,7 +197,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
     }
 
     @Nullable
-    private ExecutableMethod<B, Object> selectMethod(@NonNull InterceptorKind type) {
+    private ExecutableMethod<B, Object>[] selectMethod(@NonNull InterceptorKind type) {
         switch (type) {
             case AROUND_CONSTRUCT:
                 return aroundConstruct;
@@ -220,18 +212,15 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
         }
     }
 
-    private B resolveTarget() {
+    private B resolveInterceptorBean() {
         return beanContext.getBean(beanDefinition);
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+    @SuppressWarnings("rawtypes")
+    private ExecutableMethod[] toMethodArray(List<String> methods) {
+        return methods.stream().map(n -> beanDefinition.getRequiredMethod(
+                n,
+                jakarta.interceptor.InvocationContext.class
+        )).toArray(ExecutableMethod[]::new);
     }
-
-    @Override
-    public boolean equals(Object o) {
-        return super.equals(o);
-    }
-
 }

@@ -120,27 +120,10 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                                     visitorContext,
                                     scannedClass
                             );
-                            if (interceptorBuilder != null) {
-
-                                final List<MethodElement> aroundInvokeMethods =
-                                        findAroundInvokeMethods(scannedClass);
-                                if (!aroundInvokeMethods.isEmpty()) {
-                                    if (aroundInvokeMethods.size() == 1) {
-                                        final MethodElement methodElement = aroundInvokeMethods.iterator().next();
-                                        InterceptorVisitor.setAroundInvokeMethod(
-                                                methodElement,
-                                                interceptorBuilder
-                                        );
-                                    } else {
-                                        visitorContext.fail("Only a single @AroundInvoke method is allowed", scannedClass);
-                                        return;
-                                    }
-                                }
-                            }
                         }
 
                         final ElementQuery<MethodElement> executableMethods = ElementQuery.ALL_METHODS
-                                .onlyDeclared()
+                                .onlyInstance()
                                 .onlyDeclared()
                                 .onlyConcrete()
                                 .annotated((annotationMetadata -> annotationMetadata.hasAnnotation(Executable.class)));

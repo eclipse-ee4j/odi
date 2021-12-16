@@ -17,8 +17,10 @@ package com.oracle.odi.cdi.intercept;
 
 import io.micronaut.aop.InvocationContext;
 import io.micronaut.aop.MethodInvocationContext;
+import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.convert.value.MutableConvertibleValues;
 import io.micronaut.core.util.CollectionUtils;
+import io.micronaut.inject.ExecutableMethod;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -27,12 +29,32 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-class InvocationContextAdapter implements jakarta.interceptor.InvocationContext {
+/**
+ * Adapter for the invocation context.
+ * @param <B> The bean type
+ */
+class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationContext {
     @SuppressWarnings("checkstyle:VisibilityModifier")
     final InvocationContext<?, ?> invocationContext;
+    private final ExecutableMethod<B, Object>[] methods;
+    private int index;
+    private B interceptor;
 
-    InvocationContextAdapter(InvocationContext<?, ?> invocationContext) {
+    InvocationContextAdapter(InvocationContext<?, ?> invocationContext,
+                             ExecutableMethod<B, Object>[] methods) {
         this.invocationContext = invocationContext;
+        this.methods = methods;
+        this.index = methods.length;
+    }
+
+    /**
+     * Invoke the adapter with the given interceptor.
+     * @param interceptor the interceptor
+     * @return The result
+     */
+    public Object invoke(@NonNull B interceptor) {
+        this.interceptor = interceptor;
+        return methods[--index].invoke(interceptor, this);
     }
 
     @Override
@@ -84,6 +106,18 @@ class InvocationContextAdapter implements jakarta.interceptor.InvocationContext 
 
     @Override
     public Object proceed() {
+        if (index <= 0) {
+            return invocationContextProceed();
+        } else {
+            if (interceptor == null) {
+                throw new IllegalStateException();
+            } else {
+                return methods[--index].invoke(interceptor, this);
+            }
+        }
+    }
+
+    protected Object invocationContextProceed() {
         return invocationContext.proceed();
     }
 

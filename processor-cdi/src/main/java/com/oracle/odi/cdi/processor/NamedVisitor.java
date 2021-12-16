@@ -15,7 +15,9 @@
  */
 package com.oracle.odi.cdi.processor;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Named;
 
@@ -34,6 +36,11 @@ import jakarta.enterprise.inject.Stereotype;
  * Validates elements annotated with {@link javax.inject.Named}.
  */
 public class NamedVisitor implements TypeElementVisitor<Object, Named> {
+
+    @Override
+    public Set<String> getSupportedAnnotationNames() {
+        return Collections.singleton(Named.class.getName());
+    }
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
