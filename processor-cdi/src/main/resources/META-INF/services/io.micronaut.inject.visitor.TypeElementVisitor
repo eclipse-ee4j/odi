@@ -7,5 +7,4 @@ com.oracle.odi.cdi.processor.SpecializesVisitor
 com.oracle.odi.cdi.processor.DisposesMethodVisitor
 com.oracle.odi.cdi.processor.InterceptorVisitor
 com.oracle.odi.cdi.processor.ObservesMethodVisitor
-com.oracle.odi.cdi.processor.BeanVisitor
 com.oracle.odi.cdi.processor.extensions.BuildTimeExtensionVisitor
