@@ -15,6 +15,8 @@
  */
 package com.oracle.odi.cdi.intercept;
 
+import io.micronaut.aop.InterceptedProxy;
+import io.micronaut.aop.InterceptorKind;
 import io.micronaut.aop.InvocationContext;
 import io.micronaut.aop.MethodInvocationContext;
 import io.micronaut.core.annotation.NonNull;
@@ -37,14 +39,17 @@ class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationConte
     @SuppressWarnings("checkstyle:VisibilityModifier")
     final InvocationContext<?, ?> invocationContext;
     private final ExecutableMethod<B, Object>[] methods;
+    private final InterceptorKind kind;
     private int index;
     private B interceptor;
 
     InvocationContextAdapter(InvocationContext<?, ?> invocationContext,
-                             ExecutableMethod<B, Object>[] methods) {
+                             ExecutableMethod<B, Object>[] methods,
+                             InterceptorKind kind) {
         this.invocationContext = invocationContext;
         this.methods = methods;
         this.index = methods.length;
+        this.kind = kind;
     }
 
     /**
@@ -59,7 +64,11 @@ class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationConte
 
     @Override
     public Object getTarget() {
-        return invocationContext.getTarget();
+        final Object target = invocationContext.getTarget();
+        if (target instanceof InterceptedProxy) {
+            return ((InterceptedProxy<?>) target).interceptedTarget();
+        }
+        return target;
     }
 
     @Override
@@ -69,7 +78,12 @@ class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationConte
 
     @Override
     public Method getMethod() {
-        return ((MethodInvocationContext<?, ?>) invocationContext).getTargetMethod();
+        final MethodInvocationContext<?, ?> mic = (MethodInvocationContext<?, ?>) this.invocationContext;
+        try {
+            return mic.getTargetMethod();
+        } catch (NoSuchMethodError e) {
+            return null;
+        }
     }
 
     @Override
@@ -106,13 +120,28 @@ class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationConte
 
     @Override
     public Object proceed() {
-        if (index <= 0) {
-            return invocationContextProceed();
-        } else {
-            if (interceptor == null) {
-                throw new IllegalStateException();
+        if (kind == InterceptorKind.AROUND) {
+
+            if (index <= 0) {
+                return invocationContextProceed();
             } else {
-                return methods[--index].invoke(interceptor, this);
+                if (interceptor == null) {
+                    throw new IllegalStateException();
+                } else {
+                    return methods[--index].invoke(interceptor, this);
+                }
+            }
+        } else {
+            if (index <= 0) {
+                invocationContextProceed();
+                return null;
+            } else {
+                if (interceptor == null) {
+                    throw new IllegalStateException();
+                } else {
+                    methods[--index].invoke(interceptor, this);
+                    return null;
+                }
             }
         }
     }

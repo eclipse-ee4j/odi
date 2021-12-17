@@ -4,9 +4,14 @@
     <test name="CDI TCK">
 
         <classes>
-            <class name="org.jboss.cdi.tck.interceptors.tests.order.lifecycleCallback.PostConstructOrderTest"/>
+            <!--            TODO: AroundInvoke on beans directly not supported in lite? -->
+            <!--            <class name="org.jboss.cdi.tck.interceptors.tests.order.aroundInvoke.AroundInvokeOrderTest"/>-->
+            <!--            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest"/>-->
             <class name="org.jboss.cdi.tck.interceptors.tests.order.aroundConstruct.AroundConstructOrderTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest"/>
+
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest"/>
+            <class name="org.jboss.cdi.tck.interceptors.tests.order.lifecycleCallback.PostConstructOrderTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.returnValueIgnored.AroundConstructInterceptorReturnValueTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.withAroundInvoke.SingleInterceptorInstanceTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest"/>

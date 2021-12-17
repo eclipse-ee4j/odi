@@ -147,7 +147,11 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
         }
         ExecutableMethod<B, Object> executableMethod = executableMethods[0];
         B target = resolveInterceptorBean();
-        InvocationContextAdapter<B> ctx = new InvocationContextAdapter<>(context, executableMethods);
+        InvocationContextAdapter<B> ctx = new InvocationContextAdapter<>(
+                context,
+                executableMethods,
+                context.getKind()
+        );
 
         if (executableMethod.getReturnType().isVoid()) {
             ctx.invoke(target);

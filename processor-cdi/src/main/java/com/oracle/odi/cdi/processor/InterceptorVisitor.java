@@ -68,6 +68,8 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                                               ClassElement interceptorBean) {
         Set<String> interceptorBindings =
                 new HashSet<>(interceptorBean.getAnnotationNamesByStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS));
+        interceptorBean.removeAnnotation(AnnotationUtil.ANN_AROUND);
+        interceptorBean.removeStereotype(AnnotationUtil.ANN_AROUND);
         interceptorBean.removeStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
         interceptorBean.removeAnnotation(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
         interceptorBean.annotate(Singleton.class);

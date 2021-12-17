@@ -21,7 +21,9 @@ import java.util.Set;
 
 import javax.inject.Scope;
 
+import io.micronaut.aop.Around;
 import io.micronaut.aop.InterceptorBinding;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.ast.ClassElement;
@@ -47,11 +49,24 @@ public class BeanVisitor implements TypeElementVisitor<Scope, Object> {
             if (CollectionUtils.isNotEmpty(interceptorBindings)) {
                 // declare binding on type level for constructor binding as well
                 for (AnnotationValue<?> value : interceptorBindings) {
-                    value.stringValue().ifPresent(n ->
-                        element.annotate(value)
-                    );
+                    value.stringValue().ifPresent(n -> {
+                        element.annotate(value);
+                        if (!element.hasStereotype(Around.class)) {
+                            element.annotate(Around.class, (builder) -> {
+                                builder.member("proxyTarget", true);
+                                builder.member("cacheableLazyTarget", true);
+                            });
+                        }
+                    });
                 }
             }
+        }
+    }
+
+    @Override
+    public void visitMethod(MethodElement element, VisitorContext context) {
+        if (element.hasDeclaredAnnotation(Executable.class) && element.isPrivate()) {
+            element.removeAnnotation(Executable.class);
         }
     }
 

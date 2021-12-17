@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import io.micronaut.aop.ConstructorInvocationContext;
+import io.micronaut.aop.InterceptorKind;
 import io.micronaut.aop.InvocationContext;
 import io.micronaut.core.beans.BeanConstructor;
 import io.micronaut.core.type.Argument;
@@ -42,7 +43,7 @@ final class ConstructorInvocationContextAdapter<B> extends InvocationContextAdap
     ConstructorInvocationContextAdapter(
             InvocationContext<?, ?> invocationContext,
             ExecutableMethod<B, Object>[] methods) {
-        super(invocationContext, methods);
+        super(invocationContext, methods, InterceptorKind.AROUND_CONSTRUCT);
     }
 
     @Override
