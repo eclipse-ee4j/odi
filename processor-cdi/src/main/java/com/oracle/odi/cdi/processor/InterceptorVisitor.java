@@ -24,9 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 import io.micronaut.aop.InterceptorBean;
-import io.micronaut.aop.InterceptorBinding;
-import io.micronaut.aop.InterceptorBindingDefinitions;
-import io.micronaut.aop.InterceptorKind;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -198,7 +195,6 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
             addSetMethod(aroundMethods, interceptorBuilder, setMethodName);
         }
     }
-
 
     private static void addSetMethod(List<String> methods, BeanElementBuilder currentBuilder, String setMethodName) {
         currentBuilder.withMethods(
