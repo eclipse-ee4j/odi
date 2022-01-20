@@ -9,7 +9,8 @@
             <!--            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest"/>-->
             <class name="org.jboss.cdi.tck.interceptors.tests.order.aroundConstruct.AroundConstructOrderTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest"/>
-
+<!--            TODO: Test faulty because of implicit rules -->
+<!--            <class name="org.jboss.cdi.tck.interceptors.tests.bindings.overriding.InterceptorBindingOverridingTest"/>-->
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.order.lifecycleCallback.PostConstructOrderTest"/>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.returnValueIgnored.AroundConstructInterceptorReturnValueTest"/>

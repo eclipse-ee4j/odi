@@ -35,12 +35,16 @@ public class InterceptorBindingTransformer implements TypedAnnotationTransformer
     public static final List<AnnotationValue<?>> INTERCEPTOR_BINDING_VALUES =
             List.of(AnnotationValue.builder(io.micronaut.aop.InterceptorBinding.class)
             .member("kind", InterceptorKind.AROUND)
+            .member("bindMembers", true)
             .build(), AnnotationValue.builder(io.micronaut.aop.InterceptorBinding.class)
             .member("kind", InterceptorKind.AROUND_CONSTRUCT)
+            .member("bindMembers", true)
             .build(), AnnotationValue.builder(io.micronaut.aop.InterceptorBinding.class)
             .member("kind", InterceptorKind.PRE_DESTROY)
+            .member("bindMembers", true)
             .build(), AnnotationValue.builder(io.micronaut.aop.InterceptorBinding.class)
             .member("kind", InterceptorKind.POST_CONSTRUCT)
+            .member("bindMembers", true)
             .build());
 
     @Override

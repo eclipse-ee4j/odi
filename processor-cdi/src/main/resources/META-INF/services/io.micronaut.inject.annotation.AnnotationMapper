@@ -1,4 +1,5 @@
 com.oracle.odi.cdi.processor.AlternativeMapper
+com.oracle.odi.cdi.processor.NonbindingMapper
 com.oracle.odi.cdi.processor.SpecializesMapper
 com.oracle.odi.cdi.processor.InterceptorMapper
 com.oracle.odi.cdi.processor.JakartaPriorityMapper

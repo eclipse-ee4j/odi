@@ -193,8 +193,12 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
     @Nullable
     private ExecutableMethod<B, Object>[] selectMethod(@NonNull InterceptionType type) {
         try {
-            final InterceptorKind kind = InterceptorKind.valueOf(type.name());
-            return selectMethod(kind);
+            if (type == InterceptionType.AROUND_INVOKE) {
+                return selectMethod(InterceptorKind.AROUND);
+            } else {
+                final InterceptorKind kind = InterceptorKind.valueOf(type.name());
+                return selectMethod(kind);
+            }
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -226,5 +230,10 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
                 n,
                 jakarta.interceptor.InvocationContext.class
         )).toArray(ExecutableMethod[]::new);
+    }
+
+    @Override
+    public String toString() {
+        return beanDefinition.toString();
     }
 }

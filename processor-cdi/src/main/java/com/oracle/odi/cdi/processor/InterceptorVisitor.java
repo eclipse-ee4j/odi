@@ -82,27 +82,13 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                     .withParameters(parameters -> parameters[0].typeArguments(interceptorBean))
                     .annotate(InterceptorBean.class)
                     .annotate(Indexed.class,
-                              (builder) -> builder.value(io.micronaut.aop.Interceptor.class))
-                    .annotate(InterceptorBindingDefinitions.class,
-                              (bindingBuilder) -> {
-                                  List<AnnotationValue<InterceptorBinding>> bindings = new ArrayList<>();
-                                  for (String interceptorBinding : interceptorBindings) {
-                                      final InterceptorKind[] kinds = InterceptorKind.values();
-                                      for (InterceptorKind kind : kinds) {
-                                          if (kind != InterceptorKind.INTRODUCTION) {
-                                              bindings.add(
-                                                      AnnotationValue.builder(
-                                                                      InterceptorBinding.class)
-                                                              .value(interceptorBinding)
-                                                              .member("kind",
-                                                                      kind)
-                                                              .build()
-                                              );
-                                          }
-                                      }
-                                  }
-                                  bindingBuilder.values(bindings.toArray(new AnnotationValue[0]));
-                              });
+                              (builder) -> builder.value(io.micronaut.aop.Interceptor.class));
+            for (String interceptorBinding : interceptorBindings) {
+                final AnnotationValue<Annotation> av = interceptorBean.getAnnotation(interceptorBinding);
+                if (av != null) {
+                    interceptorBuilder.annotate(av);
+                }
+            }
             discoverInterceptMethods(
                     originatingElement,
                     context,
