@@ -24,6 +24,9 @@ import io.micronaut.inject.annotation.TypedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.util.Nonbinding;
 
+/**
+ * Mapper for the non-binding annotation.
+ */
 public class NonbindingMapper implements TypedAnnotationMapper<Nonbinding> {
     @Override
     public Class<Nonbinding> annotationType() {
