@@ -20,22 +20,30 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import io.micronaut.aop.ConstructorInvocationContext;
+import io.micronaut.aop.InterceptorKind;
 import io.micronaut.aop.InvocationContext;
 import io.micronaut.core.beans.BeanConstructor;
 import io.micronaut.core.type.Argument;
+import io.micronaut.inject.AdvisedBeanType;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ConstructorInjectionPoint;
+import io.micronaut.inject.ExecutableMethod;
 
 /**
  * CDI constructor interceptor.
  *
  * According to the spec {@link #proceed()} should return `null` for the first call and after that {@link #getTarget()}
  * will return the actual instance.
+ * @param <B> the bean type
  */
-final class ConstructorInvocationContextAdapter extends InvocationContextAdapter {
+final class ConstructorInvocationContextAdapter<B> extends InvocationContextAdapter<B> {
 
     private Object constructorTarget;
 
-    ConstructorInvocationContextAdapter(InvocationContext<?, ?> invocationContext) {
-        super(invocationContext);
+    ConstructorInvocationContextAdapter(
+            InvocationContext<?, ?> invocationContext,
+            ExecutableMethod<B, Object>[] methods) {
+        super(invocationContext, methods, InterceptorKind.AROUND_CONSTRUCT);
     }
 
     @Override
@@ -52,11 +60,20 @@ final class ConstructorInvocationContextAdapter extends InvocationContextAdapter
     public Constructor<?> getConstructor() {
         ConstructorInvocationContext<?> cic = (ConstructorInvocationContext<?>) invocationContext;
         final BeanConstructor<?> constructor = cic.getConstructor();
-        final Class<?>[] args = Arrays.stream(constructor.getArguments())
+        Class<?> declaringBeanType = constructor.getDeclaringBeanType();
+        Class<?>[] args = Arrays.stream(constructor.getArguments())
                 .map(Argument::getType)
                 .toArray(Class[]::new);
+        if (constructor instanceof ConstructorInjectionPoint) {
+            final BeanDefinition<?> declaringBean = ((ConstructorInjectionPoint<?>) constructor).getDeclaringBean();
+            if (declaringBean instanceof AdvisedBeanType) {
+                declaringBeanType = ((AdvisedBeanType<?>) declaringBean).getInterceptedType();
+                args = Arrays.copyOfRange(args, 0, args.length - 4);
+            }
+        }
+
         try {
-            return constructor.getDeclaringBeanType()
+            return declaringBeanType
                     .getDeclaredConstructor(args);
         } catch (NoSuchMethodException e) {
             throw new IllegalStateException("Constructor advice missing reflection information for constructor: " + e
@@ -66,11 +83,23 @@ final class ConstructorInvocationContextAdapter extends InvocationContextAdapter
 
     @Override
     public Object proceed() {
-        constructorTarget = invocationContext.proceed();
+        super.proceed();
         return null;
+    }
+
+    @Override
+    protected Object invocationContextProceed() {
+        constructorTarget = super.invocationContextProceed();
+        return constructorTarget;
     }
 
     public Object getConstructorTarget() {
         return constructorTarget;
+    }
+
+    @Override
+    public Object invoke(B interceptor) {
+        super.invoke(interceptor);
+        return getConstructorTarget();
     }
 }

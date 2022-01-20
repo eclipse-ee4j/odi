@@ -15,10 +15,14 @@
  */
 package com.oracle.odi.cdi.intercept;
 
+import io.micronaut.aop.InterceptedProxy;
+import io.micronaut.aop.InterceptorKind;
 import io.micronaut.aop.InvocationContext;
 import io.micronaut.aop.MethodInvocationContext;
+import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.convert.value.MutableConvertibleValues;
 import io.micronaut.core.util.CollectionUtils;
+import io.micronaut.inject.ExecutableMethod;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -27,17 +31,44 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-class InvocationContextAdapter implements jakarta.interceptor.InvocationContext {
+/**
+ * Adapter for the invocation context.
+ * @param <B> The bean type
+ */
+class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationContext {
     @SuppressWarnings("checkstyle:VisibilityModifier")
     final InvocationContext<?, ?> invocationContext;
+    private final ExecutableMethod<B, Object>[] methods;
+    private final InterceptorKind kind;
+    private int index;
+    private B interceptor;
 
-    InvocationContextAdapter(InvocationContext<?, ?> invocationContext) {
+    InvocationContextAdapter(InvocationContext<?, ?> invocationContext,
+                             ExecutableMethod<B, Object>[] methods,
+                             InterceptorKind kind) {
         this.invocationContext = invocationContext;
+        this.methods = methods;
+        this.index = methods.length;
+        this.kind = kind;
+    }
+
+    /**
+     * Invoke the adapter with the given interceptor.
+     * @param interceptor the interceptor
+     * @return The result
+     */
+    public Object invoke(@NonNull B interceptor) {
+        this.interceptor = interceptor;
+        return methods[--index].invoke(interceptor, this);
     }
 
     @Override
     public Object getTarget() {
-        return invocationContext.getTarget();
+        final Object target = invocationContext.getTarget();
+        if (target instanceof InterceptedProxy) {
+            return ((InterceptedProxy<?>) target).interceptedTarget();
+        }
+        return target;
     }
 
     @Override
@@ -47,7 +78,12 @@ class InvocationContextAdapter implements jakarta.interceptor.InvocationContext 
 
     @Override
     public Method getMethod() {
-        return ((MethodInvocationContext<?, ?>) invocationContext).getTargetMethod();
+        final MethodInvocationContext<?, ?> mic = (MethodInvocationContext<?, ?>) this.invocationContext;
+        try {
+            return mic.getTargetMethod();
+        } catch (NoSuchMethodError e) {
+            return null;
+        }
     }
 
     @Override
@@ -84,6 +120,33 @@ class InvocationContextAdapter implements jakarta.interceptor.InvocationContext 
 
     @Override
     public Object proceed() {
+        if (kind == InterceptorKind.AROUND) {
+
+            if (index <= 0) {
+                return invocationContextProceed();
+            } else {
+                if (interceptor == null) {
+                    throw new IllegalStateException();
+                } else {
+                    return methods[--index].invoke(interceptor, this);
+                }
+            }
+        } else {
+            if (index <= 0) {
+                invocationContextProceed();
+                return null;
+            } else {
+                if (interceptor == null) {
+                    throw new IllegalStateException();
+                } else {
+                    methods[--index].invoke(interceptor, this);
+                    return null;
+                }
+            }
+        }
+    }
+
+    protected Object invocationContextProceed() {
         return invocationContext.proceed();
     }
 

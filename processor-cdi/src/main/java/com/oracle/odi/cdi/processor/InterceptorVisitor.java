@@ -17,14 +17,13 @@ package com.oracle.odi.cdi.processor;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.micronaut.aop.InterceptorBean;
-import io.micronaut.aop.InterceptorBinding;
-import io.micronaut.aop.InterceptorBindingDefinitions;
-import io.micronaut.aop.InterceptorKind;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -48,16 +47,10 @@ import jakarta.interceptor.Interceptor;
 public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Object> {
 
     private static final String INTERCEPTOR_ADAPTER = "com.oracle.odi.cdi.intercept.JakartaInterceptorAdapter";
-    private BeanElementBuilder currentBuilder;
-    private ClassElement currentClass;
-    private Set<String> mappedTypes = new HashSet<>();
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        mappedTypes.clear();
-
-        this.currentClass = element;
-        this.currentBuilder = addInterceptor(element, context, element);
+        addInterceptor(element, context, element);
     }
 
     /**
@@ -72,105 +65,145 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                                               ClassElement interceptorBean) {
         Set<String> interceptorBindings =
                 new HashSet<>(interceptorBean.getAnnotationNamesByStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS));
+        interceptorBean.removeAnnotation(AnnotationUtil.ANN_AROUND);
+        interceptorBean.removeStereotype(AnnotationUtil.ANN_AROUND);
         interceptorBean.removeStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
         interceptorBean.removeAnnotation(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
         interceptorBean.annotate(Singleton.class);
         final ClassElement interceptorElement = context.getClassElement(INTERCEPTOR_ADAPTER).orElse(null);
         if (interceptorElement != null) {
 
-            return originatingElement
+            final BeanElementBuilder interceptorBuilder = originatingElement
                     .addAssociatedBean(interceptorElement)
                     .typeArguments(interceptorBean)
                     .withParameters(parameters -> parameters[0].typeArguments(interceptorBean))
                     .annotate(InterceptorBean.class)
                     .annotate(Indexed.class,
-                              (builder) -> builder.value(io.micronaut.aop.Interceptor.class))
-                    .annotate(InterceptorBindingDefinitions.class,
-                              (bindingBuilder) -> {
-                                  List<AnnotationValue<InterceptorBinding>> bindings = new ArrayList<>();
-                                  for (String interceptorBinding : interceptorBindings) {
-                                      final InterceptorKind[] kinds = InterceptorKind.values();
-                                      for (InterceptorKind kind : kinds) {
-                                          if (kind != InterceptorKind.INTRODUCTION) {
-                                              bindings.add(
-                                                      AnnotationValue.builder(
-                                                              InterceptorBinding.class)
-                                                              .value(interceptorBinding)
-                                                              .member("kind",
-                                                                      kind)
-                                                              .build()
-                                              );
-                                          }
-                                      }
-                                  }
-                                  bindingBuilder.values(bindings.toArray(new AnnotationValue[0]));
-                              });
+                              (builder) -> builder.value(io.micronaut.aop.Interceptor.class));
+            for (String interceptorBinding : interceptorBindings) {
+                final AnnotationValue<Annotation> av = interceptorBean.getAnnotation(interceptorBinding);
+                if (av != null) {
+                    interceptorBuilder.annotate(av);
+                }
+            }
+            discoverInterceptMethods(
+                    originatingElement,
+                    context,
+                    interceptorBean,
+                    interceptorBuilder,
+                    AroundInvoke.class,
+                    "setAroundInvoke",
+                    false
+            );
+            discoverInterceptMethods(
+                    originatingElement,
+                    context,
+                    interceptorBean,
+                    interceptorBuilder,
+                    AroundConstruct.class,
+                    "setAroundConstruct",
+                    false
+            );
+            discoverInterceptMethods(
+                    originatingElement,
+                    context,
+                    interceptorBean,
+                    interceptorBuilder,
+                    PostConstruct.class,
+                    "setPostConstruct",
+                    true
+            );
+            discoverInterceptMethods(
+                    originatingElement,
+                    context,
+                    interceptorBean,
+                    interceptorBuilder,
+                    PreDestroy.class,
+                    "setPreDestroy",
+                    true
+            );
+            discoverInterceptMethods(
+                    originatingElement,
+                    context,
+                    interceptorBean,
+                    interceptorBuilder,
+                    javax.annotation.PostConstruct.class,
+                    "setPostConstruct",
+                    true
+            );
+            discoverInterceptMethods(
+                    originatingElement,
+                    context,
+                    interceptorBean,
+                    interceptorBuilder,
+                    javax.annotation.PreDestroy.class,
+                    "setPreDestroy",
+                    true
+            );
+            return interceptorBuilder;
         }
         return null;
     }
 
-    @Override
-    public void visitMethod(MethodElement element, VisitorContext context) {
-        if (currentBuilder != null && currentClass != null && element.getDeclaringType().hasDeclaredAnnotation(Interceptor.class)) {
-            visitAroundMethod(element, context, AroundInvoke.class, "setAroundInvoke");
-            visitAroundMethod(element, context, AroundConstruct.class, "setAroundConstruct");
-            remap(element, context, PostConstruct.class, "setPostConstruct");
-            remap(element, context, javax.annotation.PostConstruct.class, "setPostConstruct");
-            remap(element, context, PreDestroy.class, "setPreDestroy");
-            remap(element, context, javax.annotation.PreDestroy.class, "setPreDestroy");
-        }
-    }
+    private static void discoverInterceptMethods(ClassElement originatingElement,
+                                  VisitorContext context,
+                                  ClassElement interceptorBean,
+                                  BeanElementBuilder interceptorBuilder,
+                                  Class<? extends Annotation> aroundAnnotation,
+                                  String setMethodName,
+                                  boolean isRemoveAnn) {
+        final ElementQuery<MethodElement> baseQuery = ElementQuery.ALL_METHODS
+                .onlyAccessible(originatingElement);
 
-    private void remap(MethodElement element, VisitorContext context, Class<? extends Annotation> ann, String setMethodName) {
-        if (element.hasDeclaredAnnotation(ann)) {
-            visitAroundMethod(element, context, ann, setMethodName);
-            element.removeAnnotation(ann);
-        }
-    }
-
-    private void visitAroundMethod(
-            MethodElement element,
-            VisitorContext context,
-            Class<? extends Annotation> aroundAnnotation,
-            String setMethodName) {
-        if (element.hasDeclaredAnnotation(aroundAnnotation)) {
-            if (mappedTypes.contains(setMethodName)) {
-                context.fail("Only a single " + aroundAnnotation.getSimpleName() + " method is allowed", element);
-                return;
+        Map<String, String> mappedTypes = new HashMap<>();
+        List<String> aroundMethods = new ArrayList<>(5);
+        interceptorBean.getEnclosedElements(
+                baseQuery.annotated(ann -> ann.hasDeclaredAnnotation(aroundAnnotation) || aroundAnnotation.equals(ann.classValue(Executable.class).orElse(null)))
+        ).forEach(methodElement -> {
+            final String declaringType = methodElement.getDeclaringType().getName();
+            final String previous = mappedTypes.put(declaringType, methodElement.getName());
+            if (previous != null) {
+                context.fail("Only a single " + aroundAnnotation.getSimpleName() + " method is allowed", originatingElement);
             } else {
-                if (element.isStatic()) {
-                    context.fail(aroundAnnotation.getSimpleName() + " method cannot be static", element);
-                    return;
+                if (methodElement.isStatic()) {
+                    context.fail(aroundAnnotation.getSimpleName() + " method cannot be static", methodElement);
+                } else if (methodElement.isAbstract()) {
+                    context.fail(aroundAnnotation.getSimpleName() + " method cannot be abstract", methodElement);
+                } else {
+                    methodElement.annotate(Executable.class, (builder) -> builder.value(aroundAnnotation));
+                    final ClassElement dt = methodElement.getDeclaringType();
+                    if (!dt.equals(interceptorBean)) {
+                        final MethodElement parentMethod = dt.getEnclosedElement(
+                                        ElementQuery.ALL_METHODS.onlyInstance().
+                                                named(n -> n.equals(methodElement.getName()))
+                                                .filter(m -> m.equals(methodElement)))
+                                .orElse(null);
+                        if (parentMethod != null) {
+                            parentMethod.annotate(Executable.class, (builder) -> builder.value(aroundAnnotation));
+                            parentMethod.removeAnnotation(aroundAnnotation);
+                        }
+                    }
+                    aroundMethods.add(methodElement.getName());
+                    if (isRemoveAnn) {
+                        methodElement.removeAnnotation(aroundAnnotation);
+                    }
                 }
-                if (element.isAbstract()) {
-                    context.fail(aroundAnnotation.getSimpleName() + " method cannot be abstract", element);
-                    return;
-                }
-
-                element.annotate(Executable.class);
-                mappedTypes.add(setMethodName);
-                addSetMethod(element, currentBuilder, setMethodName);
             }
+        });
+
+        if (!aroundMethods.isEmpty()) {
+            addSetMethod(aroundMethods, interceptorBuilder, setMethodName);
         }
     }
 
-    /**
-     * Sets the around invoke method.
-     * @param element The element
-     * @param currentBuilder The current builder
-     */
-    public static void setAroundInvokeMethod(MethodElement element, BeanElementBuilder currentBuilder) {
-        addSetMethod(element, currentBuilder, "setAroundInvoke");
-    }
-
-    private static void addSetMethod(MethodElement element, BeanElementBuilder currentBuilder, String setMethodName) {
+    private static void addSetMethod(List<String> methods, BeanElementBuilder currentBuilder, String setMethodName) {
         currentBuilder.withMethods(
                 ElementQuery.ALL_METHODS.onlyInstance().onlyDeclared().onlyAccessible()
                         .named((name) -> name.equals(setMethodName)),
                 (
                         (method) -> {
                             method.inject();
-                            method.getParameters()[0].injectValue(element.getName());
+                            method.getParameters()[0].injectValue(String.join(",", methods));
                         })
         );
     }

@@ -18,6 +18,7 @@ package com.oracle.odi.cdi.processor;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.micronaut.aop.Around;
 import io.micronaut.aop.InterceptorKind;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.annotation.TypedAnnotationTransformer;
@@ -34,12 +35,16 @@ public class InterceptorBindingTransformer implements TypedAnnotationTransformer
     public static final List<AnnotationValue<?>> INTERCEPTOR_BINDING_VALUES =
             List.of(AnnotationValue.builder(io.micronaut.aop.InterceptorBinding.class)
             .member("kind", InterceptorKind.AROUND)
+            .member("bindMembers", true)
             .build(), AnnotationValue.builder(io.micronaut.aop.InterceptorBinding.class)
             .member("kind", InterceptorKind.AROUND_CONSTRUCT)
+            .member("bindMembers", true)
             .build(), AnnotationValue.builder(io.micronaut.aop.InterceptorBinding.class)
             .member("kind", InterceptorKind.PRE_DESTROY)
+            .member("bindMembers", true)
             .build(), AnnotationValue.builder(io.micronaut.aop.InterceptorBinding.class)
             .member("kind", InterceptorKind.POST_CONSTRUCT)
+            .member("bindMembers", true)
             .build());
 
     @Override
@@ -51,6 +56,9 @@ public class InterceptorBindingTransformer implements TypedAnnotationTransformer
     public List<AnnotationValue<?>> transform(AnnotationValue<InterceptorBinding> annotation, VisitorContext visitorContext) {
         List<AnnotationValue<?>> list = new ArrayList<>(INTERCEPTOR_BINDING_VALUES.size() + 1);
         list.add(annotation);
+        list.add(AnnotationValue.builder(Around.class)
+                         .member("proxyTarget", true)
+                         .member("cacheableLazyTarget", true).build());
         list.addAll(INTERCEPTOR_BINDING_VALUES);
         return list;
     }
