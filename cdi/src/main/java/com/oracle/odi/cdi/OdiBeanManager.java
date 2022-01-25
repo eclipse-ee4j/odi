@@ -39,7 +39,6 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanContainer;
-import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
@@ -69,12 +68,6 @@ final class OdiBeanManager implements BeanContainer {
         } else {
             throw new IllegalArgumentException("Unsupported by bean type: " + bean.getClass());
         }
-    }
-
-    @Override
-    public Object getInjectableReference(InjectionPoint ij, CreationalContext<?> ctx) {
-        // TODO: support qualifiers
-        return applicationContext.getBean(Argument.of(ij.getType()));
     }
 
     @Override

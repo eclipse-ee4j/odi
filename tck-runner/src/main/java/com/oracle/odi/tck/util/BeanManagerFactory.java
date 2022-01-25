@@ -190,7 +190,7 @@ public class BeanManagerFactory {
 
             @Override
             public Object getInjectableReference(InjectionPoint ij, CreationalContext<?> ctx) {
-                return beanContainer.getInjectableReference(ij, ctx);
+                return null;
             }
 
             @Override
