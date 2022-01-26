@@ -158,8 +158,7 @@ final class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRe
                 final Class<?>[] types = enhancement.types();
                 for (Class<?> type : types) {
                     if (type.getName().equals(typeToEnhance.getName()) || (includeSubtypes && typeToEnhance.isAssignable(type))) {
-                        if (ArrayUtils.isEmpty(aw) || (aw.length == 1 && aw[0] == Enhancement.BeanDefiningAnnotations.class) || Arrays.stream(aw)
-                                .anyMatch(typeToEnhance::hasAnnotation)) {
+                        if (ArrayUtils.isEmpty(aw) || (aw.length == 0 || Arrays.stream(aw).anyMatch(typeToEnhance::hasAnnotation))) {
                             runEnhancement(originatingElement, typeToEnhance, visitorContext, extension, enhanceMethod);
                             continue outer;
                         }
