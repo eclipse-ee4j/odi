@@ -63,7 +63,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
      * Default constructor.
      *
      * @param beanDefinition The bean definition
-     * @param beanContext The bean context
+     * @param beanContext    The bean context
      */
     public JakartaInterceptorAdapter(
             BeanDefinition<B> beanDefinition,
@@ -230,6 +230,11 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
                 n,
                 jakarta.interceptor.InvocationContext.class
         )).toArray(ExecutableMethod[]::new);
+    }
+
+    @Override
+    public int getPriority() {
+        return priority;
     }
 
     @Override

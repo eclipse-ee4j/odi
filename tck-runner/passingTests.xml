@@ -1,50 +1,1442 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
 <suite name="CDI TCK" verbose="0" configfailurepolicy="continue">
 
+    <listeners>
+        <!-- Required - avoid randomly mixed test method execution -->
+        <listener class-name="org.jboss.cdi.tck.impl.testng.SingleTestClassMethodInterceptor"/>
+        <!-- Optional - intended for debug purpose only -->
+        <listener class-name="org.jboss.cdi.tck.impl.testng.ConfigurationLoggingListener"/>
+        <listener class-name="org.jboss.cdi.tck.impl.testng.ProgressLoggingTestListener"/>
+        <!-- Optional - it's recommended to disable the default JUnit XML reporter -->
+        <listener class-name="org.testng.reporters.SuiteHTMLReporter"/>
+        <listener class-name="org.testng.reporters.FailedReporter"/>
+        <listener class-name="org.testng.reporters.XMLReporter"/>
+        <listener class-name="org.testng.reporters.EmailableReporter"/>
+        <listener class-name="org.testng.reporters.TestHTMLReporter"/>
+    </listeners>
+
     <test name="CDI TCK">
 
+        <packages>
+            <package name="org.jboss.cdi.tck.tests.*"/>
+            <package name="org.jboss.cdi.tck.interceptors.tests.*"/>
+        </packages>
+
         <classes>
-            <!--            TODO: AroundInvoke on beans directly not supported in lite? -->
-            <!--            <class name="org.jboss.cdi.tck.interceptors.tests.order.aroundInvoke.AroundInvokeOrderTest"/>-->
-            <!--            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest"/>-->
-            <class name="org.jboss.cdi.tck.interceptors.tests.order.aroundConstruct.AroundConstructOrderTest"/>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest"/>
-<!--            TODO: Test faulty because of implicit rules -->
-<!--            <class name="org.jboss.cdi.tck.interceptors.tests.bindings.overriding.InterceptorBindingOverridingTest"/>-->
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest"/>
-            <class name="org.jboss.cdi.tck.interceptors.tests.order.lifecycleCallback.PostConstructOrderTest"/>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.returnValueIgnored.AroundConstructInterceptorReturnValueTest"/>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.aroundConstruct.withAroundInvoke.SingleInterceptorInstanceTest"/>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest"/>
-            <class name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierNotDeclaredTest"/>
-            <class name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierNotInheritedTest"/>
-            <class name="org.jboss.cdi.tck.tests.context.GetOnInactiveContextTest"/>
-            <class name="org.jboss.cdi.tck.tests.definition.scope.inOtherBda.ScopeDefinedInOtherBDATest"/>
-            <class name="org.jboss.cdi.tck.tests.definition.stereotype.interceptor.StereotypeWithMultipleInterceptorBindingsTest"/>
-            <class name="org.jboss.cdi.tck.tests.event.fires.sync.FireSyncEventTest"/>
-            <class name="org.jboss.cdi.tck.tests.event.observer.abortProcessing.orderedObservers.ExceptionInOrderedObserversAbortsProcessingTest"/>
-            <class name="org.jboss.cdi.tck.tests.event.observer.async.executor.FireAsyncWithCustomExecutorTest"/>
-            <class name="org.jboss.cdi.tck.tests.event.observer.inheritance.ObserverInheritanceTest"/>
-            <class name="org.jboss.cdi.tck.tests.event.observer.param.modification.SyncEventModificationTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.context.passivating.producer.ProducerMethodWithPrimitiveReturnTypePassivationTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.context.passivating.producer.ProducerWithPrimitiveFieldTypePassivationTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.context.passivating.transientreference.TransientReferenceParameterTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.extensions.interceptors.custom.CustomInterceptorRegistrationTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest"/>
-            <class name="org.jboss.cdi.tck.tests.full.implementation.simple.lifecycle.SimpleBeanLifecycleTest"/>
-            <class name="org.jboss.cdi.tck.tests.implementation.initializer.InitializerMethodTest"/>
-            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.nonDependentWithPublicStaticField.NonDependentWithPublicStaticFieldTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.binding.members.annotation.BindingAnnotationWithMemberTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.byname.ambiguous.AmbiguousELNamesTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PrivateFinalMethodTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.StaticFinalMethodTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.dependency.resolution.AmbiguousDependencyResolutionTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.injection.any.AnyInjectionTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithActualTypeTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithTypeVariableTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithTypeVariableUpperBoundTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToParameterizedWithWildcardTest"/>
-            <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.named.NamedAtInjectionPointTest"/>
+            <class name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierInheritedTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative02Test">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.order.aroundInvoke.AroundInvokeOrderTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative01Test">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.alternative.selection.stereotype.priority.StereotypeWithAlternativeSelectedByPriorityTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.order.overriden.lifecycleCallback.OverridenLifecycleCallbackInterceptorTest">
+                <methods>
+                    <exclude name="testCallbackOverridenByCallback"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.dependent.transientreference.DependentTransientReferenceDestroyedTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.dependent.instance.BuiltinInstanceDependentObjectTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest">
+                <methods>
+                    <exclude name="testBusinessMethodInterceptorBindings"/>
+                    <exclude name="testLifecycleInterceptorBindings"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.DestroyedInstanceReturnedByGetTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest">
+                <methods>
+                    <exclude name="testRequestScopedComponent"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.GetWithNoCreationalContextTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.DestroyForSameCreationalContextTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.GetFromContextualTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.context.DestroyForSameCreationalContext2Test">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.bindings.broken.InvalidStereotypeInterceptorBindingAnnotationsTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.inherited.StereotypeInheritedPriorityConflictTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.ConflictingPrioritiesFromSingleStereotypeTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.ConflictingPriorityStereotypesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.broken.scopeConflict.transitive.TransitiveIncompatibleStereotypesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.broken.scopeConflict.IncompatibleStereotypesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.broken.tooManyScopes.TooManyScopeTypesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.bindings.LifecycleInterceptorDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.broken.nonEmptyNamed.NonEmptyNamedTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.named.DefaultNamedTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest">
+                <methods>
+                    <exclude name="testLifeCycleCallbackInterceptorNotInvokedForMethodLevelInterceptor"/>
+                    <exclude name="testPreDestroyInterceptor"/>
+                    <exclude name="testPrivateLifecycleInterceptorMethod"/>
+                    <exclude name="testSingleMethodInterposingMultipleLifecycleCallbackEvents"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.inheritance.StereotypeInheritenceTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.bean.types.illegal.BeanTypesWithIllegalTypeTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.bean.types.ManagedBeanTypesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.bean.broken.restricted.RestrictedManagedBeanTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.bean.broken.restricted.RestrictedProducerMethodTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.bean.broken.restricted.RestrictedProducerFieldTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.bean.genericbroken.GenericManagedBeanTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.bindings.AroundInvokeInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.qualifier.repeatable.RepeatableQualifiersTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest">
+                <methods>
+                    <exclude name="testMultipleQualifiers"/>
+                    <exclude name="testQualifierDeclaredInheritedIsBlockedByIntermediateClass"/>
+                    <exclude name="testQualifierDeclaredInheritedIsInherited"/>
+                    <exclude name="testQualifierNotDeclaredInheritedIsNotIndirectlyInherited"/>
+                    <exclude name="testQualifierNotDeclaredInheritedIsNotInherited"/>
+                    <exclude name="testQualifiersDeclaredInJava"/>
+                    <exclude name="testQualifierDeclaredInheritedIsIndirectlyInherited"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.exceptions.aroundInvoke.ExceptionTest">
+                <methods>
+                    <exclude name="testExceptions2"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.producer.method.ProducerMethodTooManyScopesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.producer.field.ProducerFieldTooManyScopesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.TooManyScopesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest">
+                <methods>
+                    <exclude name="testDefaultNamed"/>
+                    <exclude name="testNameStartingWithDollarCharacter"/>
+                    <exclude name="testNameStartingWithLowerCaseCharacter"/>
+                    <exclude name="testNameStartingWithMultipleUpperCaseCharacters"/>
+                    <exclude name="testNameStartingWithUnderScoreCharacter"/>
+                    <exclude name="testNamedNotDeclaredByStereotype"/>
+                    <exclude name="testNonDefaultNamed"/>
+                    <exclude name="testStereotypeDefaultsName"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.deployment.discovery.EmptyBeansXmlDiscoveryTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.async.handlingExceptions.MultipleExceptionsInObserversNotificationTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.async.basic.MixedObserversTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.ObserverNotificationTest">
+                <methods>
+                    <exclude name="testObserverMethodNotInvokedIfNoActiveContext"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.inheritance.ObserverInheritanceTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.wildcardAndTypeVariable.ObserverMethodWithParametertizedTypeTest">
+                <methods>
+                    <exclude name="testObserverMethodCanObserveArrayWildcard"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.runtimeException.ObserverExceptionRethrownTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.broken.validation.ambiguous.ObserverMethodParameterInjectionValidationTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.broken.validation.unsatisfied.ObserverMethodParameterInjectionValidationTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest">
+                <methods>
+                    <exclude name="testFireEventToMultipleObserversWithPriority"/>
+                    <exclude name="testResolveObserversLowerPriorityBeforeDefaultPriority"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.priority.contextLifecycleEvent.ApplicationContextLifecycleEventObserverOrderingTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.checkedException.CheckedExceptionWrappedTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.resolve.binding.DuplicateBindingTypesWhenResolvingTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.resolve.binding.ResolvingChecksBindingTypeMembersTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.ChecksEventTypeWhenResolvingTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.resolve.nonbinding.NonBindingTypesWhenResolvingTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.fires.nonbinding.NonBindingTypePassedToFireTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.fires.FireEventTest">
+                <methods>
+                    <exclude name="testBeanManagerFireEvent"/>
+                    <exclude name="testEventFireThrowsExceptionIfEventObjectTypeContainsUnresovableTypeVariable"/>
+                    <exclude name="testEventProvidesMethodForFiringEventsWithCombinationOfTypeAndBindings"/>
+                    <exclude name="testEventSelectedFiresAndObserversNotified"/>
+                    <exclude name="testFireContainerLifecycleEvent"/>
+                    <exclude name="testInjectedAnyEventCanFireEvent"/>
+                    <exclude name="testInjectedEventAcceptsEventObject"/>
+                    <exclude name="testInjectedEventCanHaveBindings"/>
+                    <exclude name="testInjectedEventCanSpecifyBindingsDynamically"/>
+                    <exclude name="testTypeVariableEventTypeFails"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest">
+                <methods>
+                    <exclude name="testEventTypeIsArray"/>
+                    <exclude name="testEventTypeIsConcreteTypeWithNoTypeVariables"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.bindings.broken.InvalidTransitiveInterceptorBindingAnnotationsTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.bindings.overriding.InterceptorBindingOverridingTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest">
+                <methods>
+                    <exclude name="testAsyncConditionalObserver"/>
+                    <exclude name="testConditionalObserver"/>
+                    <exclude name="testConditionalObserverMethodNotInvokedIfNoActiveContext"/>
+                    <exclude name="testObserverMethodInvokedOnReturnedInstanceFromContext"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.metadata.broken.initializer.InvalidEventMetadataInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.raw.RawEventDisposerInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.raw.RawEventInitMethodInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.raw.RawEventFieldInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.raw.RawEventConstructorInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.raw.RawEventProducerMethodInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.raw.RawEventObserverInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.observer.dependentIsConditionalObserver.DependentIsConditionalObserverTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.observer.tooManyParameters.ObserverMethodWithObservesAndObservesAsyncParametersTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.observer.tooManyParameters.ObserverMethodWithTwoEventParametersTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.observer.inject.DeploymentFailureTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.observer.beanNotManaged.ObserverMethodOnIncorrectBeanTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.observer.isProducer.ObserverMethodAnnotatedProducesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.observer.isDisposer.ObserverMethodAnnotatedDisposesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.broken.observer.bothObservesAnnotations.ObserverMethodParameterAnnotatedAsSyncAndAsyncTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest">
+                <methods>
+                    <exclude name="testEventObjectTypeUsed"/>
+                    <exclude
+                            name="testSelectedEventTypeCombinedWithEventObjectRuntimeTypeForResolvingEventTypeArguments"/>
+                    <exclude name="testSelectedEventTypeUsedForResolvingEventTypeArguments"/>
+                    <exclude name="testSelectedEventTypeUsedForResolvingEventTypeArguments2"/>
+                    <exclude name="testUnresolvedTypeVariableDetected1"/>
+                    <exclude name="testUnresolvedTypeVariableDetected2"/>
+                    <exclude name="testUnresolvedTypeVariableDetected3"/>
+                    <exclude name="testWildcardIsResolvable"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest">
+                <methods>
+                    <exclude name="testFireEventWithNonBindingAnnotationsFails"/>
+                    <exclude name="testNonRuntimeBindingTypeIsNotAnEventBindingType"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.select.SelectEventTest">
+                <methods>
+                    <exclude name="testEventSelectReturnsEventOfSameType"/>
+                    <exclude name="testEventSelectThrowsExceptionIfAnnotationIsNotBindingType"/>
+                    <exclude name="testEventSelectThrowsExceptionIfEventTypeHasTypeVariable"/>
+                    <exclude name="testEventSelectWithSubtypeThrowsExceptionIfAnnotationIsNotBindingType"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest">
+                <methods>
+                    <exclude name="testImplicitEventHasImplementation"/>
+                    <exclude name="testImplicitEventIsPassivationCapable"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.event.EventTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.full.lookup.injection.visibility.InjectionVisibilityTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.broken.field.InjectedFieldAnnotatedWithProducesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.constructorHasDisposesParameter.ConstructorHasDisposesParameterTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.tooManyInitializerAnnotatedConstructors.TooManyInitializerAnnotatedConstructorsTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.constructorHasObservesParameter.ConstructorHasObservesParameterTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.constructorHasAsyncObservesParameter.ConstructorHasAsyncObservesParameterTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.dependentWithPublicField.DependentWithPublicFieldTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiple.MultipleDisposerMethodsForProducerMethodTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.unresolvedMethod.UnresolvedDisposalMethodDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.producesUnallowed.ProducesUnallowedDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.initializerUnallowed.InitializerUnallowedDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.observes.ObserverParameterUnallowedDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.interceptor.DisposerMethodOnInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.validation.ambiguous.DisposerMethodParameterInjectionValidationTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.validation.unsatisfied.DisposerMethodParameterInjectionValidationTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiParams.MultipleDisposeParametersDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.inheritance.DisposerMethodInheritanceTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.parameters.DisposedParameterPositionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.interceptor.ProducerFieldOnInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.wildcard.ProducerFieldTypeWithWildcardTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.array.ProducerFieldArrayTypeVariableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.array.ProducerFieldArrayWildcardTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.inject.InjectAnnotatedProducerFieldTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.typeVariable.ProducerFieldWithTypeVariableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.typeVariable2.RequestScopedProducerFieldWithTypeVariableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest">
+                <methods>
+                    <exclude name="testCreateFailsIfProducerReturnsNullAndNotDependent"/>
+                    <exclude name="testCreateRethrowsUncheckedException"/>
+                    <exclude name="testCreateReturnsNullIfProducerDoesAndDependent"/>
+                    <exclude name="testCreateWrapsCheckedExceptionAndRethrows"/>
+                    <exclude name="testProducerMethodBeanCreate"/>
+                    <exclude name="testProducerMethodBeanDestroy"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithTypeParameter.ParameterizedReturnTypeWithTypeVariableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithTypeParameter.ParametrizedReturnTypeWithTypeVariable02Test">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithWildcard.ParametrizedTypeWithWildcard02Test">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithWildcard.ParameterizedTypeWithWildcardTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.array.ProducerMethodArrayTypeVariableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.array.ProducerMethodArrayWildcardTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.interceptor.ProducerMethodOnInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterAnnotatedObservesAsync.ParameterAnnotatedAsyncObservesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.typeVariableReturnType.TypeVariableReturnTypeTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterAnnotatedObserves.ParameterAnnotatedObservesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterAnnotatedDisposes.ParameterAnnotatedDisposesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptedBeanTypeParamFieldTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptorTypeParamInitializerTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptedBeanTypeParamConstructorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptorTypeParamConstructorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptedBeanTypeParamInitializerTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.interceptor.InterceptorTypeParamFieldTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamDisposerTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamInitializerTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamConstructorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamProducerTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamFieldTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.intercepted.InterceptedBeanInitializerInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.intercepted.InterceptedBeanFieldInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.intercepted.InterceptedBeanConstructorInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.BuiltinInterceptorInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedObserves.ParameterAnnotatedObservesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedDisposes.ParameterAnnotatedDisposesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedAsyncObserves.ParameterAnnotatedAsyncObservesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.initializer.broken.generic.GenericInitializerMethodTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.initializer.broken.methodAnnotatedProduces.InitializerMethodAnnotatedProducesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.broken.binding.FinalClassWithInheritedStereotypeInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.broken.binding.FinalMethodWithInheritedStereotypeInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.broken.binding.FinalClassWithInheritedClassLevelInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.broken.binding.FinalMethodWithInheritedClassLevelInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest">
+                <methods>
+                    <exclude name="testMethodInterceptorBindingDirectlyInheritedFromManagedBean"/>
+                    <exclude name="testInterceptorBindingDirectlyInheritedFromManagedBean"/>
+                    <exclude name="testInterceptorBindingIndirectlyInheritedFromManagedBean"/>
+                    <exclude name="testMethodInterceptorBindingIndirectlyInheritedFromManagedBean"/>
+                    <exclude name="testMethodInterceptorBindingIndirectlyNotInheritedFromManagedBean"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.interceptorOrder.InterceptorOrderTest">
+                <methods>
+                    <exclude name="testInterceptorsInvocationOrder"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.DependentBeanFinalMethodInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.NormalScopedBeanFinalClassInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.FinalClassClassLevelInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.NormalScopedBeanFinalMethodInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.broken.observer.async.InterceptorWithAsyncObserverMethodTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.broken.observer.InterceptorWithObserverMethodTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.broken.nonDependent.NonDependentInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest">
+                <methods>
+                    <exclude name="testInstanceOfInterceptorForEveryEnabledInterceptor"/>
+                    <exclude name="testInterceptorBindingAnnotation"/>
+                    <exclude name="testInterceptorBindingTypes"/>
+                    <exclude name="testNoBindingTypesToResolveInterceptorsFails"/>
+                    <exclude name="testNonBindingTypeToResolveInterceptorsFails"/>
+                    <exclude name="testResolveInterceptorsReturnsOrderedList"/>
+                    <exclude name="testSameBindingTypesToResolveInterceptorsFails"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest">
+                <methods>
+                    <exclude name="testDisposerMethodsAreIntercepted"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PublicFinalMethodNotProxyableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.NonPrivateNonStaticSuperclassMethodTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PackagePrivateFinalMethodNotProxyableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.ProtectedFinalMethodNotProxyableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.beanConstructor.BeanConstructorWithParametersTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.array.ArrayTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.primitive.UnproxyableTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.privateConstructor.PrivateConstructorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.interceptor.InterceptedBeanProxyTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalClass.FinalClassTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.ClientProxyTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToRawTypeTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.broken.raw.ParameterizedTypesInjectionRawAmbiguousTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dependency.resolution.broken.ambiguous.AmbiguousDependencyTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dependency.resolution.broken.unsatisfied.UnsatisfiedDependencyTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.broken.disposer.DisposerInjectionPointMetadataTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.broken.normal.scope.NormalScopedBeanWithInjectionPoint">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.requiredtype.LegalRequiredTypeTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectableReferenceTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.raw.RawBeanTypeParameterizedRequiredTypeTest">
+                <methods>
+                    <exclude name="testNotAssignableTypeParams"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest">
+                <methods>
+                    <exclude
+                            name="testAssignabilityOfParameterizedTypeWithTypeVariableWithMultipleBoundsToParameterizedTypeWithTypeVariable"/>
+                    <exclude
+                            name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithActualTypes"/>
+                    <exclude
+                            name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithTypeVariable"/>
+                    <exclude
+                            name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcardWithLowerBound"/>
+                    <exclude
+                            name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcards"/>
+                    <exclude
+                            name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcards2"/>
+                    <exclude
+                            name="testAssignabilityOfParameterizedTypeWithTypeVariablesWithMultipleBoundsToParameterizedTypeWithActualTypes"/>
+                    <exclude name="testAssignabilityToRawType"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.interceptor.InterceptorNotResolvedTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.interceptor.InterceptorNotResolvedInterModuleTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.broken.disabled.DisabledBeanNotAvailableForInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.broken.type.variable.TypeVariableInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.primitive.PrimitiveInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.broken.injectionPointWithNamed3.NamedNonFieldInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.broken.injectionPointWithNamed.NamedNonFieldInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.broken.prefix.ExpandedNamePrefixTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.broken.prefix.NamePrefixTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.broken.prefix.ExpandedNamePrefix2Test">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.broken.injectionPointWithNamed2.NamedNonFieldInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.broken.duplicity.DuplicitNameTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.byname.ResolutionByNameTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceDisposerInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceInitMethodInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceObserverInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceProducerMethodInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceFieldInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceConstructorInjectionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.handle.InstanceHandleTest">
+                <methods>
+                    <exclude name="testGetAfterDestroyingContextualInstance"/>
+                    <exclude name="testGetHandle"/>
+                    <exclude name="testHandles"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.dependent.DestroyingDependentInstanceTest">
+                <methods>
+                    <exclude name="testDestroyingDependentInstances"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.normal.DestroyingNormalScopedInstanceTest">
+                <methods>
+                    <exclude name="testApplicationScopedComponent"/>
+                    <exclude name="testRequestScopedComponent"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest">
+                <methods>
+                    <exclude name="testAlternatives"/>
+                    <exclude name="testAmbiguousDependencyThrowsException"/>
+                    <exclude name="testDuplicateBindingsThrowsException"/>
+                    <exclude name="testIsAmbiguous"/>
+                    <exclude name="testIsUnsatisfied"/>
+                    <exclude name="testNonBindingThrowsException"/>
+                    <exclude name="testUnsatisfiedDependencyThrowsException"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest">
+                <methods>
+                    <exclude name="testGetReferenceWithIllegalBeanType"/>
+                    <exclude name="testManagerBeanHasCurrentBinding"/>
+                    <exclude name="testManagerBeanIsDependentScoped"/>
+                    <exclude name="testManagerBeanIsPassivationCapable"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.discovery.trimmed.TrimmedBeanArchiveSETest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveWithSystemPropertyTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.discovery.implicit.ImplicitBeanArchiveSETest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.container.contextualReference.InvalidContextualReferenceTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.container.BootstrapSEContainerTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.container.customClassloader.CustomClassLoaderSETest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.context.custom.CustomRequestContextSETest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.context.activation.interceptor.ActivateRequestContextByInterceptorTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.context.activation.programmatic.ActivateRequestContextProgrammaticallyTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.context.ContextSETest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.context.request.RequestContextTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.se.customCDIProvider.CustomCDIProviderTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.vetoed.VetoedTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <!--            Extensions-->
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeObserverQualifier.ChangeObserverQualifierTest">
+                <methods>
+                    <exclude name="test"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeBeanQualifier.ChangeBeanQualifierTest">
+                <methods>
+                    <exclude name="test"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customStereotype.CustomStereotypeTest">
+                <methods>
+                    <exclude name="test"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyMessagesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementMultipleParams2Test">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParams2Test">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationNoParamTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyMessagesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyTypesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementMultipleParamsTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementNoParamTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParamsTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyTypesTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBean.SyntheticBeanTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBeanWithLookup.SyntheticBeanWithLookupTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBeanInjectionPoint.SyntheticBeanInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserverOfParameterizedType.SyntheticObserverOfParameterizedTypeTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeInjectionPoint.ChangeInjectionPointTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.validation.ValidationTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customInterceptorBinding.CustomInterceptorBindingTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserver.SyntheticObserverTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+<!--            Bean container-->
+            <class name="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest">
+                <methods>
+                    <exclude name="testGetBeans"/>
+                    <exclude name="testGetBeansDoesNotResolveAlternatives"/>
+                    <exclude name="testNonBindingType"/>
+                    <exclude name="testNoBindingImpliesCurrent"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest">
+                <methods>
+                    <exclude name="testAmbiguousDependencyNotResolved"/>
+                    <exclude name="testAmbiguousDependencyResolved"/>
+                    <exclude name="testDetermineScope"/>
+                    <exclude name="testResolveWithEmptySet"/>
+                    <exclude name="testResolveWithNull"/>
+                </methods>
+            </class>
         </classes>
 
     </test>
