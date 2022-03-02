@@ -21,6 +21,7 @@ import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InterceptorBinding;
 
 import java.util.List;
@@ -32,6 +33,11 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Interceptor
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
+        if (element.isAnnotationPresent(Interceptor.class)) {
+            // We are only interested in intercepted classes
+            return;
+        }
+
         List<MethodElement> methods = element.getEnclosedElements(
                 ElementQuery.ALL_METHODS
                         .onlyInstance()
@@ -46,28 +52,6 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Interceptor
                         .member("proxyTarget", true)
                         .member("cacheableLazyTarget", true).build();
             });
-//            @Override
-//            public void visitClass(ClassElement element, VisitorContext context) {
-//                final MethodElement constructor = element.getPrimaryConstructor().orElse(null);
-//                if (constructor != null) {
-//                    final List<AnnotationValue<io.micronaut.aop.InterceptorBinding>> interceptorBindings
-//                            = constructor.getAnnotationValuesByType(io.micronaut.aop.InterceptorBinding.class);
-//                    if (CollectionUtils.isNotEmpty(interceptorBindings)) {
-//                        // declare binding on type level for constructor binding as well
-//                        for (AnnotationValue<?> value : interceptorBindings) {
-//                            value.stringValue().ifPresent(n -> {
-//                                element.annotate(value);
-//                                if (!element.hasStereotype(Around.class)) {
-//                                    element.annotate(Around.class, (builder) -> {
-//                                        builder.member("proxyTarget", true);
-//                                        builder.member("cacheableLazyTarget", true);
-//                                    });
-//                                }
-//                            });
-//                        }
-//                    }
-//                }
-//            }
         }
     }
 
