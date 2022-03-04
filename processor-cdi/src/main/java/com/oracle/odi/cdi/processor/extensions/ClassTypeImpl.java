@@ -25,7 +25,7 @@ final class ClassTypeImpl extends AnnotationTargetImpl implements jakarta.enterp
     private final VisitorContext visitorContext;
 
     ClassTypeImpl(ClassElement element, Types types, VisitorContext visitorContext) {
-        super(element, types);
+        super(element, types, visitorContext);
         this.visitorContext = visitorContext;
     }
 

@@ -15,14 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.OptionalInt;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Order;
@@ -40,6 +32,7 @@ import jakarta.enterprise.inject.build.compatible.spi.DisposerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InjectionPointInfo;
 import jakarta.enterprise.inject.build.compatible.spi.ScopeInfo;
 import jakarta.enterprise.inject.build.compatible.spi.StereotypeInfo;
+import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
@@ -47,14 +40,23 @@ import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.interceptor.Interceptor;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.OptionalInt;
+import java.util.stream.Collectors;
+
 final class BeanInfoImpl implements BeanInfo {
     private final BeanElement beanElement;
     private final VisitorContext visitorContext;
+    private final Types types;
     private final ClassInfoImpl classInfo;
 
     BeanInfoImpl(BeanElement beanElement, VisitorContext visitorContext) {
         this.beanElement = beanElement;
         this.visitorContext = visitorContext;
+        this.types = new TypesImpl(visitorContext);
         this.classInfo = new ClassInfoImpl(beanElement.getDeclaringClass(), new TypesImpl(visitorContext), visitorContext);
     }
 
@@ -105,14 +107,11 @@ final class BeanInfoImpl implements BeanInfo {
     private List<AnnotationInfo> annotationNamesToInfo(
             Element element, Collection<String> qualifiers) {
         if (!qualifiers.isEmpty()) {
-            return qualifiers.stream().flatMap(n ->
-                visitorContext.getClassElement(n).map(Stream::of).orElse(Stream.empty())
-            ).map(classElement -> {
-                final AnnotationValue<Annotation> annotation =
-                        element.getAnnotation(classElement.getName());
-                return new AnnotationInfoImpl(
-                        annotation
-                );
+            return qualifiers.stream()
+                    .flatMap(n -> visitorContext.getClassElement(n).stream())
+                    .map(classElement -> {
+                final AnnotationValue<Annotation> annotation = element.getAnnotation(classElement.getName());
+                return new AnnotationInfoImpl(types, visitorContext, annotation);
             }).collect(Collectors.toUnmodifiableList());
         }
         return Collections.emptyList();

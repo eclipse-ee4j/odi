@@ -26,7 +26,7 @@ final class ArrayTypeImpl extends AnnotationTargetImpl implements ArrayType {
     private final VisitorContext visitorContext;
 
     ArrayTypeImpl(ClassElement element, Types types, VisitorContext visitorContext) {
-        super(element, types);
+        super(element, types, visitorContext);
         this.arrayElement = element;
         this.visitorContext = visitorContext;
     }

@@ -15,9 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
-
 import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -29,6 +26,9 @@ import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.types.PrimitiveType;
 import jakarta.enterprise.lang.model.types.Type;
+
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
 
 final class AnnotationBuilderImpl implements AnnotationBuilder {
     private final AnnotationValueBuilder<?> builder;
@@ -263,17 +263,12 @@ final class AnnotationBuilderImpl implements AnnotationBuilder {
 
     @Override
     public AnnotationBuilder member(String name, Annotation... values) {
-        builder.member(
-                name,
-                Arrays.stream(values).map(AnnotationReflection::toAnnotationValue).toArray(AnnotationValue[]::new)
-        );
+        builder.member(name, Arrays.stream(values).map(AnnotationReflection::toAnnotationValue).toArray(AnnotationValue[]::new));
         return this;
     }
 
     @Override
     public AnnotationInfo build() {
-        return new AnnotationInfoImpl(
-                builder.build()
-        );
+        return new AnnotationInfoImpl(builder.build());
     }
 }

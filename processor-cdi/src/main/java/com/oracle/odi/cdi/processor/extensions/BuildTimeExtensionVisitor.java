@@ -43,6 +43,12 @@ import jakarta.inject.Scope;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 
+import java.lang.annotation.Annotation;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * A {@link io.micronaut.inject.visitor.TypeElementVisitor} that implements the build time extension specification.
  */

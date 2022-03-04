@@ -1,1 +1,2 @@
 com.oracle.odi.cdi.processor.extensions.BuildCompatibleFaultToleranceExtension
+com.oracle.odi.cdi.processor.extensions.LangModelVerifierExtension

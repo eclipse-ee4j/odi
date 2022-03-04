@@ -15,8 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.util.Objects;
-
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.PrimitiveElement;
 import io.micronaut.inject.visitor.VisitorContext;
@@ -30,13 +28,15 @@ import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.VoidType;
 import jakarta.enterprise.lang.model.types.WildcardType;
 
+import java.util.Objects;
+
 final class TypesImpl implements Types {
     private final VisitorContext visitorContext;
     private final VoidTypeImpl voidType;
 
     TypesImpl(VisitorContext visitorContext) {
         this.visitorContext = visitorContext;
-        this.voidType = new VoidTypeImpl(PrimitiveElement.VOID, this);
+        this.voidType = new VoidTypeImpl(PrimitiveElement.VOID, this, visitorContext);
     }
 
     @Override
@@ -58,14 +58,14 @@ final class TypesImpl implements Types {
     @Override
     public PrimitiveType ofPrimitive(PrimitiveType.PrimitiveKind kind) {
         switch (kind) {
-            case BOOLEAN: return new PrimitiveTypeImpl(PrimitiveElement.BOOLEAN, this);
-            case BYTE: return new PrimitiveTypeImpl(PrimitiveElement.BYTE, this);
-            case CHAR: return new PrimitiveTypeImpl(PrimitiveElement.CHAR, this);
-            case DOUBLE: return new PrimitiveTypeImpl(PrimitiveElement.DOUBLE, this);
-            case FLOAT: return new PrimitiveTypeImpl(PrimitiveElement.FLOAT, this);
-            case INT: return new PrimitiveTypeImpl(PrimitiveElement.INT, this);
-            case LONG: return new PrimitiveTypeImpl(PrimitiveElement.LONG, this);
-            case SHORT: return new PrimitiveTypeImpl(PrimitiveElement.SHORT, this);
+            case BOOLEAN: return new PrimitiveTypeImpl(PrimitiveElement.BOOLEAN, this, visitorContext);
+            case BYTE: return new PrimitiveTypeImpl(PrimitiveElement.BYTE, this, visitorContext);
+            case CHAR: return new PrimitiveTypeImpl(PrimitiveElement.CHAR, this, visitorContext);
+            case DOUBLE: return new PrimitiveTypeImpl(PrimitiveElement.DOUBLE, this, visitorContext);
+            case FLOAT: return new PrimitiveTypeImpl(PrimitiveElement.FLOAT, this, visitorContext);
+            case INT: return new PrimitiveTypeImpl(PrimitiveElement.INT, this, visitorContext);
+            case LONG: return new PrimitiveTypeImpl(PrimitiveElement.LONG, this, visitorContext);
+            case SHORT: return new PrimitiveTypeImpl(PrimitiveElement.SHORT, this, visitorContext);
             default:
                 throw new IllegalStateException("Unsupported primitive type: " + kind);
         }
@@ -74,8 +74,7 @@ final class TypesImpl implements Types {
 
     @Override
     public ClassType ofClass(String name) {
-        final ClassElement classElement =
-                visitorContext.getClassElement(name).orElse(null);
+        final ClassElement classElement = visitorContext.getClassElement(name).orElse(null);
         if (classElement == null) {
             throw new IllegalStateException("Type does not exist on the application classpath: " + name);
         }

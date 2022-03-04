@@ -1,7 +1,7 @@
 description = 'ODI CDI Test'
 
 dependencies {
-    implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.0.Alpha2'
+    implementation "jakarta.enterprise:jakarta.enterprise.cdi-api:$cdiApiVersion"
     implementation 'io.micronaut:micronaut-inject'
     implementation 'io.micronaut.test:micronaut-test-junit5'
     implementation 'io.micronaut:micronaut-aop'

@@ -1,8 +1,10 @@
 package com.oracle.odi.cdi.annotation.type
 
 import com.oracle.odi.cdi.processor.extensions.TypeFactory
+import com.oracle.odi.cdi.processor.extensions.VoidTypeImpl
 import io.micronaut.annotation.processing.test.AbstractTypeElementSpec
 import io.micronaut.inject.ast.ClassElement
+import io.micronaut.inject.ast.PrimitiveElement
 import io.micronaut.inject.visitor.VisitorContext
 import jakarta.enterprise.inject.build.compatible.spi.Types
 import jakarta.enterprise.lang.model.declarations.ClassInfo
@@ -40,8 +42,10 @@ final class Test {
 
         when:
         def mock = Mock(VisitorContext)
+        def types = Mock(Types)
+        types.ofVoid() >> new VoidTypeImpl(PrimitiveElement.VOID, types, mock)
         mock.getClassElement('test.Test') >> Optional.of(classElement)
-        Type type = TypeFactory.createType(classElement, Mock(Types), mock)
+        Type type = TypeFactory.createType(classElement, types, mock)
 
         then:
         type instanceof ClassType

@@ -15,15 +15,7 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.PackageElement;
 import io.micronaut.inject.visitor.VisitorContext;
@@ -36,23 +28,31 @@ import jakarta.enterprise.lang.model.declarations.RecordComponentInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.TypeVariable;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
     private final ClassElement classElement;
     private final VisitorContext visitorContext;
 
     ClassInfoImpl(ClassElement element, Types types, VisitorContext visitorContext) {
-        super(element, types);
+        super(element, types, visitorContext);
         this.classElement = element;
         this.visitorContext = visitorContext;
     }
 
     @Override
+    public ClassInfo asClass() {
+        return this;
+    }
+
+    @Override
     public Type asType() {
-        return TypeFactory.createType(
-                classElement,
-                getTypes(),
-                visitorContext
-        );
+        return TypeFactory.createType(classElement, getTypes(), visitorContext);
     }
 
     @Override
@@ -73,7 +73,7 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
     @Override
     public PackageInfo packageInfo() {
         PackageElement aPackage = classElement.getPackage();
-        return new PackageInfoImpl(aPackage, types);
+        return new PackageInfoImpl(aPackage, types, visitorContext);
     }
 
     @Override
@@ -82,20 +82,16 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
         if (typeArguments.isEmpty()) {
             return Collections.emptyList();
         } else {
-            return typeArguments.entrySet().stream().map(entry ->
-                new TypeVariableImpl(entry.getKey(), entry.getValue(), visitorContext, getTypes())
-            ).collect(Collectors.toUnmodifiableList());
+            return typeArguments.values().stream()
+                    .map(v -> TypeFactory.createTypeVariable(v, types, visitorContext))
+                    .collect(Collectors.toUnmodifiableList());
         }
     }
 
     @Override
     public Type superClass() {
         return classElement.getSuperType()
-                .map(e -> TypeFactory.createType(
-                        e,
-                        types,
-                        visitorContext
-                ))
+                .map(e -> TypeFactory.createType(e, types, visitorContext))
                 .orElse(null);
     }
 
@@ -118,12 +114,12 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
     @Override
     public List<ClassInfo> superInterfacesDeclarations() {
         return superInterfaces().stream().map(t -> t.asDeclaration().asClass())
-                    .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public boolean isPlainClass() {
-        return classElement.getFirstTypeArgument().isEmpty();
+        return !isInterface() && !isEnum() && !isAnnotation() && !isRecord();
     }
 
     @Override
@@ -163,26 +159,24 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
 
     @Override
     public Collection<MethodInfo> constructors() {
-        return classElement.getEnclosedElements(ElementQuery.of(ConstructorElement.class))
-                .stream().map(methodElement ->
-                      new MethodInfoImpl(this, methodElement, types, visitorContext)
-                )
+        return classElement.getEnclosedElements(ElementQuery.CONSTRUCTORS)
+                .stream().map(methodElement -> new MethodInfoImpl(this, methodElement, types, visitorContext))
                 .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public Collection<MethodInfo> methods() {
-        return classElement.getEnclosedElements(ElementQuery.ALL_METHODS)
-                    .stream().map(methodElement ->
-                          new MethodInfoImpl(this, methodElement, types, visitorContext)
-                )
+        return classElement.getEnclosedElements(ElementQuery.ALL_METHODS.includeOverriddenMethods().includeHiddenElements())
+                .stream()
+                .map(methodElement -> new MethodInfoImpl(getDeclaringType(methodElement.getDeclaringType()), methodElement, types, visitorContext))
                 .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public Collection<FieldInfo> fields() {
-        return classElement.getEnclosedElements(ElementQuery.ALL_FIELDS)
-                    .stream().map(fieldElement -> new FieldInfoImpl(this, fieldElement, types, visitorContext))
+        return classElement.getEnclosedElements(ElementQuery.ALL_FIELDS.includeEnumConstants().includeHiddenElements())
+                .stream()
+                .map(fieldElement -> new FieldInfoImpl(getDeclaringType(fieldElement.getDeclaringType()), fieldElement, types, visitorContext))
                 .collect(Collectors.toUnmodifiableList());
     }
 
@@ -190,6 +184,16 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
     public Collection<RecordComponentInfo> recordComponents() {
         // TODO
         return Collections.emptyList();
+    }
+
+    private ClassInfoImpl getDeclaringType(ClassElement declaringType) {
+        ClassInfoImpl declaringClassInfo;
+        if (classElement.equals(declaringType)) {
+            declaringClassInfo = this;
+        } else {
+            declaringClassInfo = new ClassInfoImpl(declaringType, types, visitorContext);
+        }
+        return declaringClassInfo;
     }
 
     @Override

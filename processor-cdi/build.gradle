@@ -12,4 +12,15 @@ dependencies {
     testImplementation 'io.helidon.config:helidon-config-mp:2.3.2'
     testImplementation 'io.smallrye:smallrye-fault-tolerance:5.1.0'
     testImplementation 'javax.enterprise:cdi-api:2.0.SP1'
+    testImplementation "jakarta.enterprise:cdi-tck-lang-model:$cdiTckApi"
+
+    implementation "jakarta.enterprise:cdi-tck-lang-model:$cdiTckApi"
+}
+
+tasks.withType(JavaCompile).all { JavaCompile jc ->
+    jc.options.forkOptions.jvmArgs += "-ea"
+}
+
+tasks.withType(GroovyCompile).all { GroovyCompile gc ->
+    gc.options.forkOptions.jvmArgs += "-ea"
 }

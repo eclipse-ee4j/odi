@@ -16,6 +16,7 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.types.PrimitiveType;
 
@@ -25,8 +26,8 @@ final class PrimitiveTypeImpl extends AnnotationTargetImpl implements PrimitiveT
 
     private final ClassElement classElement;
 
-    PrimitiveTypeImpl(ClassElement element, Types types) {
-        super(element, types);
+    PrimitiveTypeImpl(ClassElement element, Types types, VisitorContext visitorContext) {
+        super(element, types, visitorContext);
         this.classElement = element;
     }
 
@@ -37,6 +38,6 @@ final class PrimitiveTypeImpl extends AnnotationTargetImpl implements PrimitiveT
 
     @Override
     public PrimitiveKind primitiveKind() {
-        return PrimitiveKind.valueOf(name().toLowerCase(Locale.ENGLISH));
+        return PrimitiveKind.valueOf(name().toUpperCase(Locale.ENGLISH));
     }
 }

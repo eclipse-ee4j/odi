@@ -15,11 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.VisitorContext;
@@ -30,13 +25,17 @@ import jakarta.enterprise.lang.model.declarations.ParameterInfo;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.TypeVariable;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 final class MethodInfoImpl extends DeclarationInfoImpl implements MethodInfo {
     private final VisitorContext visitorContext;
     private final MethodElement methodElement;
     private final ClassInfoImpl declaringClassInfo;
 
     MethodInfoImpl(ClassInfoImpl declaringClassInfo, MethodElement element, Types types, VisitorContext visitorContext) {
-        super(element, types);
+        super(element, types, visitorContext);
         this.methodElement = element;
         this.visitorContext = visitorContext;
         this.declaringClassInfo = declaringClassInfo;
@@ -53,41 +52,51 @@ final class MethodInfoImpl extends DeclarationInfoImpl implements MethodInfo {
 
     @Override
     public String name() {
+        if (isConstructor()) {
+            return methodElement.getOwningType().getName();
+        }
         return methodElement.getName();
     }
 
     @Override
     public List<ParameterInfo> parameters() {
-        return Arrays.stream(methodElement.getParameters()).map(pe ->
-            new ParameterInfoImpl(this, pe, getTypes(), visitorContext)
-        ).collect(Collectors.toUnmodifiableList());
+        return Arrays.stream(methodElement.getParameters())
+                .map(pe -> new ParameterInfoImpl(this, pe, getTypes(), visitorContext))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public Type returnType() {
-        return TypeFactory.createType(
-                methodElement.getReturnType(),
-                getTypes(),
-                visitorContext
-        );
+        if (isConstructor()) {
+            return declaringClassInfo.asType().asClass();
+        }
+        return TypeFactory.createType(methodElement.getReturnType(), getTypes(), visitorContext);
     }
 
     @Override
     public Type receiverType() {
-        // TODO
-        return null;
+        if (isStatic() || isConstructor()) {
+            return null;
+        }
+        return methodElement.getReceiverType()
+                .map(ce -> TypeFactory.createType(ce, getTypes(), visitorContext))
+                .orElseGet(declaringClassInfo::asType);
+
     }
 
     @Override
     public List<Type> throwsTypes() {
-        // TODO
-        return Collections.emptyList();
+        return Arrays.stream(methodElement.getThrownTypes())
+                .map(ce -> TypeFactory.createType(ce, getTypes(), visitorContext))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public List<TypeVariable> typeParameters() {
-        // TODO
-        return Collections.emptyList();
+        return methodElement.getDeclaredTypeVariables()
+                .stream()
+                .map(ce -> TypeFactory.createTypeVariable(ce, getTypes(), visitorContext))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override

@@ -15,13 +15,16 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.WildcardElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.ParameterizedType;
 import jakarta.enterprise.lang.model.types.Type;
@@ -32,7 +35,7 @@ final class ParameterizedTypeImpl extends AnnotationTargetImpl implements Parame
     private final ClassElement classElement;
 
     ParameterizedTypeImpl(ClassElement element, Types types, VisitorContext visitorContext) {
-        super(element, types);
+        super(element, types, visitorContext);
         this.visitorContext = visitorContext;
         this.classElement = element;
     }
@@ -47,15 +50,33 @@ final class ParameterizedTypeImpl extends AnnotationTargetImpl implements Parame
     }
 
     @Override
+    public DeclarationInfo asDeclaration() {
+        return asClass().asDeclaration();
+    }
+
+    @Override
+    public ClassType asClass() {
+        return new ClassTypeImpl(classElement, types, visitorContext);
+    }
+
+    @Override
     public ClassType genericClass() {
         return declaration().asType().asClass();
     }
 
     @Override
     public List<Type> typeArguments() {
-        // TODO: nested parameter types, type variables etc.
-        return classElement.getTypeArguments().values()
-                .stream().map(ce -> TypeFactory.createType(classElement, getTypes(), visitorContext))
-                .collect(Collectors.toUnmodifiableList());
+        List<? extends ClassElement> boundGenericTypes = classElement.getBoundGenericTypes();
+        List<Type> list = new ArrayList<>();
+        for (ClassElement ce : boundGenericTypes) {
+            Type type;
+            if (ce.isWildcard()) {
+                type = TypeFactory.createWildType((WildcardElement) ce, getTypes(), visitorContext, classElement, boundGenericTypes.indexOf(ce));
+            } else {
+                type = TypeFactory.createType(ce, getTypes(), visitorContext);
+            }
+            list.add(type);
+        }
+        return Collections.unmodifiableList(list);
     }
 }

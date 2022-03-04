@@ -15,26 +15,45 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationMember;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
 class AnnotationInfoImpl implements AnnotationInfo {
+    @Nullable
+    private final Types types;
+    @Nullable
+    private final VisitorContext visitorContext;
     private final AnnotationValue<?> annotationValue;
 
     protected AnnotationInfoImpl(AnnotationValue<?> annotationValue) {
+        this(null, annotationValue);
+    }
+
+    protected AnnotationInfoImpl(VisitorContext visitorContext, AnnotationValue<?> annotationValue) {
+        this.types = visitorContext == null ? null : new TypesImpl(visitorContext);
+        this.visitorContext = visitorContext;
+        this.annotationValue = annotationValue;
+    }
+
+    protected AnnotationInfoImpl(Types types, VisitorContext visitorContext, AnnotationValue<?> annotationValue) {
+        this.types = types;
+        this.visitorContext = visitorContext;
         this.annotationValue = annotationValue;
     }
 
     @Override
     public ClassInfo declaration() {
-        VisitorContext visitorContext = ActiveVisitorContext.currentVisitorContext();
+        VisitorContext visitorContext = this.visitorContext == null ? ActiveVisitorContext.currentVisitorContext() : this.visitorContext;
+        Types types = this.types == null ? new TypesImpl(visitorContext) : this.types;
         ClassElement classElement = visitorContext.getClassElement(annotationValue.getAnnotationName()).orElse(null);
         if (classElement == null) {
             final String message = "The declaration for annotation ["
@@ -42,11 +61,7 @@ class AnnotationInfoImpl implements AnnotationInfo {
                     + "] cannot be retrieved because the type does not exist on the application classpath";
             throw new IllegalStateException(message);
         }
-        return new ClassInfoImpl(
-                classElement,
-                new TypesImpl(visitorContext),
-                visitorContext
-        );
+        return new ClassInfoImpl(classElement, types, visitorContext);
     }
 
     @Override
@@ -56,13 +71,14 @@ class AnnotationInfoImpl implements AnnotationInfo {
 
     @Override
     public boolean hasMember(String name) {
-        return annotationValue.contains(name);
+        return annotationValue.get(name, Object.class).isPresent();
     }
 
     @Override
     public AnnotationMember member(String name) {
-        final Object v = annotationValue.getValues().get(name);
-        return new AnnotationMemberImpl(v);
+        return annotationValue.get(name, Object.class)
+                .map(val -> new AnnotationMemberImpl(types, visitorContext, annotationValue.getAnnotationName(), name, val))
+                .orElse(null);
     }
 
     @Override
@@ -70,7 +86,7 @@ class AnnotationInfoImpl implements AnnotationInfo {
         return annotationValue.getValues().entrySet()
                 .stream().collect(Collectors.toMap(
                         (entry) -> entry.getKey().toString(),
-                        (entry) -> new AnnotationMemberImpl(entry.getValue())
+                        (entry) -> new AnnotationMemberImpl(types, visitorContext, annotationValue.getAnnotationName(), entry.getKey().toString(), entry.getValue())
                 ));
     }
 

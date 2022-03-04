@@ -32,7 +32,7 @@ final class ParameterInfoImpl extends AnnotationTargetImpl implements ParameterI
                              ParameterElement parameterElement,
                              Types types,
                              VisitorContext visitorContext) {
-        super(parameterElement, types);
+        super(parameterElement, types, visitorContext);
         this.methodInfo = methodInfo;
         this.parameterElement = parameterElement;
         this.visitorContext = visitorContext;

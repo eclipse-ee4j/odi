@@ -102,7 +102,7 @@ final class ClassConfigImpl implements ClassConfig, ElementAnnotationConfig {
 
     @Override
     public ClassInfo info() {
-        return null;
+        return classInfo;
     }
 
     @Override

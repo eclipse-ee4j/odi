@@ -15,23 +15,28 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.util.Set;
-
-import javax.lang.model.element.PackageElement;
-
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.ElementModifier;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 
+import javax.lang.model.element.PackageElement;
+import java.util.Set;
+
 class DeclarationInfoImpl extends AnnotationTargetImpl implements DeclarationInfo {
 
-    protected DeclarationInfoImpl(Element element, Types types) {
-        super(element, types);
+    protected DeclarationInfoImpl(Element element, Types types, VisitorContext visitorContext) {
+        super(element, types, visitorContext);
+    }
+
+    @Override
+    public DeclarationInfo asDeclaration() {
+        return this;
     }
 
     @Override

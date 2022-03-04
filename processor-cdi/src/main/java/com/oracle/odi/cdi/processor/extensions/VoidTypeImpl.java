@@ -16,15 +16,14 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import io.micronaut.inject.ast.Element;
-import io.micronaut.inject.ast.PrimitiveElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.types.VoidType;
 
 final class VoidTypeImpl extends AnnotationTargetImpl implements VoidType {
-    static final VoidTypeImpl INSTANCE = new VoidTypeImpl(PrimitiveElement.VOID, null);
 
-    VoidTypeImpl(Element element, Types types) {
-        super(element, types);
+    VoidTypeImpl(Element element, Types types, VisitorContext visitorContext) {
+        super(element, types, visitorContext);
     }
 
     @Override

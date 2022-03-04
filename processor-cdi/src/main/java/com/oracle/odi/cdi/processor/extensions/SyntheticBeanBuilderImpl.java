@@ -55,7 +55,7 @@ final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements 
     SyntheticBeanBuilderImpl(ClassElement element,
                                     Types types,
                                     VisitorContext visitorContext) {
-        super(element, types);
+        super(element, types, visitorContext);
         this.beanType = element;
         this.visitorContext = visitorContext;
     }
