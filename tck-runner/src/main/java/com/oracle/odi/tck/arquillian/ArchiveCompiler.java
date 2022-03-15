@@ -15,11 +15,15 @@
  */
 package com.oracle.odi.tck.arquillian;
 
+import com.oracle.odi.cdi.processor.extensions.BuildTimeExtensionRegistry;
 import io.micronaut.annotation.processing.AggregatingTypeElementVisitorProcessor;
 import io.micronaut.annotation.processing.BeanDefinitionInjectProcessor;
 import io.micronaut.annotation.processing.PackageConfigurationInjectProcessor;
 import io.micronaut.annotation.processing.ServiceDescriptionProcessor;
 import io.micronaut.annotation.processing.TypeElementVisitorProcessor;
+import io.micronaut.core.io.IOUtils;
+import io.micronaut.core.io.service.SoftServiceLoader;
+import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ArchivePath;
@@ -32,15 +36,20 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -119,26 +128,93 @@ final class ArchiveCompiler {
     private void doCompile(Collection<File> testSources, File outputDir) throws DeploymentException, IOException {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        final Map<ArchivePath, Node> extension = deploymentArchive.getContent(object ->
+            object.get().contains("jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension")
+        );
+        boolean hasBuildExtensions = !extension.isEmpty();
         try (StandardJavaFileManager mgr = compiler.getStandardFileManager(diagnostics, null, null)) {
+            final String targetDir = outputDir.getAbsolutePath();
             JavaCompiler.CompilationTask task = compiler.getTask(null, mgr, diagnostics,
-                    Arrays.asList("-d", outputDir.getAbsolutePath(), "-verbose"), null,
-                    mgr.getJavaFileObjectsFromFiles(testSources));
-            task.setProcessors(getAnnotationProcessors());
-
+                                                                 Arrays.asList("-d", targetDir, "-verbose"), null, mgr.getJavaFileObjectsFromFiles(testSources));
+            if (hasBuildExtensions) {
+                // run without processors since extensions have to be applied on the compiled code
+                task.setProcessors(Collections.emptyList());
+            } else {
+                task.setProcessors(getAnnotationProcessors());
+            }
             Boolean success = task.call();
             if (!Boolean.TRUE.equals(success)) {
-                throw new DeploymentException("Compilation failed:\n" + diagnostics.getDiagnostics()
-                        .stream()
-                        .map(it -> {
-                            if (it.getSource() == null) {
-                                return "- " + it.getMessage(Locale.US);
-                            }
-                            Path source = deploymentDir.source.relativize(Paths.get(it.getSource().toUri().getPath()));
-                            return "- " + source + ":" + it.getLineNumber() + " " + it.getMessage(Locale.US);
-                        })
-                        .collect(Collectors.joining("\n")));
+                outputDiagnostics(diagnostics);
+            } else if (hasBuildExtensions) {
+                // now run another task that produces the beans
+                final Map.Entry<ArchivePath, Node> extensionEntry = extension.entrySet().iterator().next();
+                final Node extensionValue = extensionEntry.getValue();
+                final String extensionName = IOUtils.readText(
+                        new BufferedReader(new InputStreamReader(extensionValue.getAsset().openStream()))
+                );
+                String packageName = extensionName.substring(0, extensionName.lastIndexOf('.'));
+
+                final Path applicationSource = setupExtensionCompilation(extensionName, packageName);
+                final JavaCompiler.CompilationTask enhancementTask = compiler.getTask(
+                        null,
+                        mgr,
+                        diagnostics,
+                        Arrays.asList("-d", targetDir, "-verbose", "-Amicronaut.cdi.bean.packages=" + packageName),
+                        null,
+                        mgr.getJavaFileObjectsFromFiles(Collections.singleton(applicationSource.toFile()))
+                );
+
+                ClassLoader classLoader = new DeploymentClassLoader(deploymentDir);
+                SoftServiceLoader<BuildCompatibleExtension> buildExtensionLoader =
+                        SoftServiceLoader.load(BuildCompatibleExtension.class, classLoader);
+                try {
+                    BuildTimeExtensionRegistry.setInstance(new BuildTimeExtensionRegistry() {
+                        @Override
+                        protected SoftServiceLoader<BuildCompatibleExtension> findExtensions() {
+                            return buildExtensionLoader;
+                        }
+                    });
+                } finally {
+
+                    enhancementTask.setProcessors(getAnnotationProcessors());
+                    if (!Boolean.TRUE.equals(enhancementTask.call())) {
+                        outputDiagnostics(diagnostics);
+                    }
+                }
             }
         }
+    }
+
+    private Path setupExtensionCompilation(String extensionName, String packageName) throws IOException {
+
+        final Path applicationSource = deploymentDir.target.resolve(
+                (packageName + ".Application").replace('.', '/') + ".java"
+        );
+        String sourceCode = "package " + packageName + ";\n" +
+        "@jakarta.inject.Singleton class Application {}";
+        Files.write(
+                applicationSource,
+                sourceCode.getBytes(
+                        StandardCharsets.UTF_8)
+        );
+        final Path extensionServiceEntry = deploymentDir.target.resolve(
+                "META-INF/services/jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension");
+        Files.createDirectories(extensionServiceEntry.getParent());
+        Files.write(extensionServiceEntry, extensionName.getBytes(StandardCharsets.UTF_8));
+        return applicationSource;
+    }
+
+    private void outputDiagnostics(DiagnosticCollector<JavaFileObject> diagnostics) throws DeploymentException {
+        throw new DeploymentException("Compilation failed:\n" + diagnostics.getDiagnostics()
+                .stream()
+                .map(it -> {
+                    if (it.getSource() == null) {
+                        return "- " + it.getMessage(Locale.US);
+                    }
+                    Path source = deploymentDir.source.relativize(Paths.get(it.getSource().toUri().getPath()));
+                    return "- " + source + ":" + it.getLineNumber() + " " + it.getMessage(Locale.US);
+                })
+                .collect(Collectors.joining("\n")));
     }
 
     private List<Processor> getAnnotationProcessors() {

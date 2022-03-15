@@ -16,11 +16,13 @@
 package com.oracle.odi.tck.arquillian;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,6 +49,21 @@ final class DeploymentClassLoader extends URLClassLoader {
         }
 
         return result.toArray(new URL[0]);
+    }
+
+    @Override
+    public InputStream getResourceAsStream(String name) {
+        return super.getResourceAsStream(name);
+    }
+
+    @Override
+    public URL getResource(String name) {
+        return super.getResource(name);
+    }
+
+    @Override
+    public Enumeration<URL> getResources(String name) throws IOException {
+        return super.getResources(name);
     }
 
     @Override

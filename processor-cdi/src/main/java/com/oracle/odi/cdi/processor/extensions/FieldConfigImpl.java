@@ -45,17 +45,17 @@ final class FieldConfigImpl implements FieldConfig, ElementAnnotationConfig {
 
     @Override
     public Element getElement() {
-        return null;
+        return fieldInfo.getElement();
     }
 
     @Override
     public VisitorContext getVisitorContext() {
-        return null;
+        return fieldInfo.getVisitorContext();
     }
 
     @Override
     public FieldInfo info() {
-        return null;
+        return fieldInfo;
     }
 
     @Override

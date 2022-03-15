@@ -1319,11 +1319,6 @@
                     <exclude name="test"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeBeanQualifier.ChangeBeanQualifierTest">
-                <methods>
-                    <exclude name="test"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customStereotype.CustomStereotypeTest">
                 <methods>
                     <exclude name="test"/>
@@ -1374,6 +1369,11 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.registration.RegistrationTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyTypesTest">
                 <methods>
                     <exclude name=".*"/>
@@ -1409,12 +1409,22 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customQualifier.CustomQualifierTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customInterceptorBinding.CustomInterceptorBindingTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserver.SyntheticObserverTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.inspectAnnotatedSubtypes.InspectAnnotatedSubtypesTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>

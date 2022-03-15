@@ -49,6 +49,27 @@ tasks.register('fullTckTest', Test) {
     }
 }
 
+tasks.register('singleTest', Test) {
+    scanForTestClasses false
+    useTestNG {
+        suiteXmlBuilder().suite(name: 'Sample Suite') {
+            test(name : 'Sample Test') {
+                classes('') {
+                    'class'(name: 'org.jboss.cdi.tck.tests.build.compatible.extensions.changeBeanQualifier.ChangeBeanQualifierTest') {
+//                        methods() {
+//                            include(name: 'testMultipleConstructorLevelBinding')
+//                        }
+                    }
+                }
+            }
+        }
+        excludeGroups("cdi-full", "javaee-full")
+        systemProperties = [
+                'org.jboss.cdi.tck.libraryDirectory': "${buildDir}/tck-lib",
+        ]
+    }
+}
+
 test {
     scanForTestClasses false
     useTestNG {
