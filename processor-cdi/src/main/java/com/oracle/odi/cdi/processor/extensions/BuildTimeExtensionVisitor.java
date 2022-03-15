@@ -23,7 +23,9 @@ import java.util.Set;
 
 import com.oracle.odi.cdi.processor.InterceptorVisitor;
 import io.micronaut.context.annotation.Executable;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
@@ -31,6 +33,9 @@ import io.micronaut.inject.ast.beans.BeanElementBuilder;
 import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.context.NormalScope;
+import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 
@@ -50,12 +55,12 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
     private final Set<ClassElement> interceptorBindings = new HashSet<>();
     private final Set<ClassElement> qualifiers = new HashSet<>();
     private final Set<ClassElement> stereotypes = new HashSet<>();
-
+    private Set<String> beanPackages = new HashSet<>();
     /**
      * Default constructor.
      */
     public BuildTimeExtensionVisitor() {
-        this.registry = BuildTimeExtensionRegistry.INSTANCE.start();
+        this.registry = BuildTimeExtensionRegistry.getInstance().start();
 
         this.supportedAnnotationNames.add("jakarta.inject.*");
         this.supportedAnnotationNames.add("jakarta.interceptor.*");
@@ -76,6 +81,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         registeredSupportedAnnotations(metaAnnotations.getQualifiers());
         registeredSupportedAnnotations(metaAnnotations.getStereotypes());
         this.hasErrors = this.discovery.hasErrors();
+        this.beanPackages = resolveBeanPackages(visitorContext);
 
         ActiveVisitorContext.setVisitorContext(visitorContext);
         if (hasErrors) {
@@ -90,6 +96,19 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
             buildDiscoveryConfig(visitorContext, meta.getQualifiers(), this.qualifiers);
             buildDiscoveryConfig(visitorContext, meta.getStereotypes(), this.stereotypes);
         }
+    }
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        return Collections.singleton("micronaut.cdi.bean.packages");
+    }
+
+    private Set<String> resolveBeanPackages(VisitorContext visitorContext) {
+        final String packageNames = visitorContext.getOptions().get("micronaut.cdi.bean.packages");
+        if (packageNames != null) {
+            return CollectionUtils.setOf(packageNames.split(","));
+        }
+        return Collections.emptySet();
     }
 
     @Override
@@ -110,31 +129,49 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 final Set<String> scannedClassNames = this.discovery
                         .getScannedClasses()
                         .getScannedClassNames();
+                if (CollectionUtils.isNotEmpty(beanPackages)) {
+                    for (String beanPackage : beanPackages) {
+                        final ClassElement[] classElements = visitorContext.getClassElements(beanPackage,
+                                                                                             Interceptor.class.getName(),
+                                                                                             Scope.class.getName(),
+                                                                                             Qualifier.class.getName(),
+                                                                                             NormalScope.class.getName(),
+                                                                                             AnnotationUtil.SCOPE,
+                                                                                             AnnotationUtil.QUALIFIER);
+                        for (ClassElement classElement : classElements) {
+                            handleScannedClass(visitorContext, classElement);
+                        }
+                    }
+                }
 
                 for (String scannedClassName : scannedClassNames) {
                     visitorContext.getClassElement(scannedClassName).ifPresent((scannedClass) -> {
-                        this.registry.runEnhancement(scannedClass, scannedClass, visitorContext);
-                        if (scannedClass.hasAnnotation(Interceptor.class)) {
-                            final BeanElementBuilder interceptorBuilder = InterceptorVisitor.addInterceptor(
-                                    rootClassElement,
-                                    visitorContext,
-                                    scannedClass
-                            );
-                        }
-
-                        final ElementQuery<MethodElement> executableMethods = ElementQuery.ALL_METHODS
-                                .onlyInstance()
-                                .onlyDeclared()
-                                .onlyConcrete()
-                                .annotated((annotationMetadata -> annotationMetadata.hasAnnotation(Executable.class)));
-                        rootClassElement
-                                .addAssociatedBean(scannedClass)
-                                .withMethods(executableMethods, BeanMethodElement::executable)
-                                .inject();
+                        handleScannedClass(visitorContext, scannedClass);
                     });
                 }
             }
         }
+    }
+
+    private void handleScannedClass(VisitorContext visitorContext, ClassElement scannedClass) {
+        this.registry.runEnhancement(scannedClass, scannedClass, visitorContext);
+        if (scannedClass.hasAnnotation(Interceptor.class)) {
+            final BeanElementBuilder interceptorBuilder = InterceptorVisitor.addInterceptor(
+                    rootClassElement,
+                    visitorContext,
+                    scannedClass
+            );
+        }
+
+        final ElementQuery<MethodElement> executableMethods = ElementQuery.ALL_METHODS
+                .onlyInstance()
+                .onlyDeclared()
+                .onlyConcrete()
+                .annotated((annotationMetadata -> annotationMetadata.hasAnnotation(Executable.class)));
+        rootClassElement
+                .addAssociatedBean(scannedClass)
+                .withMethods(executableMethods, BeanMethodElement::executable)
+                .inject();
     }
 
     @Override

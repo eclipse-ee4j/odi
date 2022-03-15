@@ -38,7 +38,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
         if (firstBean == null) {
             firstBean = beanElement;
         }
-        final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.INSTANCE;
+        final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
         registry.runRegistration(beanElement, visitorContext);
         return beanElement;
     }
@@ -46,7 +46,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
     @Override
     public void finish(VisitorContext visitorContext) {
         ActiveVisitorContext.setVisitorContext(null);
-        final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.INSTANCE;
+        final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
         try {
             if (firstBean != null) {
                 final BeanElement beanElement = this.firstBean;
