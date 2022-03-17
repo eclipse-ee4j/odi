@@ -15,8 +15,7 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import io.micronaut.annotation.processing.visitor.JavaGenericPlaceholderElementHelper;
-import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.annotation.processing.visitor.JavaClassElementHelper;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.ast.PrimitiveElement;
@@ -62,17 +61,14 @@ final class TypeFactory {
     public static WildcardTypeImpl createWildType(WildcardElement classElement, Types types, VisitorContext visitorContext,
                                                   ClassElement rootElement,
                                                   int boundIndex) {
-        boolean isUpperEmpty = JavaGenericPlaceholderElementHelper.isEmptyUpperBoundOfWildcard(rootElement, boundIndex);
-        boolean isLowerEmpty = JavaGenericPlaceholderElementHelper.isEmptyLowerBoundOfWildcard(rootElement, boundIndex);
+        boolean isUpperEmpty = JavaClassElementHelper.isEmptyUpperBoundOfWildcard(rootElement, boundIndex);
+        boolean isLowerEmpty = JavaClassElementHelper.isEmptyLowerBoundOfWildcard(rootElement, boundIndex);
         return new WildcardTypeImpl(classElement, types, visitorContext, isUpperEmpty, isLowerEmpty);
     }
 
-    public static TypeVariable createTypeVariable(ClassElement classElement,
-                                                  Types types,
-                                                  VisitorContext visitorContext) {
-        AnnotationMetadata annotationMetadata = JavaGenericPlaceholderElementHelper.getGenericAnnotationMetadata(classElement, visitorContext);
+    public static TypeVariable createTypeVariable(ClassElement classElement, Types types, VisitorContext visitorContext) {
         GenericPlaceholderElement genericPlaceholderElement = (GenericPlaceholderElement) classElement;
-        return new TypeVariableImpl(genericPlaceholderElement.getVariableName(), genericPlaceholderElement, visitorContext, types, annotationMetadata);
+        return new TypeVariableImpl(genericPlaceholderElement.getVariableName(), genericPlaceholderElement, visitorContext, types);
     }
 
 }

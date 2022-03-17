@@ -15,8 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import io.micronaut.annotation.processing.visitor.JavaGenericPlaceholderElementHelper;
-import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
@@ -31,9 +29,8 @@ final class TypeVariableImpl extends AnnotationTargetImpl implements TypeVariabl
     private final GenericPlaceholderElement classElement;
     private final VisitorContext visitorContext;
 
-    TypeVariableImpl(String name, GenericPlaceholderElement element, VisitorContext visitorContext,
-                     Types types, AnnotationMetadata annotationMetadata) {
-        super(element, annotationMetadata, types, visitorContext);
+    TypeVariableImpl(String name, GenericPlaceholderElement element, VisitorContext visitorContext, Types types) {
+        super(element, types, visitorContext);
         this.name = name;
         this.classElement = element;
         this.visitorContext = visitorContext;
@@ -46,7 +43,6 @@ final class TypeVariableImpl extends AnnotationTargetImpl implements TypeVariabl
 
     @Override
     public List<Type> bounds() {
-        JavaGenericPlaceholderElementHelper.getBounds(classElement, visitorContext);
         return classElement.getBounds()
                 .stream()
                 .map(bound -> TypeFactory.createType(bound, getTypes(), visitorContext))

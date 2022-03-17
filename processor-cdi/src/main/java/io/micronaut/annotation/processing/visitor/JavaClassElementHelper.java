@@ -15,9 +15,11 @@
  */
 package io.micronaut.annotation.processing.visitor;
 
-import java.util.Map;
+import io.micronaut.inject.ast.ClassElement;
 
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
+import java.util.Map;
 
 /**
  * Needs to be addressed in the core.
@@ -34,6 +36,22 @@ public final class JavaClassElementHelper {
     // TODO: Replace with new generics API
     public static Map<String, Map<String, TypeMirror>> getGenericTypeInfo(JavaClassElement classElement) {
         return classElement.getGenericTypeInfo();
+    }
+
+    public static boolean isEmptyUpperBoundOfWildcard(ClassElement classElement, int boundIndex) {
+        if (classElement instanceof JavaClassElement) {
+            WildcardType wildcardType = (WildcardType) ((JavaClassElement) classElement).typeArguments.get(boundIndex);
+            return wildcardType.getExtendsBound() == null;
+        }
+        return false;
+    }
+
+    public static boolean isEmptyLowerBoundOfWildcard(ClassElement classElement, int boundIndex) {
+        if (classElement instanceof JavaClassElement) {
+            WildcardType wildcardType = (WildcardType) ((JavaClassElement) classElement).typeArguments.get(boundIndex);
+            return wildcardType.getSuperBound() == null;
+        }
+        return false;
     }
 
 }

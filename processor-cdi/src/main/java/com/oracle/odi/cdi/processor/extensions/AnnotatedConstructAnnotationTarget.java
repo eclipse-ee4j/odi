@@ -15,7 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import io.micronaut.annotation.processing.visitor.JavaGenericPlaceholderElementHelper;
 import io.micronaut.annotation.processing.visitor.JavaVisitorContext;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.inject.ast.ClassElement;
@@ -38,6 +37,7 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
@@ -70,7 +70,13 @@ final class AnnotatedConstructAnnotationTarget implements AnnotationTarget {
     private List<AnnotationInfo> annotations;
 
     AnnotatedConstructAnnotationTarget(Element element, Types types, JavaVisitorContext visitorContext) {
-        this.annotatedConstruct = (AnnotatedConstruct) JavaGenericPlaceholderElementHelper.getNativeType(element);
+        Object nativeType = element.getNativeType();
+        if (nativeType instanceof TypeVariable) {
+            // TypeVariable getAnnotationMirrors doesn't return anything
+            this.annotatedConstruct = ((TypeVariable) nativeType).asElement();
+        } else {
+            this.annotatedConstruct = (AnnotatedConstruct) nativeType;
+        }
         this.visitorContext = visitorContext;
         this.types = types;
     }

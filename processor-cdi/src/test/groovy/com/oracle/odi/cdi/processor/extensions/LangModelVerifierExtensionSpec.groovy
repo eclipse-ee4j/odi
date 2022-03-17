@@ -5,13 +5,13 @@ import io.micronaut.context.ApplicationContextBuilder
 import io.micronaut.inject.BeanDefinitionReference
 import io.micronaut.inject.provider.JavaxProviderBeanDefinition
 import io.micronaut.inject.visitor.TypeElementVisitor
-import spock.lang.PendingFeature
+import org.jboss.cdi.lang.model.tck.LangModelVerifier
 
 class LangModelVerifierExtensionSpec extends AbstractTypeElementSpec {
 
-    @PendingFeature(reason = "Type annotation tests needs to be disabled")
     void "test lang model extension"() {
         given:
+            LangModelVerifier.EXCLUDE_TYPE_ANNOTATION_CHECKS = true
             LangModelVerifierExtension.enable = true
             def context = buildContext('''
 package testft;
