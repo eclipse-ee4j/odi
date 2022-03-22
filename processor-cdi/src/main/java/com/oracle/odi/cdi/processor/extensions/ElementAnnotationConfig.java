@@ -23,9 +23,13 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.lang.model.element.TypeElement;
+
 import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.inject.annotation.AbstractAnnotationMetadataBuilder;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.processing.JavaModelUtils;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.DeclarationConfig;
 import jakarta.enterprise.lang.model.AnnotationInfo;
@@ -126,15 +130,28 @@ interface ElementAnnotationConfig extends DeclarationConfig, AnnotationTarget {
 
     @Override
     default DeclarationConfig removeAnnotation(Predicate<AnnotationInfo> predicate) {
-        getElement().removeAnnotationIf(annotationValue ->
+        final Element element = getElement();
+        element.removeAnnotationIf(annotationValue ->
                 predicate.test(new AnnotationInfoImpl(annotationValue))
         );
+        final Object nativeType = element.getNativeType();
+        // workaround to Micronaut bug, remove once fixed
+        if (nativeType instanceof javax.lang.model.element.Element) {
+            javax.lang.model.element.Element javaElement = (javax.lang.model.element.Element) nativeType;
+            while (javaElement != null && !(JavaModelUtils.isClassOrInterface(javaElement) || JavaModelUtils.isRecord(javaElement) || JavaModelUtils.isEnum(javaElement))) {
+                javaElement = javaElement.getEnclosingElement();
+            }
+            if (javaElement instanceof TypeElement) {
+                final String declaring = ((TypeElement) javaElement).getQualifiedName().toString();
+                AbstractAnnotationMetadataBuilder.addMutatedMetadata(declaring, nativeType, element.getAnnotationMetadata());
+            }
+        }
         return this;
     }
 
     @Override
     default DeclarationConfig removeAllAnnotations() {
-        getElement().removeAnnotationIf(annotationValue -> true);
+        removeAnnotation(annotationValue -> true);
         return this;
     }
 }
