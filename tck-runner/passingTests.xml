@@ -1314,11 +1314,6 @@
                 </methods>
             </class>
             <!--            Extensions-->
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeObserverQualifier.ChangeObserverQualifierTest">
-                <methods>
-                    <exclude name="test"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customStereotype.CustomStereotypeTest">
                 <methods>
                     <exclude name="test"/>

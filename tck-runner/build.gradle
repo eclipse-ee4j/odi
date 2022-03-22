@@ -55,7 +55,7 @@ tasks.register('singleTest', Test) {
         suiteXmlBuilder().suite(name: 'Sample Suite') {
             test(name : 'Sample Test') {
                 classes('') {
-                    'class'(name: 'org.jboss.cdi.tck.tests.build.compatible.extensions.changeBeanQualifier.ChangeBeanQualifierTest') {
+                    'class'(name: 'org.jboss.cdi.tck.tests.build.compatible.extensions.changeObserverQualifier.ChangeObserverQualifierTest') {
 //                        methods() {
 //                            include(name: 'testMultipleConstructorLevelBinding')
 //                        }

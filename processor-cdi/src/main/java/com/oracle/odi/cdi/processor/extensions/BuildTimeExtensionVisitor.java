@@ -16,12 +16,15 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import com.oracle.odi.cdi.processor.InterceptorVisitor;
+import com.oracle.odi.cdi.processor.ObservesMethodVisitor;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
@@ -34,6 +37,7 @@ import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.context.NormalScope;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
 import jakarta.interceptor.AroundInvoke;
@@ -56,6 +60,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
     private final Set<ClassElement> qualifiers = new HashSet<>();
     private final Set<ClassElement> stereotypes = new HashSet<>();
     private Set<String> beanPackages = new HashSet<>();
+
     /**
      * Default constructor.
      */
@@ -139,7 +144,9 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                                                                                              AnnotationUtil.SCOPE,
                                                                                              AnnotationUtil.QUALIFIER);
                         for (ClassElement classElement : classElements) {
-                            handleScannedClass(visitorContext, classElement);
+                            if (!scannedClassNames.contains(classElement.getName())) {
+                                handleScannedClass(visitorContext, classElement);
+                            }
                         }
                     }
                 }
@@ -168,9 +175,29 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 .onlyDeclared()
                 .onlyConcrete()
                 .annotated((annotationMetadata -> annotationMetadata.hasAnnotation(Executable.class)));
+        final Predicate<MethodElement> isObservesMethod = m ->
+                m.hasParameters() &&
+                Arrays.stream(m.getParameters()).anyMatch(p -> p.hasDeclaredAnnotation(Observes.class)
+        );
+        final ElementQuery<MethodElement> observesMethods = ElementQuery.ALL_METHODS
+                        .onlyInstance()
+                        .filter(isObservesMethod);
         rootClassElement
                 .addAssociatedBean(scannedClass)
                 .withMethods(executableMethods, BeanMethodElement::executable)
+                .withMethods(observesMethods, observesMethod -> {
+                    if (isObservesMethod.test(observesMethod)) {
+                        observesMethod.executable();
+                        observesMethod.annotate(Executable.class, (builder) ->
+                                builder.member("processOnStartup", true)
+                        );
+                        ObservesMethodVisitor.handleObservesMethod(
+                                scannedClass,
+                                observesMethod,
+                                visitorContext
+                        );
+                    }
+                })
                 .inject();
     }
 

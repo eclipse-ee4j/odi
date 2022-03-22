@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
@@ -59,6 +60,16 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
                 return;
             }
         }
+        handleObservesMethod(currentClass, element, context);
+    }
+
+    /**
+     * Ands a method with observes arguments.
+     * @param classElement The declaring class element
+     * @param element The element
+     * @param context The context
+     */
+    public static void handleObservesMethod(ClassElement classElement, MethodElement element, VisitorContext context) {
         final List<ParameterElement> observesParameters = Arrays
                 .stream(element.getParameters())
                 .filter(p -> p.hasDeclaredAnnotation(Observes.class) || p.hasDeclaredAnnotation(ObservesAsync.class))
@@ -66,54 +77,62 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
         if (observesParameters.size() > 1) {
             context.fail("Method cannot have multiple parameters annotated with @Observes or @ObservesAsync.", element);
         } else if (!observesParameters.isEmpty()) {
-            Optional<ParameterElement> observesAnnotated = observesParameters.stream()
-                    .filter(p -> p.hasDeclaredAnnotation(Observes.class))
-                    .findFirst();
-            Optional<ParameterElement> observesAsyncAnnotated = observesParameters.stream()
-                    .filter(p -> p.hasDeclaredAnnotation(ObservesAsync.class))
-                    .findFirst();
-            if (observesAnnotated.isPresent() && observesAsyncAnnotated.isPresent()) {
-                context.fail("Method parameter cannot define both @Observes and @ObservesAsync.", observesAnnotated.get());
-            } else if (element.isPrivate()) {
-                context.fail("Methods with parameters annotated with @Observes cannot be private.", element);
-            } else if (element.isStatic()) {
-                context.fail("Methods with parameters annotated with @Observes cannot be static.", element);
-            } else if (element.isAbstract()) {
-                context.fail("Methods with parameters annotated with @Observes cannot be abstract.", element);
-            } else if (element.hasDeclaredAnnotation(Produces.class)) {
-                context.fail("Methods with parameters annotated with @Observes cannot be annotated with @Produces", element);
-            } else if (element.hasDeclaredAnnotation(Inject.class)) {
-                context.fail("Methods annotated with @Inject cannot define parameters annotated with @Observes", element);
-            } else if (this.currentClass.hasDeclaredAnnotation(Interceptor.class)) {
-                context.fail("Interceptors cannot declare @Observes methods", element);
-            } else {
-                if (!AnnotationUtil.hasBeanDefiningAnnotation(currentClass)) {
-                    currentClass.annotate(ApplicationScoped.class);
-                }
-                element.annotate(ANN_OBSERVES_METHOD, annotationValueBuilder -> {
-                    observesAnnotated.ifPresent(p -> {
-                        annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
-                        p.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
-                            annotationValueBuilder.member("notifyObserver", reception);
-                        });
-                        p.enumValue("during", TransactionPhase.class).ifPresent(during -> {
-                            annotationValueBuilder.member("during", during);
-                        });
-//                        if (p.getAnnotationNamesByStereotype("javax.inject.Qualifier").isEmpty()) {
-//                            p.annotate(Any.class);
-//                        }
-                    });
-                    observesAsyncAnnotated.ifPresent(p -> {
-                        annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
-                        p.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
-                            annotationValueBuilder.member("notifyObserver", reception);
-                        });
-//                        if (p.getAnnotationNamesByStereotype("javax.inject.Qualifier").isEmpty()) {
-//                            p.annotate(Any.class);
-//                        }
-                    });
-                });
+            handleObservesMethod(classElement, element, context, observesParameters);
+        }
+    }
+
+    @Internal
+    private static void handleObservesMethod(ClassElement classElement,
+                                             MethodElement element,
+                                             VisitorContext context,
+                                             List<ParameterElement> observesParameters) {
+        Optional<ParameterElement> observesAnnotated = observesParameters.stream()
+                .filter(p -> p.hasDeclaredAnnotation(Observes.class))
+                .findFirst();
+        Optional<ParameterElement> observesAsyncAnnotated = observesParameters.stream()
+                .filter(p -> p.hasDeclaredAnnotation(ObservesAsync.class))
+                .findFirst();
+        if (observesAnnotated.isPresent() && observesAsyncAnnotated.isPresent()) {
+            context.fail("Method parameter cannot define both @Observes and @ObservesAsync.", observesAnnotated.get());
+        } else if (element.isPrivate()) {
+            context.fail("Methods with parameters annotated with @Observes cannot be private.", element);
+        } else if (element.isStatic()) {
+            context.fail("Methods with parameters annotated with @Observes cannot be static.", element);
+        } else if (element.isAbstract()) {
+            context.fail("Methods with parameters annotated with @Observes cannot be abstract.", element);
+        } else if (element.hasDeclaredAnnotation(Produces.class)) {
+            context.fail("Methods with parameters annotated with @Observes cannot be annotated with @Produces", element);
+        } else if (element.hasDeclaredAnnotation(Inject.class)) {
+            context.fail("Methods annotated with @Inject cannot define parameters annotated with @Observes", element);
+        } else if (classElement.hasDeclaredAnnotation(Interceptor.class)) {
+            context.fail("Interceptors cannot declare @Observes methods", element);
+        } else {
+            if (!AnnotationUtil.hasBeanDefiningAnnotation(classElement)) {
+                classElement.annotate(ApplicationScoped.class);
             }
+            element.annotate(ANN_OBSERVES_METHOD, annotationValueBuilder -> {
+                observesAnnotated.ifPresent(p -> {
+                    annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
+                    p.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
+                        annotationValueBuilder.member("notifyObserver", reception);
+                    });
+                    p.enumValue("during", TransactionPhase.class).ifPresent(during -> {
+                        annotationValueBuilder.member("during", during);
+                    });
+//                        if (p.getAnnotationNamesByStereotype("javax.inject.Qualifier").isEmpty()) {
+//                            p.annotate(Any.class);
+//                        }
+                });
+                observesAsyncAnnotated.ifPresent(p -> {
+                    annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
+                    p.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
+                        annotationValueBuilder.member("notifyObserver", reception);
+                    });
+//                        if (p.getAnnotationNamesByStereotype("javax.inject.Qualifier").isEmpty()) {
+//                            p.annotate(Any.class);
+//                        }
+                });
+            });
         }
     }
 
