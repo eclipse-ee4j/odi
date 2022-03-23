@@ -15,26 +15,22 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.util.Collections;
-import java.util.List;
-
-import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.GenericPlaceholderElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.TypeVariable;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 final class TypeVariableImpl extends AnnotationTargetImpl implements TypeVariable {
     private final String name;
-    private final ClassElement classElement;
+    private final GenericPlaceholderElement classElement;
     private final VisitorContext visitorContext;
 
-    TypeVariableImpl(
-            String name,
-            ClassElement element,
-            VisitorContext visitorContext,
-            Types types) {
-        super(element, types);
+    TypeVariableImpl(String name, GenericPlaceholderElement element, VisitorContext visitorContext, Types types) {
+        super(element, types, visitorContext);
         this.name = name;
         this.classElement = element;
         this.visitorContext = visitorContext;
@@ -47,12 +43,9 @@ final class TypeVariableImpl extends AnnotationTargetImpl implements TypeVariabl
 
     @Override
     public List<Type> bounds() {
-        return Collections.singletonList(
-                TypeFactory.createType(
-                        classElement,
-                        getTypes(),
-                        visitorContext
-                )
-        );
+        return classElement.getBounds()
+                .stream()
+                .map(bound -> TypeFactory.createType(bound, getTypes(), visitorContext))
+                .collect(Collectors.toList());
     }
 }

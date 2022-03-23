@@ -15,27 +15,54 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
+import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.Nullable;
+import io.micronaut.core.util.ArrayUtils;
+import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.inject.build.compatible.spi.Types;
+import jakarta.enterprise.lang.model.AnnotationInfo;
+import jakarta.enterprise.lang.model.AnnotationMember;
+import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.types.Type;
+
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.micronaut.core.annotation.AnnotationClassValue;
-import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.core.util.ArrayUtils;
-import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.lang.model.AnnotationInfo;
-import jakarta.enterprise.lang.model.AnnotationMember;
-import jakarta.enterprise.lang.model.declarations.ClassInfo;
-import jakarta.enterprise.lang.model.types.Type;
-
 final class AnnotationMemberImpl implements AnnotationMember {
+    @Nullable
+    private final Types types;
+    @Nullable
+    private final VisitorContext visitorContext;
+    private final String annotationName;
+    private final String name;
     private final Object val;
+    private ClassElement enumType;
 
-    AnnotationMemberImpl(Object val) {
+    AnnotationMemberImpl(Types types, VisitorContext visitorContext, String annotationName, String name, Object val) {
+        this.types = types;
+        this.visitorContext = visitorContext;
+        this.annotationName = annotationName;
+        this.name = name;
         this.val = val;
+    }
+
+    private ClassElement getEnumType() {
+        if (enumType == null) {
+            VisitorContext visitorContext = this.visitorContext == null ? ActiveVisitorContext.currentVisitorContext() : this.visitorContext;
+            ClassElement classElement = visitorContext.getClassElement(annotationName).orElse(null);
+            ClassElement returnType = classElement.getEnclosedElement(ElementQuery.ALL_METHODS.named(n -> n.equals(name))).get().getReturnType();
+            if (returnType.isEnum()) {
+                enumType = returnType;
+            }
+
+        }
+        return enumType;
     }
 
     @Override
@@ -61,22 +88,21 @@ final class AnnotationMemberImpl implements AnnotationMember {
         if (val instanceof Boolean) {
             return Kind.BOOLEAN;
         }
-        if (val instanceof String) {
-            return Kind.STRING;
-        }
         if (val instanceof AnnotationValue) {
             return Kind.NESTED_ANNOTATION;
         }
         if (val instanceof Class || val instanceof AnnotationClassValue) {
             return Kind.CLASS;
         }
-        if (val instanceof Enum) {
-            return Kind.ENUM;
-        }
         if (val instanceof Character) {
             return Kind.CHAR;
         }
-
+        if (val instanceof Enum || visitorContext != null && getEnumType() != null) {
+            return Kind.ENUM;
+        }
+        if (val instanceof String) {
+            return Kind.STRING;
+        }
         throw new IllegalStateException("Unknown kind " + val.getClass());
     }
 
@@ -156,7 +182,11 @@ final class AnnotationMemberImpl implements AnnotationMember {
 
     @Override
     public ClassInfo asEnumClass() {
-        throw new IllegalStateException("Not an enum type");
+        ClassElement enumType = getEnumType();
+        if (enumType == null) {
+            throw new IllegalStateException("Not an enum!");
+        }
+        return new ClassInfoImpl(enumType, types, visitorContext);
     }
 
     @Override
@@ -167,7 +197,7 @@ final class AnnotationMemberImpl implements AnnotationMember {
     @Override
     public Type asType() {
         if (val instanceof AnnotationClassValue) {
-            VisitorContext visitorContext = ActiveVisitorContext.currentVisitorContext();
+            VisitorContext visitorContext = this.visitorContext == null ? ActiveVisitorContext.currentVisitorContext() : this.visitorContext;
             String name = ((AnnotationClassValue<?>) val).getName();
             ClassElement classElement = visitorContext.getClassElement(name).orElse(null);
             if (classElement != null) {
@@ -188,9 +218,7 @@ final class AnnotationMemberImpl implements AnnotationMember {
     @Override
     public AnnotationInfo asNestedAnnotation() {
         if (val instanceof AnnotationValue) {
-            return new AnnotationInfoImpl(
-                (AnnotationValue<? extends Annotation>) val
-            );
+            return new AnnotationInfoImpl(types, visitorContext, (AnnotationValue<? extends Annotation>) val);
         }
         throw new IllegalStateException("Not a nested annotation");
     }
@@ -201,11 +229,11 @@ final class AnnotationMemberImpl implements AnnotationMember {
         if (t.isArray()) {
             if (t.getComponentType().isPrimitive()) {
                 return Arrays.stream(ArrayUtils.toWrapperArray(val))
-                        .map(AnnotationMemberImpl::new)
+                        .map(val1 -> new AnnotationMemberImpl(types, visitorContext, annotationName, name, val1))
                         .collect(Collectors.toUnmodifiableList());
             } else {
                 return Arrays.stream(((Object[]) val))
-                        .map(AnnotationMemberImpl::new)
+                        .map(val1 -> new AnnotationMemberImpl(types, visitorContext, annotationName, name, val1))
                         .collect(Collectors.toUnmodifiableList());
             }
         }

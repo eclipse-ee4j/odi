@@ -15,16 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import javax.lang.model.element.TypeElement;
-
 import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.annotation.AbstractAnnotationMetadataBuilder;
@@ -34,6 +24,15 @@ import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.DeclarationConfig;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationTarget;
+
+import javax.lang.model.element.TypeElement;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Internal interface for configured elements.
@@ -64,7 +63,7 @@ interface ElementAnnotationConfig extends DeclarationConfig, AnnotationTarget {
         if (annotationType != null) {
             final AnnotationValue<T> av = getElement().getAnnotation(annotationType);
             if (av != null) {
-                return new AnnotationInfoImpl(av);
+                return new AnnotationInfoImpl(getVisitorContext(), av);
             }
         }
         return null;
@@ -74,7 +73,7 @@ interface ElementAnnotationConfig extends DeclarationConfig, AnnotationTarget {
     default <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
         if (annotationType != null) {
             return getElement().getAnnotationValuesByType(annotationType)
-                    .stream().map(AnnotationInfoImpl::new)
+                    .stream().map(annotationValue -> new AnnotationInfoImpl(getVisitorContext(), annotationValue))
                     .collect(Collectors.toUnmodifiableList());
 
         }
@@ -95,7 +94,7 @@ interface ElementAnnotationConfig extends DeclarationConfig, AnnotationTarget {
         Collection<AnnotationInfo> annotations = new LinkedHashSet<>(annotationNames.size());
         for (String annotationName : annotationNames) {
             final AnnotationValue<Annotation> av = getElement().getAnnotation(annotationName);
-            annotations.add(new AnnotationInfoImpl(av));
+            annotations.add(new AnnotationInfoImpl(getVisitorContext(), av));
         }
         return Collections.unmodifiableCollection(annotations);
     }

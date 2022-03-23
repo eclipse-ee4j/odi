@@ -16,12 +16,13 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import io.micronaut.inject.ast.PackageElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.PackageInfo;
 
 final class PackageInfoImpl extends DeclarationInfoImpl implements PackageInfo {
-    PackageInfoImpl(PackageElement element, Types types) {
-        super(element, types);
+    PackageInfoImpl(PackageElement element, Types types, VisitorContext visitorContext) {
+        super(element, types, visitorContext);
     }
 
     @Override

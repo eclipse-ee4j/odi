@@ -15,50 +15,52 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import javax.lang.model.element.PackageElement;
-
-import io.micronaut.core.annotation.AnnotationUtil;
-import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.annotation.processing.visitor.JavaVisitorContext;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
+import io.micronaut.inject.ast.PrimitiveElement;
 import io.micronaut.inject.ast.TypedElement;
+import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationTarget;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Qualifier;
-import jakarta.inject.Scope;
-import jakarta.inject.Singleton;
+
+import javax.lang.model.element.PackageElement;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.function.Predicate;
 
 abstract class AnnotationTargetImpl implements AnnotationTarget {
-    private static final Map<String, String> META_ANNOTATIONS = new HashMap<>(10);
 
-    static {
-        META_ANNOTATIONS.put(Singleton.class.getName(), AnnotationUtil.SINGLETON);
-        META_ANNOTATIONS.put(Scope.class.getName(), AnnotationUtil.SCOPE);
-        META_ANNOTATIONS.put(Qualifier.class.getName(), AnnotationUtil.QUALIFIER);
-        META_ANNOTATIONS.put(Named.class.getName(), AnnotationUtil.NAMED);
-        META_ANNOTATIONS.put(Inject.class.getName(), AnnotationUtil.INJECT);
+    @SuppressWarnings("checkstyle:VisibilityModifier")
+    final Element element;
+    final VisitorContext visitorContext;
+    @SuppressWarnings("checkstyle:VisibilityModifier")
+    final Types types;
+    private final AnnotationTarget annotationTargetDelegate;
+
+    protected AnnotationTargetImpl(Element element, Types types, VisitorContext visitorContext) {
+        this(element, element.getAnnotationMetadata(), types, visitorContext);
     }
 
-    @SuppressWarnings("checkstyle:VisibilityModifier") final Element element;
-    @SuppressWarnings("checkstyle:VisibilityModifier") final Types types;
-
-    protected AnnotationTargetImpl(Element element, Types types) {
+    protected AnnotationTargetImpl(Element element, AnnotationMetadata annotationMetadata, Types types, VisitorContext visitorContext) {
         this.element = element;
+        this.visitorContext = visitorContext;
         this.types = types;
+        // TODO: select impl based on some option
+        if (visitorContext instanceof JavaVisitorContext) {
+            if (element instanceof PrimitiveElement) {
+                this.annotationTargetDelegate = EmptyAnnotationTarget.INSTANCE;
+            } else {
+                this.annotationTargetDelegate = new AnnotatedConstructAnnotationTarget(element, types, (JavaVisitorContext) visitorContext);
+            }
+        } else {
+            this.annotationTargetDelegate = new MicronautAnnotationTarget(element, types);
+        }
     }
 
     @Override
@@ -77,84 +79,32 @@ abstract class AnnotationTargetImpl implements AnnotationTarget {
 
     @Override
     public boolean hasAnnotation(Class<? extends Annotation> annotationType) {
-        if (annotationType == null) {
-            throw new IllegalArgumentException("Argument annotationType cannot be null");
-        }
-        final String n = META_ANNOTATIONS.get(annotationType.getName());
-        if (n != null) {
-            return element.hasAnnotation(n);
-        }
-        return element.hasAnnotation(annotationType);
+        return annotationTargetDelegate.hasAnnotation(annotationType);
     }
 
     @Override
     public boolean hasAnnotation(Predicate<AnnotationInfo> predicate) {
-        if (predicate == null) {
-            throw new IllegalArgumentException("Argument predicate cannot be null");
-        }
-
-        final Set<String> annotationNames = element.getAnnotationNames();
-        for (String annotationName : annotationNames) {
-            final AnnotationValue<Annotation> av = element
-                    .getAnnotation(META_ANNOTATIONS.getOrDefault(annotationName, annotationName));
-            if (av != null) {
-                if (predicate.test(new AnnotationInfoImpl(av))) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return annotationTargetDelegate.hasAnnotation(predicate);
     }
 
     @Override
     public <T extends Annotation> AnnotationInfo annotation(Class<T> annotationType) {
-        if (annotationType == null) {
-            throw new IllegalArgumentException("Argument annotationType cannot be null");
-        }
-        String annotationName = annotationType.getName();
-        final String n = META_ANNOTATIONS.getOrDefault(annotationName, annotationName);
-        final AnnotationValue<T> av;
-        if (n != null) {
-            av = element.getAnnotation(n);
-        } else {
-            av = element.getAnnotation(annotationType);
-        }
-
-        if (av != null) {
-            return new AnnotationInfoImpl(av);
-        }
-        return null;
+        return annotationTargetDelegate.annotation(annotationType);
     }
 
     @Override
     public <T extends Annotation> Collection<AnnotationInfo> repeatableAnnotation(Class<T> annotationType) {
-        if (annotationType == null) {
-            throw new IllegalArgumentException("Argument annotationType cannot be null");
-        }
-
-        return element.getAnnotationValuesByType(annotationType)
-                .stream().map(AnnotationInfoImpl::new)
-                .collect(Collectors.toUnmodifiableList());
+        return annotationTargetDelegate.repeatableAnnotation(annotationType);
     }
 
     @Override
     public Collection<AnnotationInfo> annotations(Predicate<AnnotationInfo> predicate) {
-        if (predicate == null) {
-            throw new IllegalArgumentException("Argument predicate cannot be null");
-        }
-        return element.getAnnotationNames().stream()
-                .map(name -> new AnnotationInfoImpl(
-                        element.getAnnotation(META_ANNOTATIONS.getOrDefault(name, name))
-                ))
-                .filter(predicate)
-                .collect(Collectors.toUnmodifiableList());
+        return annotationTargetDelegate.annotations(predicate);
     }
 
     @Override
     public Collection<AnnotationInfo> annotations() {
-        return element.getAnnotationNames().stream()
-                .map(name -> new AnnotationInfoImpl(element.getAnnotation(META_ANNOTATIONS.getOrDefault(name, name))))
-                .collect(Collectors.toUnmodifiableList());
+        return annotationTargetDelegate.annotations();
     }
 
     public Element getElement() {
@@ -163,5 +113,22 @@ abstract class AnnotationTargetImpl implements AnnotationTarget {
 
     public Types getTypes() {
         return types;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        AnnotationTargetImpl other = (AnnotationTargetImpl) o;
+        return annotationTargetDelegate.equals(other.annotationTargetDelegate);
+    }
+
+    @Override
+    public int hashCode() {
+        return annotationTargetDelegate.hashCode();
     }
 }

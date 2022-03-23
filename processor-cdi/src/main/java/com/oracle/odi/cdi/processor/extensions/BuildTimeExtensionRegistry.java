@@ -15,17 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
 import io.micronaut.context.LifeCycle;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.NonNull;
@@ -35,6 +24,7 @@ import io.micronaut.core.io.service.SoftServiceLoader;
 import io.micronaut.core.order.OrderUtil;
 import io.micronaut.core.order.Ordered;
 import io.micronaut.core.reflect.ReflectionUtils;
+import io.micronaut.core.reflect.exception.InvocationException;
 import io.micronaut.core.util.ArrayUtils;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -61,6 +51,18 @@ import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Internal implementation for build time extensions.
@@ -292,16 +294,16 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
             invokeExtensionMethod(extension, synthesisMethod, parameters);
         } catch (Exception e) {
             visitorContext.fail("Error running build time synthesis in method '" + synthesisMethod.getName() + "' of extension "
-                                        + "[" + extension.getClass()
+                    + "[" + extension.getClass()
                     .getName() + "]: " + e.getMessage(), originatingBean.getProducingElement());
 
         }
     }
 
     private void runRegistration(BuildCompatibleExtension extension,
-                               Method processingMethod,
-                               BeanElement beanElement,
-                               VisitorContext visitorContext) {
+                                 Method processingMethod,
+                                 BeanElement beanElement,
+                                 VisitorContext visitorContext) {
         final Class<?>[] parameterTypes = processingMethod.getParameterTypes();
         Object[] parameters = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
@@ -327,7 +329,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
             invokeExtensionMethod(extension, processingMethod, parameters);
         } catch (Exception e) {
             visitorContext.fail("Error running build time processing in method '" + processingMethod.getName() + "' of "
-                                        + "extension [" + extension.getClass()
+                    + "extension [" + extension.getClass()
                     .getName() + "]: " + e.getMessage(), beanElement.getProducingElement());
 
         }
@@ -385,7 +387,13 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 }
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            if (e instanceof InvocationException) {
+                e = e.getCause();
+            }
+            if (e instanceof InvocationTargetException) {
+                e = e.getCause();
+            }
             visitorContext.fail("Error running build time enhancement in method '" + enhanceMethod.getName() + "' of extension "
                                         + "[" + extension.getClass()
                     .getName() + "]: " + e.getMessage(), originatingElement);
@@ -425,8 +433,8 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
             Method enhanceMethod,
             Class<?> parameterType) {
         visitorContext.fail("Unsupported parameter of type '" + parameterType.getName() + "' defined in method '"
-                                    + enhanceMethod.getName()
-                                    + "' of extension: " + buildTimeExtension.getClass()
+                + enhanceMethod.getName()
+                + "' of extension: " + buildTimeExtension.getClass()
                 .getName(), originatingElement);
     }
 

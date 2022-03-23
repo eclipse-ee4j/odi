@@ -28,12 +28,8 @@ final class FieldInfoImpl extends DeclarationInfoImpl implements FieldInfo {
     private final VisitorContext visitorContext;
     private final ClassInfoImpl declaringInfo;
 
-    FieldInfoImpl(
-            ClassInfoImpl declaringInfo,
-            FieldElement element,
-            Types types,
-            VisitorContext visitorContext) {
-        super(element, types);
+    FieldInfoImpl(ClassInfoImpl declaringInfo, FieldElement element, Types types, VisitorContext visitorContext) {
+        super(element, types, visitorContext);
         this.fieldElement = element;
         this.visitorContext = visitorContext;
         this.declaringInfo = declaringInfo;

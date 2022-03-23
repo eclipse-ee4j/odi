@@ -15,14 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Predicate;
-
 import com.oracle.odi.cdi.processor.InterceptorVisitor;
 import com.oracle.odi.cdi.processor.ObservesMethodVisitor;
 import io.micronaut.context.annotation.Executable;
@@ -42,6 +34,14 @@ import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
+
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * A {@link io.micronaut.inject.visitor.TypeElementVisitor} that implements the build time extension specification.
