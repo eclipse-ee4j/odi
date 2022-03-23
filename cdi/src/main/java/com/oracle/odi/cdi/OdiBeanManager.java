@@ -15,14 +15,6 @@
  */
 package com.oracle.odi.cdi;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.oracle.odi.cdi.events.OdiObserverMethodRegistry;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.core.order.OrderUtil;
@@ -45,6 +37,14 @@ import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
 import jakarta.interceptor.InterceptorBinding;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 final class OdiBeanManager implements BeanContainer {
     private final ApplicationContext applicationContext;
@@ -73,7 +73,7 @@ final class OdiBeanManager implements BeanContainer {
     @Override
     public <T> CreationalContext<T> createCreationalContext(Contextual<T> contextual) {
         if (contextual instanceof OdiBeanImpl || contextual == null) {
-            return new OdiCreationalContext<>();
+            return new OdiCreationalContext<>(container.getApplicationContext());
         } else {
             throw new IllegalArgumentException("Unsupported by contextual type: " + contextual.getClass());
         }

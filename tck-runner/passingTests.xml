@@ -48,11 +48,6 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.interceptors.tests.order.overriden.lifecycleCallback.OverridenLifecycleCallbackInterceptorTest">
-                <methods>
-                    <exclude name="testCallbackOverridenByCallback"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.context.dependent.transientreference.DependentTransientReferenceDestroyedTest">
                 <methods>
                     <exclude name=".*"/>

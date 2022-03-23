@@ -15,13 +15,6 @@
  */
 package com.oracle.odi.cdi;
 
-import java.lang.annotation.Annotation;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.scope.BeanCreationContext;
@@ -38,6 +31,13 @@ import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.CreationException;
+
+import java.lang.annotation.Annotation;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Overrides the default custom scope registry to support CDI {@link jakarta.enterprise.context.spi.Context} concept.
@@ -147,7 +147,7 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                 return bean;
             } else {
                 createdContextuals.put(creationContext.id(), contextual);
-                final OdiCreationalContext<T> creationalContext = new OdiCreationalContext<>();
+                final OdiCreationalContext<T> creationalContext = new OdiCreationalContext<>(beanContext);
                 return context.get(
                         createContextual(beanContext, creationContext),
                         creationalContext

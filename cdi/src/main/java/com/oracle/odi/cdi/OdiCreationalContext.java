@@ -15,12 +15,20 @@
  */
 package com.oracle.odi.cdi;
 
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.scope.CreatedBean;
+import io.micronaut.inject.BeanDefinition;
 import jakarta.enterprise.context.spi.CreationalContext;
 
 final class OdiCreationalContext<T> implements CreationalContext<T> {
 
+    private final BeanContext beanContext;
     private CreatedBean<T> createdBean;
+
+    OdiCreationalContext(BeanContext beanContext) {
+        this.beanContext = beanContext;
+    }
 
     @Override
     public void push(T incompleteInstance) {
@@ -30,7 +38,16 @@ final class OdiCreationalContext<T> implements CreationalContext<T> {
     @Override
     public void release() {
         if (createdBean != null) {
-            this.createdBean.close();
+            if (createdBean.getClass() == BeanRegistration.class) {
+                // TODO in Core: BeanRegistration#close is no-op
+                BeanDefinition<T> definition = createdBean.definition();
+                Object bean = beanContext.destroyBean(definition.asArgument(), definition.getDeclaredQualifier());
+                if (bean == null) {
+                    beanContext.destroyBean(createdBean.bean());
+                }
+            } else {
+                createdBean.close();
+            }
             this.createdBean = null;
         }
     }
