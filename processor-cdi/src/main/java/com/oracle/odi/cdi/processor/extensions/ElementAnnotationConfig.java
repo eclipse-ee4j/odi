@@ -15,16 +15,6 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import javax.lang.model.element.TypeElement;
-
 import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.annotation.AbstractAnnotationMetadataBuilder;
@@ -35,6 +25,7 @@ import jakarta.enterprise.inject.build.compatible.spi.DeclarationConfig;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationTarget;
 
+import javax.lang.model.element.TypeElement;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Collections;
