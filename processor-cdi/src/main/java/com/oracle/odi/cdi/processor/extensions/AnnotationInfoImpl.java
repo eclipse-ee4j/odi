@@ -16,6 +16,7 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
@@ -27,6 +28,7 @@ import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Internal
 class AnnotationInfoImpl implements AnnotationInfo {
     @Nullable
     private final Types types;

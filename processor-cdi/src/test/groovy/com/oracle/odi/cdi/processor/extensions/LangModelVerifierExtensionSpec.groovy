@@ -11,7 +11,7 @@ class LangModelVerifierExtensionSpec extends AbstractTypeElementSpec {
 
     void "test lang model extension"() {
         given:
-            LangModelVerifier.EXCLUDE_TYPE_ANNOTATION_CHECKS = true
+            LangModelVerifier.RUN_TYPE_ANNOTATION_TESTS = false
             LangModelVerifierExtension.enable = true
             def context = buildContext('''
 package testft;
