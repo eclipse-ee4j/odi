@@ -1234,11 +1234,6 @@
                 </methods>
             </class>
             <!--            Extensions-->
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customStereotype.CustomStereotypeTest">
-                <methods>
-                    <exclude name="test"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyMessagesTest">
                 <methods>
                     <exclude name=".*"/>
@@ -1310,11 +1305,6 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserverOfParameterizedType.SyntheticObserverOfParameterizedTypeTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeInjectionPoint.ChangeInjectionPointTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>

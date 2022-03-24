@@ -153,13 +153,20 @@ final class ArchiveCompiler {
                         new BufferedReader(new InputStreamReader(extensionValue.getAsset().openStream()))
                 );
                 String packageName = extensionName.substring(0, extensionName.lastIndexOf('.'));
+                List<String> args = new ArrayList<>();
+                args.add("-d");
+                args.add(targetDir);
+                args.add("-verbose");
+                if (deploymentArchive.contains("/WEB-INF/beans.xml")) {
+                    args.add("-Amicronaut.cdi.bean.packages=" + packageName);
+                }
 
                 final Path applicationSource = setupExtensionCompilation(extensionName, packageName);
                 final JavaCompiler.CompilationTask enhancementTask = compiler.getTask(
                         null,
                         mgr,
                         diagnostics,
-                        Arrays.asList("-d", targetDir, "-verbose", "-Amicronaut.cdi.bean.packages=" + packageName),
+                        args,
                         null,
                         mgr.getJavaFileObjectsFromFiles(Collections.singleton(applicationSource.toFile()))
                 );

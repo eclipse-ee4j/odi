@@ -21,6 +21,7 @@ import java.util.List;
 
 import io.micronaut.core.annotation.AnnotationMetadata;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.inject.Singleton;
 
@@ -55,7 +56,10 @@ final class MetaAnnotationSupport {
         if (n == null) {
             scope = annotationMetadata
                     .getAnnotationTypeByStereotype(META_ANNOTATION_SCOPE)
-                    .orElse(Dependent.class);
+                    .orElseGet(() ->
+                        annotationMetadata.getAnnotationTypeByStereotype(NormalScope.class)
+                                .orElse(Dependent.class)
+                    );
         } else if (META_ANNOTATION_SINGLETON.equals(n)) {
             scope = Singleton.class;
         } else {

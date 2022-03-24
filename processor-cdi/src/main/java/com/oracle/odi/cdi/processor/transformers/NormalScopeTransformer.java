@@ -36,6 +36,7 @@ public class NormalScopeTransformer implements TypedAnnotationTransformer<Normal
         // NormalScope beans are proxied, lazy and scoped by default
         // which translates to the scoped proxy scope of Micronaut
         return Arrays.asList(
+                annotation,
                 AnnotationValue.builder(ScopedProxy.class).build(),
                 AnnotationValue.builder(io.micronaut.core.annotation.AnnotationUtil.SCOPE).build()
         );
