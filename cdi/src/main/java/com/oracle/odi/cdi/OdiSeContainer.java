@@ -15,18 +15,12 @@
  */
 package com.oracle.odi.cdi;
 
-import java.lang.annotation.Annotation;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import com.oracle.odi.cdi.annotation.DisposerMethod;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextProvider;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
+import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
@@ -40,9 +34,9 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.InjectionPoint;
 import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Disposes;
-import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.ResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.se.SeContainer;
@@ -54,34 +48,43 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @SuppressWarnings("CdiManagedBeanInconsistencyInspection")
 @Factory
 final class OdiSeContainer extends CDI<Object>
-        implements SeContainer, ApplicationContextProvider, ExecutableMethodProcessor<DisposerMethod> {
+        implements SeContainer, OdiInstance<Object>,  ApplicationContextProvider, ExecutableMethodProcessor<DisposerMethod> {
     static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = Collections.synchronizedMap(new LinkedHashMap<>(5));
     private static final Logger LOG = LoggerFactory.getLogger(OdiSeContainer.class);
-    private final ApplicationContext context;
-    private final OdiBeanManager beanManager;
+    private final ApplicationContext applicationContext;
+    private final OdiBeanContainer beanContainer;
     private final Map<DisposerKey, DisposerDef> disposerMethods = new HashMap<>(20);
 
+    private final MicronautContext ctx = new MicronautContext();
+
     protected OdiSeContainer(ApplicationContext context) {
-        this.context = context;
-        this.beanManager = new OdiBeanManager(this, context);
+        this.applicationContext = context;
+        this.beanContainer = new OdiBeanContainerImpl(this, context);
         RUNNING_CONTAINERS.put(context, this);
     }
 
     @Override
     public void close() {
         try {
-            context.close();
+            applicationContext.close();
         } finally {
-            RUNNING_CONTAINERS.remove(context);
+            RUNNING_CONTAINERS.remove(applicationContext);
         }
     }
 
     @Override
     public boolean isRunning() {
-        return context.isRunning();
+        return applicationContext.isRunning();
     }
 
     @Override
@@ -92,26 +95,35 @@ final class OdiSeContainer extends CDI<Object>
     @Override
     @Singleton
     public BeanContainer getBeanContainer() {
-        return beanManager;
+        return beanContainer;
+    }
+
+    OdiInstance<Object> select(Context context) {
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, context, Argument.OBJECT_ARGUMENT, (Qualifier<Object>) null);
     }
 
     @Override
-    public Instance<Object> select(Annotation... qualifiers) {
+    public <U> OdiInstance<U> select(Argument<U> argument, Qualifier<U> qualifier) {
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx, argument, qualifier);
+    }
+
+    @Override
+    public OdiInstance<Object> select(Annotation... qualifiers) {
         if (!isRunning()) {
             throw new IllegalStateException("SeContainer already shutdown");
         }
-        return new OdiInstance<>(null, context, Argument.OBJECT_ARGUMENT, qualifiers);
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx, Argument.OBJECT_ARGUMENT, qualifiers);
     }
 
     @Override
-    public <U> Instance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new OdiInstance<>(null, context, Argument.of(subtype), qualifiers);
+    public <U> OdiInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx,  Argument.of(subtype), qualifiers);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public <U> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        return new OdiInstance(null, context, Argument.of(subtype.getType()), qualifiers);
+    public <U> OdiInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
+        return new OdiInstanceImpl(applicationContext, beanContainer, ctx, Argument.of(subtype.getType()), qualifiers);
     }
 
     @Override
@@ -139,7 +151,7 @@ final class OdiSeContainer extends CDI<Object>
 
             @Override
             public jakarta.enterprise.inject.spi.Bean<Object> getBean() {
-                return new OdiBeanImpl(OdiSeContainer.this.context, new BeanDefinition() {
+                return new OdiBeanImpl(OdiSeContainer.this.applicationContext, new BeanDefinition() {
 
                     @Override
                     public boolean isEnabled(BeanContext context, BeanResolutionContext resolutionContext) {
@@ -160,7 +172,7 @@ final class OdiSeContainer extends CDI<Object>
 
             @Override
             public void close() {
-                if (OdiSeContainer.this.context.isRunning()) {
+                if (OdiSeContainer.this.applicationContext.isRunning()) {
                     OdiSeContainer.this.close();
                 }
             }
@@ -184,7 +196,12 @@ final class OdiSeContainer extends CDI<Object>
 
     @Override
     public ApplicationContext getApplicationContext() {
-        return context;
+        return applicationContext;
+    }
+
+    @Bean
+    OdiBeanContainer beanContainer() {
+        return beanContainer;
     }
 
     @Bean
@@ -193,13 +210,13 @@ final class OdiSeContainer extends CDI<Object>
         if (injectionPoint instanceof ArgumentCoercible) {
             final Argument<?> argument = ((ArgumentCoercible<?>) injectionPoint).asArgument();
             try {
-                final BeanDefinition<?> beanDefinition = this.context.getBeanDefinition(
+                final BeanDefinition<?> beanDefinition = this.applicationContext.getBeanDefinition(
                         argument.getFirstTypeVariable()
                                 .orElseThrow(() -> new UnsatisfiedResolutionException("Cannot resolve bean for injection point:"
                                                                                               + " " + injectionPoint)),
                         Qualifiers.forArgument(argument)
                 );
-                return new OdiBeanImpl<>(this.context, beanDefinition);
+                return beanContainer.getBean(beanDefinition);
             } catch (NonUniqueBeanException e) {
                 throw new AmbiguousResolutionException(e.getMessage(), e);
             } catch (NoSuchBeanException e) {
@@ -242,7 +259,7 @@ final class OdiSeContainer extends CDI<Object>
                 if (disposerDef != null) {
                     final ExecutableMethod<Object, ?> method = disposerDef.executableMethod;
                     final BeanDefinition<?> targetBean = disposerDef.definition;
-                    final Object disposerBean = context.getBean(targetBean);
+                    final Object disposerBean = applicationContext.getBean(targetBean);
                     final Argument<?>[] parameters = method.getArguments();
                     Object[] arguments = new Object[parameters.length];
                     for (int i = 0; i < parameters.length; i++) {
@@ -250,7 +267,7 @@ final class OdiSeContainer extends CDI<Object>
                         if (parameter.getAnnotationMetadata().hasAnnotation(Disposes.class)) {
                             arguments[i] = bean;
                         } else {
-                            arguments[i] = context.getBean(parameter, Qualifiers.forArgument(parameter));
+                            arguments[i] = applicationContext.getBean(parameter, Qualifiers.forArgument(parameter));
                         }
                     }
                     method.invoke(disposerBean, arguments);

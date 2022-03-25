@@ -15,20 +15,9 @@
  */
 package com.oracle.odi.cdi.events;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executor;
-import java.util.function.Supplier;
-
 import com.oracle.odi.cdi.AnnotationUtils;
+import com.oracle.odi.cdi.OdiBeanContainer;
 import com.oracle.odi.cdi.OdiUtils;
-import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.event.ApplicationEventPublisher;
 import io.micronaut.core.annotation.AnnotationMetadata;
@@ -48,6 +37,17 @@ import jakarta.enterprise.util.TypeLiteral;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
+import java.util.function.Supplier;
+
 /**
  * The implementation of {@link Event}.
  *
@@ -58,7 +58,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
 
     private static final Logger EVENT_LOGGER = LoggerFactory.getLogger(ApplicationEventPublisher.class);
 
-    private final BeanContext beanContext;
+    private final OdiBeanContainer beanContainer;
     private final AnnotationMetadata annotationMetadata;
     private final Argument<T> eventType;
     @Nullable
@@ -74,14 +74,14 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
     @Nullable
     private Set<Annotation> qualifierAnnotations;
 
-    OdiEvent(BeanContext beanContext,
-                    AnnotationMetadata annotationMetadata,
-                    Argument<T> eventType,
-                    @Nullable Qualifier<T> qualifier,
-                    @Nullable InjectionPoint<?> injectionPoint,
-                    OdiObserverMethodRegistry observerMethodRegistry,
-                    Supplier<Executor> executorSupplier) {
-        this.beanContext = beanContext;
+    OdiEvent(OdiBeanContainer beanContainer,
+             AnnotationMetadata annotationMetadata,
+             Argument<T> eventType,
+             @Nullable Qualifier<T> qualifier,
+             @Nullable InjectionPoint<?> injectionPoint,
+             OdiObserverMethodRegistry observerMethodRegistry,
+             Supplier<Executor> executorSupplier) {
+        this.beanContainer = beanContainer;
         this.annotationMetadata = annotationMetadata;
         this.eventType = eventType;
         this.qualifier = qualifier;
@@ -141,7 +141,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             );
         }
         return new OdiEvent<>(
-                beanContext,
+                beanContainer,
                 annotationMetadata,
                 argument,
                 qualifier,
@@ -224,7 +224,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             return null;
         }
         if (cdiInjectionPoint == null) {
-            cdiInjectionPoint = OdiUtils.createCDIInjectionPoint(beanContext, injectionPoint, eventType);
+            cdiInjectionPoint = OdiUtils.createCDIInjectionPoint(beanContainer, injectionPoint, eventType);
         }
         return cdiInjectionPoint;
     }

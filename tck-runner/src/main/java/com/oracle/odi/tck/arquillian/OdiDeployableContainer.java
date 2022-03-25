@@ -16,6 +16,7 @@
 package com.oracle.odi.tck.arquillian;
 
 import com.oracle.odi.cdi.OdiApplicationContextBuilder;
+import com.oracle.odi.tck.porting.BeansImpl;
 import io.micronaut.context.ApplicationContext;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
@@ -27,6 +28,9 @@ import org.jboss.arquillian.core.api.InstanceProducer;
 import org.jboss.arquillian.core.api.annotation.Inject;
 import org.jboss.arquillian.test.spi.TestClass;
 import org.jboss.shrinkwrap.api.Archive;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.container.LibraryContainer;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,8 +85,20 @@ public class OdiDeployableContainer implements DeployableContainer<OdiContainerC
         return new ProtocolDescription("ODI");
     }
 
+    private static JavaArchive buildSupportLibrary() {
+        JavaArchive supportLib = ShrinkWrap.create(JavaArchive.class, "odi-tck-support.jar")
+                .addPackage(BeansImpl.class.getPackage());
+        return supportLib;
+    }
+
+
     @Override
     public ProtocolMetaData deploy(Archive<?> archive) throws DeploymentException {
+        if (archive instanceof LibraryContainer) {
+            ((LibraryContainer<?>) archive).addAsLibrary(buildSupportLibrary());
+        } else {
+            throw new IllegalStateException("Expected library container!");
+        }
         old = Thread.currentThread().getContextClassLoader();
         if (testClass.get() == null) {
             throw new IllegalStateException("Test class not available");

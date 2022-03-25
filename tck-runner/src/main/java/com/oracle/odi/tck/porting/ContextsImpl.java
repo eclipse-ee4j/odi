@@ -15,6 +15,7 @@
  */
 package com.oracle.odi.tck.porting;
 
+import com.oracle.odi.cdi.DependentContext;
 import jakarta.enterprise.context.spi.Context;
 import org.jboss.cdi.tck.spi.Contexts;
 
@@ -40,7 +41,7 @@ public class ContextsImpl implements Contexts<Context> {
 
     @Override
     public Context getDependentContext() {
-        throw new UnsupportedOperationException();
+        return new DependentContext(null);
     }
 
     @Override

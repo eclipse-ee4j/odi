@@ -15,13 +15,6 @@
  */
 package com.oracle.odi.cdi.events;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
@@ -32,6 +25,13 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.inject.Singleton;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The registry of all observed methods in the context.
@@ -69,9 +69,7 @@ public final class OdiObserverMethodRegistry {
      * @param <T> The argument generic type
      * @return A list of observer methods
      */
-    public <K extends T, T> List<OdiObserverMethod<K>> findListOfObserverMethods(
-            Argument<T> argument,
-            @Nullable Qualifier<T> qualifier) {
+    public <K extends T, T> List<OdiObserverMethod<K>> findListOfObserverMethods(Argument<T> argument, @Nullable Qualifier<T> qualifier) {
         // TODO: caching
         List<OdiObserverMethod<?>> list = new ArrayList<>();
         collectMethods(argument, qualifier, list);
@@ -85,15 +83,10 @@ public final class OdiObserverMethodRegistry {
      * @param qualifier The qualifier
      * @param <K> The observer method generic type
      * @param <T> The argument generic type
-     * @return A list of observer methods
+     * @return A set of observer methods
      */
-    public <K extends T, T> Set<OdiObserverMethod<K>> findSetOfObserverMethods(
-            Argument<T> argument,
-            @Nullable Qualifier<T> qualifier) {
-        // TODO: caching
-        Set<OdiObserverMethod<?>> set = new TreeSet<>(Comparator.comparing(ObserverMethod::getPriority));
-        collectMethods(argument, qualifier, set);
-        return (Set) set;
+    public <K extends T, T> Set<OdiObserverMethod<K>> findSetOfObserverMethods(Argument<T> argument, @Nullable Qualifier<T> qualifier) {
+        return new LinkedHashSet<>(findListOfObserverMethods(argument, qualifier));
     }
 
     private <T> void collectMethods(Argument<T> argument, Qualifier<T> qualifier, Collection<OdiObserverMethod<?>> method) {

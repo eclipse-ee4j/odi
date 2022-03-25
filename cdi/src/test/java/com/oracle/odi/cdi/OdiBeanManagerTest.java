@@ -16,21 +16,19 @@
 
 package com.oracle.odi.cdi;
 
-import java.lang.annotation.Annotation;
-import java.util.Set;
-
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanContainer;
-import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
 
+import java.lang.annotation.Annotation;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,7 +41,7 @@ public class OdiBeanManagerTest {
 
             assertNotNull(beanManager);
 
-            OdiTestSupport.testUnsupportedAPI(beanManager, OdiBeanManager.class);
+            OdiTestSupport.testUnsupportedAPI(beanManager, OdiBeanContainerImpl.class);
 
             final Set<Bean<?>> beans = beanManager.getBeans(Simple.class);
             assertEquals(1, beans.size());

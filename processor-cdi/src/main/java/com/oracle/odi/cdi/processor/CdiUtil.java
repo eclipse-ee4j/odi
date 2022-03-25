@@ -15,9 +15,6 @@
  */
 package com.oracle.odi.cdi.processor;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import io.micronaut.annotation.processing.visitor.JavaClassElement;
 import io.micronaut.annotation.processing.visitor.JavaClassElementHelper;
 import io.micronaut.core.naming.NameUtils;
@@ -25,7 +22,12 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.event.Event;
+import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Qualifier;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 final class CdiUtil {
     public static final String SPEC_LOCATION = "https://jakarta.ee/specifications/cdi/3.0/jakarta-cdi-spec-3.0.html";
@@ -35,6 +37,18 @@ final class CdiUtil {
 
     static String toAnnotationDescription(List<String> annotations) {
         return annotations.stream().map(n -> "@" + NameUtils.getSimpleName(n)).collect(Collectors.joining(" and "));
+    }
+
+    public static void visitBeanDefinition(VisitorContext context, Element beanDefinition) {
+        if (!beanDefinition.hasAnnotation(Qualifier.class)) {
+            beanDefinition.annotate(Default.class);
+        }
+    }
+
+    public static void visitInjectPoint(VisitorContext context, Element injectPoint) {
+        if (!injectPoint.hasAnnotation(Qualifier.class)) {
+            injectPoint.annotate(Default.class);
+        }
     }
 
     public static boolean validateInjectedType(VisitorContext context, ClassElement classElement, Element owningElement) {

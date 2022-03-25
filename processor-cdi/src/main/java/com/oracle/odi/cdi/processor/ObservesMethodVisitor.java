@@ -15,13 +15,6 @@
  */
 package com.oracle.odi.cdi.processor;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -35,6 +28,12 @@ import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.Produces;
 import jakarta.interceptor.Interceptor;
+
+import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.oracle.odi.cdi.processor.AnnotationUtil.ANN_OBSERVES_METHOD;
 
@@ -96,8 +95,8 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
             context.fail("Method parameter cannot define both @Observes and @ObservesAsync.", observesAnnotated.get());
         } else if (element.isPrivate()) {
             context.fail("Methods with parameters annotated with @Observes cannot be private.", element);
-        } else if (element.isStatic()) {
-            context.fail("Methods with parameters annotated with @Observes cannot be static.", element);
+//        } else if (element.isStatic()) {
+//            context.fail("Methods with parameters annotated with @Observes cannot be static.", element);
         } else if (element.isAbstract()) {
             context.fail("Methods with parameters annotated with @Observes cannot be abstract.", element);
         } else if (element.hasDeclaredAnnotation(Produces.class)) {
@@ -128,6 +127,7 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
                     p.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
                         annotationValueBuilder.member("notifyObserver", reception);
                     });
+                    annotationValueBuilder.member("async", true);
 //                        if (p.getAnnotationNamesByStereotype("javax.inject.Qualifier").isEmpty()) {
 //                            p.annotate(Any.class);
 //                        }

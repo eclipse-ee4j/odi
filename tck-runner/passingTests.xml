@@ -70,7 +70,23 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testCallingCreationalContextReleaseDestroysDependents"/>
+                    <exclude name="testContextGetWithCreateFalseReturnsNull"/>
+                    <exclude name="testContextGetWithCreationalContextReturnsNewInstance"/>
+                    <exclude name="testContextIsActiveDuringInjection"/>
+                    testContextIsActiveWhenInvokingDisposalMethod
+                    testContextIsActiveWhenInvokingProducerMethod
+                    testDependentBeanIsDependentObjectOfBeanInjectedInto
+                    testDependentScopedInterceptorsAreDependentObjectsOfBean
+                    testDependentsDestroyedWhenDisposerMethodCompletes
+                    testDependentsDestroyedWhenObserverMethodEvaluationCompletes
+                    testDependentsDestroyedWhenProducerFieldCompletes
+                    testDependentsDestroyedWhenProducerMethodCompletes
+                    testDestroyingManagedParentDestroysDependentsOfSameBean
+                    testDestroyingSimpleParentDestroysDependents
+                    testInstanceUsedForDisposalMethodNotShared
+                    testInstanceUsedForObserverMethodNotShared
+                    testInstanceUsedForProducerMethodNotShared
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest">
@@ -292,7 +308,9 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest">
                 <methods>
-                    <exclude name=".*"/>
+<!--                    Static event observers not supported-->
+                    <exclude name="testObserverMethodRegistration"/>
+                    <exclude name="testObserverMethodWithoutBindingTypesObservesEventsWithoutBindingTypes"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.async.handlingExceptions.MultipleExceptionsInObserversNotificationTest">
@@ -1232,17 +1250,6 @@
             <class name="org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest">
                 <methods>
                     <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest">
-                <methods>
-                    <exclude name="testAlternatives"/>
-                    <exclude name="testAmbiguousDependencyThrowsException"/>
-                    <exclude name="testDuplicateBindingsThrowsException"/>
-                    <exclude name="testIsAmbiguous"/>
-                    <exclude name="testIsUnsatisfied"/>
-                    <exclude name="testNonBindingThrowsException"/>
-                    <exclude name="testUnsatisfiedDependencyThrowsException"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest">

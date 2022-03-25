@@ -15,6 +15,34 @@
  */
 package com.oracle.odi.cdi;
 
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanRegistration;
+import io.micronaut.context.DefaultBeanContext;
+import io.micronaut.context.Qualifier;
+import io.micronaut.context.exceptions.BeanInstantiationException;
+import io.micronaut.context.exceptions.NoSuchBeanException;
+import io.micronaut.context.exceptions.NonUniqueBeanException;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.annotation.Order;
+import io.micronaut.core.type.Argument;
+import io.micronaut.inject.AdvisedBeanType;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.BeanIdentifier;
+import io.micronaut.inject.ConstructorInjectionPoint;
+import io.micronaut.inject.FieldInjectionPoint;
+import io.micronaut.inject.MethodInjectionPoint;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.Alternative;
+import jakarta.enterprise.inject.AmbiguousResolutionException;
+import jakarta.enterprise.inject.CreationException;
+import jakarta.enterprise.inject.Stereotype;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.enterprise.inject.spi.Prioritized;
+import jakarta.inject.Named;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashSet;
@@ -23,27 +51,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.micronaut.context.BeanContext;
-import io.micronaut.context.BeanRegistration;
-import io.micronaut.core.annotation.AnnotationMetadata;
-import io.micronaut.core.annotation.Internal;
-import io.micronaut.core.annotation.Order;
-import io.micronaut.core.type.Argument;
-import io.micronaut.inject.AdvisedBeanType;
-import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.ConstructorInjectionPoint;
-import io.micronaut.inject.FieldInjectionPoint;
-import io.micronaut.inject.MethodInjectionPoint;
-import jakarta.enterprise.context.spi.CreationalContext;
-import jakarta.enterprise.inject.Alternative;
-import jakarta.enterprise.inject.Stereotype;
-import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.InjectionPoint;
-import jakarta.enterprise.inject.spi.Prioritized;
-import jakarta.inject.Named;
-
 /**
  * Implementation of the {@link jakarta.enterprise.inject.spi.Bean} interface for ODI.
+ *
  * @param <T> The generic type of the bean
  */
 @Internal
@@ -55,8 +65,9 @@ public class OdiBeanImpl<T> implements Bean<T>, Prioritized {
 
     /**
      * Default constructor.
+     *
      * @param beanContext The bean context
-     * @param definition The definition
+     * @param definition  The definition
      */
     public OdiBeanImpl(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
@@ -99,12 +110,32 @@ public class OdiBeanImpl<T> implements Bean<T>, Prioritized {
         if (!(creationalContext instanceof OdiCreationalContext)) {
             throw new IllegalArgumentException("Not an ODI Creational Context");
         }
-        final BeanRegistration<T> beanRegistration = beanContext.getBeanRegistration(
-                definition.asArgument(),
-                definition.getDeclaredQualifier()
-        );
-        ((OdiCreationalContext<T>) creationalContext).setCreatedBean(beanRegistration);
-        return beanRegistration.getBean();
+        OdiCreationalContext<T> odiCreationalContext = (OdiCreationalContext<T>) creationalContext;
+        Argument<T> argument = definition.asArgument();
+        Qualifier<T> qualifier = definition.getDeclaredQualifier();
+        try {
+            BeanDefinition<T> beanDefinition = beanContext.getBeanDefinition(argument, qualifier);
+            T instance = ((DefaultBeanContext) beanContext).getBean(odiCreationalContext.getResolutionContext(), argument, qualifier);
+            odiCreationalContext.setCreatedBean(new BeanRegistration<>(BeanIdentifier.of(""), beanDefinition, instance));
+            return instance;
+        } catch (NonUniqueBeanException e) {
+            throw new AmbiguousResolutionException(e.getMessage(), e);
+        } catch (NoSuchBeanException e) {
+            throw new UnsatisfiedResolutionException(e.getMessage(), e);
+        } catch (BeanInstantiationException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else {
+                throw new CreationException(e.getMessage(), e);
+            }
+        } catch (Throwable e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                throw new CreationException(e.getMessage(), e);
+            }
+        }
     }
 
     @Override
