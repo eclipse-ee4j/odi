@@ -82,7 +82,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
     }
 
     @Override
-    public <T> Collection<OdiBeanImpl<T>> getBeans(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
+    public <T> Collection<OdiBean<T>> getBeans(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
         return getBeanDefinitions(argument, qualifier).stream()
                 .map(bd -> new OdiBeanImpl<>(argument, qualifier, applicationContext, bd))
                 .collect(Collectors.toUnmodifiableList());

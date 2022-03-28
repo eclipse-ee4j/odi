@@ -16,8 +16,8 @@
 package com.oracle.odi.cdi.events;
 
 import com.oracle.odi.cdi.DependentContext;
+import com.oracle.odi.cdi.OdiBean;
 import com.oracle.odi.cdi.OdiBeanContainer;
-import com.oracle.odi.cdi.OdiBeanImpl;
 import com.oracle.odi.cdi.annotation.ObservesMethod;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.DefaultBeanResolutionContext;
@@ -204,7 +204,7 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
                 dependentContext.destroy();
                 return;
             }
-            OdiBeanImpl<B> bean = beanContainer.getBean(beanDefinition);
+            OdiBean<B> bean = beanContainer.getBean(beanDefinition);
             CreationalContext<B> creationalContext = beanContainer.createCreationalContext(bean);
             B beanInstance = bean.create(creationalContext);
             executableMethod.invoke(beanInstance, values);

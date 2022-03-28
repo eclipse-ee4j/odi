@@ -39,7 +39,7 @@ public final class OdiUtils {
             OdiBeanContainer beanContainer,
             InjectionPoint<?> injectionPoint,
             Argument<?> argument) {
-        OdiBeanImpl<?> bean = beanContainer.getBean(injectionPoint.getDeclaringBean());
+        OdiBean<?> bean = beanContainer.getBean(injectionPoint.getDeclaringBean());
         return new OdiInjectionPoint(bean, injectionPoint, argument);
     }
 

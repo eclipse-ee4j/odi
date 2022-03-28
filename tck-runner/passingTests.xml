@@ -70,7 +70,11 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest">
                 <methods>
-<!--                    Correctly hande @Default and dependent context-->
+                    <!--                    Remove after 3.4.1-->
+                    <exclude name="testContextIsActiveWhenInvokingProducerField"/>
+                    <exclude name="testInstanceUsedForProducerFieldNotShared"/>
+
+                    <!--                    Correctly hande @Default and dependent context-->
                     <exclude name="testCallingCreationalContextReleaseDestroysDependents"/>
                     <exclude name="testContextGetWithCreateFalseReturnsNull"/>
                     <exclude name="testContextGetWithCreationalContextReturnsNewInstance"/>

@@ -47,7 +47,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Nullable
     private Qualifier<T> qualifier;
     @Nullable
-    private OdiBeanImpl<T> bean;
+    private OdiBean<T> bean;
 
     OdiInstanceImpl(BeanContext beanContext,
                     OdiBeanContainer beanContainer,
@@ -124,7 +124,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
         return toHandle(getBean());
     }
 
-    private OdiBeanImpl<T> getBean() {
+    private OdiBean<T> getBean() {
         try {
             if (bean == null) {
                 bean = beanContainer.getBean(beanType, qualifier);
@@ -137,7 +137,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
         }
     }
 
-    private Handle<T> toHandle(OdiBeanImpl<T> odiBean) {
+    private Handle<T> toHandle(OdiBean<T> odiBean) {
         return new Handle<>() {
 
             private CreationalContext<T> creationalContext;

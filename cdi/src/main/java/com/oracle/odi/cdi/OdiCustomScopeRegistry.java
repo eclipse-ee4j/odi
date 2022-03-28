@@ -150,7 +150,7 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
 
         @Override
         public <T> T getOrCreate(BeanCreationContext<T> creationContext) {
-            final OdiBeanImpl<T> contextual = getBeanContainer().getBean(creationContext.definition());
+            final OdiBean<T> contextual = getBeanContainer().getBean(creationContext.definition());
             final T bean = context.get(contextual);
             if (bean != null) {
                 return bean;

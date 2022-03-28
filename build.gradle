@@ -3,7 +3,6 @@ subprojects {
 
     repositories {
         mavenCentral()
-        mavenLocal()
     }
 
     micronautBuild {

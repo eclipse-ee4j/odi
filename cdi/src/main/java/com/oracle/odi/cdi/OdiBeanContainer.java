@@ -30,44 +30,92 @@ import jakarta.enterprise.inject.spi.BeanContainer;
 import java.util.Collection;
 
 /**
- * Internal ODI {@link BeanContainer}.
+ * ODI specific {@link BeanContainer} implementation.
  */
 @Internal
 public interface OdiBeanContainer extends BeanContainer {
 
     /**
      * Get bean definitions by CDI rules.
-     * @param argument The argument
+     *
+     * @param argument  The argument
      * @param qualifier The qualifier
-     * @param <T> The type
+     * @param <T>       The type
      * @return The beans definitions
      */
-    @NonNull <T> Collection<BeanDefinition<T>> getBeanDefinitions(@NonNull Argument<T> argument,
-                                                                  @Nullable io.micronaut.context.Qualifier<T> qualifier);
+    @NonNull
+    <T> Collection<BeanDefinition<T>> getBeanDefinitions(@NonNull Argument<T> argument,
+                                                         @Nullable io.micronaut.context.Qualifier<T> qualifier);
 
-    @NonNull <T> OdiBeanImpl<T> getBean(BeanDefinition<T> beanDefinition);
+    /**
+     * Gets a bean resolved by {@link BeanDefinition}.
+     *
+     * @param beanDefinition The bean definition
+     * @param <T>            The bean type
+     * @return The bean
+     */
+    @NonNull
+    <T> OdiBean<T> getBean(@NonNull BeanDefinition<T> beanDefinition);
 
-    @NonNull <T> OdiBeanImpl<T> getBean(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier);
+    /**
+     * Gets a bean resolved by an argument and a qualifier.
+     *
+     * @param argument  The argument
+     * @param qualifier The qualifier
+     * @param <T>       The bean type
+     * @return The bean
+     */
+    @NonNull
+    <T> OdiBean<T> getBean(@NonNull Argument<T> argument,
+                               @Nullable io.micronaut.context.Qualifier<T> qualifier);
 
-    @NonNull <T> Collection<OdiBeanImpl<T>> getBeans(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier);
+    /**
+     * Get beans resolved by an argument and a qualifier.
+     *
+     * @param argument  The argument
+     * @param qualifier The qualifier
+     * @param <T>       The bean type
+     * @return Resolved beans
+     */
+    @NonNull
+    <T> Collection<OdiBean<T>> getBeans(@NonNull Argument<T> argument,
+                                            @Nullable io.micronaut.context.Qualifier<T> qualifier);
 
+    /**
+     * @return Basic instance
+     */
     @NonNull
     OdiInstance<Object> createInstance();
 
+    /**
+     * Basic instance with an associated scope.
+     * <p>
+     * TODO: Consider removing an using contextual context.
+     *
+     * @param context The context
+     * @return Basic instance
+     */
     @NonNull
-    OdiInstance<Object> createInstance(Context context);
+    OdiInstance<Object> createInstance(@NonNull Context context);
 
     /**
      * Create a custom {@link CreationalContext} that is propagating {@link BeanResolutionContext}.
-     * @param contextual The Contextual
+     *
+     * @param contextual        The Contextual
      * @param resolutionContext THe resolution context
-     * @param <T> The type
+     * @param <T>               The type
      * @return The creational context
      */
     @NonNull
     <T> CreationalContext<T> createCreationalContext(@NonNull Contextual<T> contextual,
                                                      @NonNull BeanResolutionContext resolutionContext);
 
+    /**
+     * Gets {@link BeanContext}.
+     *
+     * @return The bean context
+     */
+    @NonNull
     BeanContext getBeanContext();
 
 }

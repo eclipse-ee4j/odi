@@ -38,7 +38,6 @@ import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.CreationException;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
-import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.Prioritized;
 import jakarta.inject.Named;
@@ -57,7 +56,7 @@ import java.util.stream.Stream;
  * @param <T> The generic type of the bean
  */
 @Internal
-public class OdiBeanImpl<T> implements Bean<T>, Prioritized {
+public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     private final Argument<T> argument;
     private final io.micronaut.context.Qualifier<T> qualifier;

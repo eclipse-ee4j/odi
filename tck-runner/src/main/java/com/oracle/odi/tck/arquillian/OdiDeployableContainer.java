@@ -91,7 +91,6 @@ public class OdiDeployableContainer implements DeployableContainer<OdiContainerC
         return supportLib;
     }
 
-
     @Override
     public ProtocolMetaData deploy(Archive<?> archive) throws DeploymentException {
         if (archive instanceof LibraryContainer) {

@@ -16,6 +16,7 @@
 package com.oracle.odi.cdi;
 
 import io.micronaut.context.Qualifier;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
@@ -23,8 +24,11 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.Instance;
 
 /**
+ * ODI specific {@link Instance} implementation.
+ *
  * @param <T> The instance type
  */
+@Internal
 public interface OdiInstance<T> extends Instance<T> {
 
     @NonNull

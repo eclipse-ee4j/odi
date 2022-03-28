@@ -15,13 +15,6 @@
  */
 package com.oracle.odi.cdi;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Member;
-import java.lang.reflect.Type;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -30,14 +23,21 @@ import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Member;
+import java.lang.reflect.Type;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Internal
 final class OdiInjectionPoint implements InjectionPoint {
-    private final OdiBeanImpl<?> bean;
+    private final OdiBean<?> bean;
     private final Argument<?> argument;
     private final AnnotationMetadata annotationMetadata;
 
     OdiInjectionPoint(
-            OdiBeanImpl<?> bean,
+            OdiBean<?> bean,
             io.micronaut.inject.InjectionPoint<?> injectionPoint,
             Argument<?> argument) {
         this.bean = Objects.requireNonNull(bean);
