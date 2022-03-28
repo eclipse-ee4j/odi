@@ -47,6 +47,10 @@ public interface OdiBeanContainer extends BeanContainer {
 
     @NonNull <T> OdiBeanImpl<T> getBean(BeanDefinition<T> beanDefinition);
 
+    @NonNull <T> OdiBeanImpl<T> getBean(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier);
+
+    @NonNull <T> Collection<OdiBeanImpl<T>> getBeans(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier);
+
     @NonNull
     OdiInstance<Object> createInstance();
 

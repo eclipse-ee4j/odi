@@ -59,6 +59,8 @@ import java.util.stream.Stream;
 @Internal
 public class OdiBeanImpl<T> implements Bean<T>, Prioritized {
 
+    private final Argument<T> argument;
+    private final io.micronaut.context.Qualifier<T> qualifier;
     private final BeanDefinition<T> definition;
     private final BeanContext beanContext;
     private Class<? extends Annotation> scope;
@@ -66,10 +68,14 @@ public class OdiBeanImpl<T> implements Bean<T>, Prioritized {
     /**
      * Default constructor.
      *
+     * @param argument    The argument
+     * @param qualifier   The qualifier
      * @param beanContext The bean context
      * @param definition  The definition
      */
-    public OdiBeanImpl(BeanContext beanContext, BeanDefinition<T> definition) {
+    public OdiBeanImpl(Argument<T> argument, Qualifier<T> qualifier, BeanContext beanContext, BeanDefinition<T> definition) {
+        this.argument = argument;
+        this.qualifier = qualifier;
         this.beanContext = beanContext;
         this.definition = Objects.requireNonNull(definition, "Bean definition cannot be null");
     }
@@ -111,12 +117,19 @@ public class OdiBeanImpl<T> implements Bean<T>, Prioritized {
             throw new IllegalArgumentException("Not an ODI Creational Context");
         }
         OdiCreationalContext<T> odiCreationalContext = (OdiCreationalContext<T>) creationalContext;
-        Argument<T> argument = definition.asArgument();
-        Qualifier<T> qualifier = definition.getDeclaredQualifier();
         try {
-            BeanDefinition<T> beanDefinition = beanContext.getBeanDefinition(argument, qualifier);
-            T instance = ((DefaultBeanContext) beanContext).getBean(odiCreationalContext.getResolutionContext(), argument, qualifier);
-            odiCreationalContext.setCreatedBean(new BeanRegistration<>(BeanIdentifier.of(""), beanDefinition, instance));
+            T instance;
+            // TODO: We need "getBean(BeanResolutionContext, BeanDefinition)" in Core
+            if (!definition.getExposedTypes().isEmpty()) {
+                instance = ((DefaultBeanContext) beanContext).getBean(odiCreationalContext.getResolutionContext(), argument, qualifier);
+            } else {
+                instance = ((DefaultBeanContext) beanContext).getBean(
+                        odiCreationalContext.getResolutionContext(),
+                        definition.asArgument(),
+                        definition.getDeclaredQualifier()
+                );
+            }
+            odiCreationalContext.setCreatedBean(new BeanRegistration<>(BeanIdentifier.of(""), definition, instance));
             return instance;
         } catch (NonUniqueBeanException e) {
             throw new AmbiguousResolutionException(e.getMessage(), e);

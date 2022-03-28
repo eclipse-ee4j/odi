@@ -21,7 +21,6 @@ import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.util.ArrayUtils;
-import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.CreationalContext;
@@ -33,7 +32,6 @@ import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -129,14 +127,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     private OdiBeanImpl<T> getBean() {
         try {
             if (bean == null) {
-                Collection<BeanDefinition<T>> beanDefinitions = beanContainer.getBeanDefinitions(beanType, qualifier);
-                if (beanDefinitions.isEmpty()) {
-                    throw new UnsatisfiedResolutionException("");
-                }
-                if (beanDefinitions.size() > 1) {
-                    throw new AmbiguousResolutionException("");
-                }
-                bean = beanContainer.getBean(beanDefinitions.iterator().next());
+                bean = beanContainer.getBean(beanType, qualifier);
             }
             return bean;
         } catch (UnsatisfiedResolutionException | AmbiguousResolutionException e) {
@@ -187,8 +178,8 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     @Override
     public List<Handle<T>> handles() {
-        return beanContainer.getBeanDefinitions(beanType, qualifier).stream()
-                .map(def -> toHandle(new OdiBeanImpl<>(beanContext, def)))
+        return beanContainer.getBeans(beanType, qualifier).stream()
+                .map(this::toHandle)
                 .collect(Collectors.toList());
     }
 
@@ -217,8 +208,6 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Override
     public Stream<T> stream() {
         return handles().stream().map(Handle::get);
-//        Qualifier<T> qualifier = resolveQualifier();
-//        return ((DefaultBeanContext) beanContext).streamOfType(resolutionContext, beanType, qualifier);
     }
 
     private <K> Qualifier<K> withAnnotations(Annotation[] qualifiers) {

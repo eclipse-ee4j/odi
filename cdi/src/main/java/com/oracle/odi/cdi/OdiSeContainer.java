@@ -151,7 +151,7 @@ final class OdiSeContainer extends CDI<Object>
 
             @Override
             public jakarta.enterprise.inject.spi.Bean<Object> getBean() {
-                return new OdiBeanImpl(OdiSeContainer.this.applicationContext, new BeanDefinition() {
+                return new OdiBeanImpl(Argument.of(OdiSeContainer.class), null, OdiSeContainer.this.applicationContext, new BeanDefinition() {
 
                     @Override
                     public boolean isEnabled(BeanContext context, BeanResolutionContext resolutionContext) {
@@ -210,13 +210,12 @@ final class OdiSeContainer extends CDI<Object>
         if (injectionPoint instanceof ArgumentCoercible) {
             final Argument<?> argument = ((ArgumentCoercible<?>) injectionPoint).asArgument();
             try {
-                final BeanDefinition<?> beanDefinition = this.applicationContext.getBeanDefinition(
+                return beanContainer.getBean(
                         argument.getFirstTypeVariable()
                                 .orElseThrow(() -> new UnsatisfiedResolutionException("Cannot resolve bean for injection point:"
                                                                                               + " " + injectionPoint)),
                         Qualifiers.forArgument(argument)
                 );
-                return beanContainer.getBean(beanDefinition);
             } catch (NonUniqueBeanException e) {
                 throw new AmbiguousResolutionException(e.getMessage(), e);
             } catch (NoSuchBeanException e) {

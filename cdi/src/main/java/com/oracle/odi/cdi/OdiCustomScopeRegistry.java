@@ -23,6 +23,7 @@ import io.micronaut.context.scope.CustomScope;
 import io.micronaut.context.scope.CustomScopeRegistry;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
 import io.micronaut.inject.BeanType;
 import jakarta.enterprise.context.Dependent;
@@ -97,7 +98,8 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
     }
 
     private <T> Contextual<T> createContextual(BeanContext beanContext, BeanCreationContext<T> creationContext) {
-        return new OdiBeanImpl<>(beanContext, creationContext.definition()) {
+        BeanDefinition<T> definition = creationContext.definition();
+        return new OdiBeanImpl<>(definition.asArgument(), definition.getDeclaredQualifier(), beanContext, definition) {
             @Override
             public T create(CreationalContext<T> creationalContext) {
                 if (creationalContext instanceof OdiCreationalContext) {

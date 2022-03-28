@@ -70,23 +70,25 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest">
                 <methods>
+<!--                    Correctly hande @Default and dependent context-->
                     <exclude name="testCallingCreationalContextReleaseDestroysDependents"/>
                     <exclude name="testContextGetWithCreateFalseReturnsNull"/>
                     <exclude name="testContextGetWithCreationalContextReturnsNewInstance"/>
                     <exclude name="testContextIsActiveDuringInjection"/>
-                    testContextIsActiveWhenInvokingDisposalMethod
-                    testContextIsActiveWhenInvokingProducerMethod
-                    testDependentBeanIsDependentObjectOfBeanInjectedInto
-                    testDependentScopedInterceptorsAreDependentObjectsOfBean
-                    testDependentsDestroyedWhenDisposerMethodCompletes
-                    testDependentsDestroyedWhenObserverMethodEvaluationCompletes
-                    testDependentsDestroyedWhenProducerFieldCompletes
-                    testDependentsDestroyedWhenProducerMethodCompletes
-                    testDestroyingManagedParentDestroysDependentsOfSameBean
-                    testDestroyingSimpleParentDestroysDependents
-                    testInstanceUsedForDisposalMethodNotShared
-                    testInstanceUsedForObserverMethodNotShared
-                    testInstanceUsedForProducerMethodNotShared
+                    <exclude name="testContextIsActiveWhenCreatingObserverMethodInstance"/>
+                    <exclude name="testContextIsActiveWhenInvokingDisposalMethod"/>
+                    <exclude name="testContextIsActiveWhenInvokingDisposalMethod"/>
+                    <exclude name="testContextIsActiveWhenInvokingProducerMethod"/>
+                    <exclude name="testDependentsDestroyedWhenDisposerMethodCompletes"/>
+                    <exclude name="testDependentsDestroyedWhenObserverMethodEvaluationCompletes"/>
+                    <exclude name="testDependentsDestroyedWhenProducerFieldCompletes"/>
+                    <exclude name="testDependentsDestroyedWhenProducerMethodCompletes"/>
+                    <exclude name="testDestroyingManagedParentDestroysDependentsOfSameBean"/>
+                    <exclude name="testDestroyingSimpleParentDestroysDependents"/>
+                    <exclude name="testInstanceNotSharedBetweenInjectionPoints"/>
+                    <exclude name="testInstanceUsedForDisposalMethodNotShared"/>
+                    <exclude name="testInstanceUsedForObserverMethodNotShared"/>
+                    <exclude name="testInstanceUsedForProducerMethodNotShared"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest">
@@ -308,7 +310,7 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest">
                 <methods>
-<!--                    Static event observers not supported-->
+                    <!--                    Static event observers not supported-->
                     <exclude name="testObserverMethodRegistration"/>
                     <exclude name="testObserverMethodWithoutBindingTypesObservesEventsWithoutBindingTypes"/>
                 </methods>
@@ -1252,6 +1254,13 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest">
+                <methods>
+                    <!--                    Correctly handle @Default-->
+                    <exclude name="beanManageCreateInstance"/>
+                    <exclude name="cdiSelectLookup"/>
+                </methods>
+            </class>
             <class name="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest">
                 <methods>
                     <exclude name="testGetReferenceWithIllegalBeanType"/>
@@ -1436,7 +1445,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-<!--            Bean container-->
+            <!--            Bean container-->
             <class name="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest">
                 <methods>
                     <exclude name="testGetBeans"/>

@@ -19,9 +19,7 @@ import com.oracle.odi.cdi.events.OdiObserverMethodRegistry;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
-import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.core.order.OrderUtil;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
@@ -34,8 +32,9 @@ import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Alternative;
-import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Stereotype;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
@@ -55,8 +54,6 @@ import java.util.stream.Collectors;
 
 final class OdiBeanContainerImpl implements OdiBeanContainer {
 
-    private static final io.micronaut.context.Qualifier DEFAULT_QUALIFIER = Qualifiers.byAnnotation(AnnotationMetadata.EMPTY_METADATA, Default.class);
-
     private final ApplicationContext applicationContext;
     private final OdiSeContainer container;
     private OdiObserverMethodRegistry observerMethodRegistry;
@@ -69,14 +66,30 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public <T> OdiBeanImpl<T> getBean(BeanDefinition<T> beanDefinition) {
-        return new OdiBeanImpl<>(applicationContext, beanDefinition);
+        return new OdiBeanImpl<>(beanDefinition.asArgument(), beanDefinition.getDeclaredQualifier(), applicationContext, beanDefinition);
+    }
+
+    @Override
+    public <T> OdiBeanImpl<T> getBean(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
+        Collection<BeanDefinition<T>> beanDefinitions = getBeanDefinitions(argument, qualifier);
+        if (beanDefinitions.isEmpty()) {
+            throw new UnsatisfiedResolutionException("No bean found for argument: " + argument + " and qualifier: " + qualifier);
+        }
+        if (beanDefinitions.size() > 1) {
+            throw new AmbiguousResolutionException("Multiple beans found for argument: " + argument + " and qualifier: " + qualifier);
+        }
+        return new OdiBeanImpl<>(argument, qualifier, applicationContext, beanDefinitions.iterator().next());
+    }
+
+    @Override
+    public <T> Collection<OdiBeanImpl<T>> getBeans(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
+        return getBeanDefinitions(argument, qualifier).stream()
+                .map(bd -> new OdiBeanImpl<>(argument, qualifier, applicationContext, bd))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public <T> Collection<BeanDefinition<T>> getBeanDefinitions(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
-//        if (qualifier == null) {
-//            qualifier = DEFAULT_QUALIFIER;
-//        }
         Collection<BeanDefinition<T>> beanDefinitions = applicationContext.getBeanDefinitions(argument, qualifier);
         if (beanDefinitions.isEmpty() || beanDefinitions.size() == 1) {
             return beanDefinitions;
@@ -134,21 +147,15 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        return toBeanSet(getBeanDefinitions(Argument.of(beanType), OdiInstanceImpl.resolveQualifier(qualifiers)));
-    }
-
-    private Set<Bean<?>> toBeanSet(Collection<? extends BeanDefinition<?>> beanDefinitions) {
-        return beanDefinitions.stream()
-                .sorted(OrderUtil.COMPARATOR)
-                .map((this::getBean))
-                .collect(Collectors.toSet());
+        return getBeans(Argument.of(beanType), OdiInstanceImpl.resolveQualifier(qualifiers)).stream()
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
     public Set<Bean<?>> getBeans(String name) {
-        return toBeanSet(applicationContext.getBeanDefinitions(Qualifiers.byName(
+        return getBeans(Argument.OBJECT_ARGUMENT, Qualifiers.byName(
                 Objects.requireNonNull(name, "Name cannot be null")
-        )));
+        )).stream().collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
