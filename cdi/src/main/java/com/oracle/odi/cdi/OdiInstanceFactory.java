@@ -25,6 +25,7 @@ import io.micronaut.inject.ArgumentInjectionPoint;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.BeanContainer;
 
 /**
  * Creates instances of {@link jakarta.enterprise.inject.Instance}.
@@ -34,9 +35,10 @@ public class OdiInstanceFactory {
 
     /**
      * Builds an instance.
-     * @param resolutionContext The resolution context
+     *
+     * @param resolutionContext      The resolution context
      * @param argumentInjectionPoint The argument injection point
-     * @param <T> The generic type
+     * @param <T>                    The generic type
      * @return The instance
      */
     @Any
@@ -54,9 +56,10 @@ public class OdiInstanceFactory {
             }
             qualifier = Qualifiers.forArgument(argument);
         }
-        return new OdiInstance<>(
-                resolutionContext,
+        return new OdiInstanceImpl<>(
                 resolutionContext.getContext(),
+                (OdiBeanContainer) resolutionContext.getContext().getBean(BeanContainer.class),
+                new DependentContext(resolutionContext),
                 injectArgument,
                 qualifier
         );

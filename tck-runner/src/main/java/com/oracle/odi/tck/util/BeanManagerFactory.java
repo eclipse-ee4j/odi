@@ -70,7 +70,7 @@ public class BeanManagerFactory {
 
             @Override
             public <T> Set<ObserverMethod<? super T>> resolveObserverMethods(T event, Annotation... qualifiers) {
-                throw new UnsupportedOperationException();
+                return beanContainer.resolveObserverMethods(event, qualifiers);
             }
 
             @Override

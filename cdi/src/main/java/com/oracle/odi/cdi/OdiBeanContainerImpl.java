@@ -17,20 +17,25 @@ package com.oracle.odi.cdi;
 
 import com.oracle.odi.cdi.events.OdiObserverMethodRegistry;
 import io.micronaut.context.ApplicationContext;
-import io.micronaut.core.order.OrderUtil;
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanResolutionContext;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ContextNotActiveException;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.event.Event;
-import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Alternative;
+import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Stereotype;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.BeanContainer;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
@@ -41,20 +46,72 @@ import jakarta.interceptor.InterceptorBinding;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-final class OdiBeanManager implements BeanContainer {
+final class OdiBeanContainerImpl implements OdiBeanContainer {
+
     private final ApplicationContext applicationContext;
     private final OdiSeContainer container;
     private OdiObserverMethodRegistry observerMethodRegistry;
     private Event<Object> objectEvent;
 
-    OdiBeanManager(OdiSeContainer container, ApplicationContext applicationContext) {
+    OdiBeanContainerImpl(OdiSeContainer container, ApplicationContext applicationContext) {
         this.container = container;
         this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public <T> OdiBeanImpl<T> getBean(BeanDefinition<T> beanDefinition) {
+        return new OdiBeanImpl<>(beanDefinition.asArgument(), beanDefinition.getDeclaredQualifier(), applicationContext, beanDefinition);
+    }
+
+    @Override
+    public <T> OdiBeanImpl<T> getBean(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
+        Collection<BeanDefinition<T>> beanDefinitions = getBeanDefinitions(argument, qualifier);
+        if (beanDefinitions.isEmpty()) {
+            throw new UnsatisfiedResolutionException("No bean found for argument: " + argument + " and qualifier: " + qualifier);
+        }
+        if (beanDefinitions.size() > 1) {
+            throw new AmbiguousResolutionException("Multiple beans found for argument: " + argument + " and qualifier: " + qualifier);
+        }
+        return new OdiBeanImpl<>(argument, qualifier, applicationContext, beanDefinitions.iterator().next());
+    }
+
+    @Override
+    public <T> Collection<OdiBean<T>> getBeans(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
+        return getBeanDefinitions(argument, qualifier).stream()
+                .map(bd -> new OdiBeanImpl<>(argument, qualifier, applicationContext, bd))
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    @Override
+    public <T> Collection<BeanDefinition<T>> getBeanDefinitions(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
+        Collection<BeanDefinition<T>> beanDefinitions = applicationContext.getBeanDefinitions(argument, qualifier);
+        if (beanDefinitions.isEmpty() || beanDefinitions.size() == 1) {
+            return beanDefinitions;
+        }
+
+        List<BeanDefinition<T>> alternatives = beanDefinitions
+                .stream()
+                .filter(bd -> bd.hasAnnotation(Alternative.class))
+                .collect(Collectors.toList());
+        if (!alternatives.isEmpty()) {
+            return alternatives.stream()
+                    .sorted(Comparator.<BeanDefinition<T>>comparingInt(bd -> {
+                        AnnotationValue<Priority> annotation = bd.getAnnotation(Priority.class);
+                        if (annotation == null) {
+                            return 0;
+                        }
+                        return annotation.intValue().orElse(0);
+                    }).reversed())
+                    .limit(1)
+                    .collect(Collectors.toList());
+        }
+        return beanDefinitions;
     }
 
     @Override
@@ -73,7 +130,16 @@ final class OdiBeanManager implements BeanContainer {
     @Override
     public <T> CreationalContext<T> createCreationalContext(Contextual<T> contextual) {
         if (contextual instanceof OdiBeanImpl || contextual == null) {
-            return new OdiCreationalContext<>(container.getApplicationContext());
+            return new OdiCreationalContext<>(container.getApplicationContext(), null);
+        } else {
+            throw new IllegalArgumentException("Unsupported by contextual type: " + contextual.getClass());
+        }
+    }
+
+    @Override
+    public <T> CreationalContext<T> createCreationalContext(Contextual<T> contextual, BeanResolutionContext resolutionContext) {
+        if (contextual instanceof OdiBeanImpl || contextual == null) {
+            return new OdiCreationalContext<>(container.getApplicationContext(), resolutionContext);
         } else {
             throw new IllegalArgumentException("Unsupported by contextual type: " + contextual.getClass());
         }
@@ -81,25 +147,15 @@ final class OdiBeanManager implements BeanContainer {
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        final Collection<? extends BeanDefinition<?>> beanDefinitions = applicationContext.getBeanDefinitions(
-                Argument.of(beanType),
-                OdiInstance.resolveQualifier(qualifiers)
-        );
-        return toBeanSet(beanDefinitions);
-    }
-
-    private Set<Bean<?>> toBeanSet(Collection<? extends BeanDefinition<?>> beanDefinitions) {
-        return beanDefinitions.stream()
-                .sorted(OrderUtil.COMPARATOR)
-                .map((beanDefinition -> new OdiBeanImpl<>(applicationContext, beanDefinition)))
-                .collect(Collectors.toSet());
+        return getBeans(Argument.of(beanType), OdiInstanceImpl.resolveQualifier(qualifiers)).stream()
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
     public Set<Bean<?>> getBeans(String name) {
-        return toBeanSet(applicationContext.getBeanDefinitions(Qualifiers.byName(
+        return getBeans(Argument.OBJECT_ARGUMENT, Qualifiers.byName(
                 Objects.requireNonNull(name, "Name cannot be null")
-        )));
+        )).stream().collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
@@ -119,7 +175,7 @@ final class OdiBeanManager implements BeanContainer {
         Argument<?> argument = Argument.of(event.getClass());
         final io.micronaut.context.Qualifier qualifierInstances = AnnotationUtils
                 .qualifierFromQualifierAnnotations(qualifiers);
-        return (Set) observerMethodRegistry
+        return observerMethodRegistry
                 .findSetOfObserverMethods(argument, qualifierInstances);
     }
 
@@ -166,6 +222,10 @@ final class OdiBeanManager implements BeanContainer {
 
     @Override
     public Context getContext(Class<? extends Annotation> scopeType) {
+        if (scopeType == Dependent.class) {
+            // TODO: make contextual
+            return new DependentContext(null);
+        }
         final List<Context> contexts = applicationContext.streamOfType(Context.class)
                 .filter(c -> c.getScope() == scopeType)
                 .filter(Context::isActive)
@@ -188,7 +248,17 @@ final class OdiBeanManager implements BeanContainer {
     }
 
     @Override
-    public Instance<Object> createInstance() {
+    public OdiInstance<Object> createInstance() {
         return container;
+    }
+
+    @Override
+    public OdiInstance<Object> createInstance(Context context) {
+        return container.select(context);
+    }
+
+    @Override
+    public BeanContext getBeanContext() {
+        return applicationContext;
     }
 }

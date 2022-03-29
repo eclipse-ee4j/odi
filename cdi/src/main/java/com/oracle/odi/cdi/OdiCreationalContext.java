@@ -17,17 +17,22 @@ package com.oracle.odi.cdi;
 
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
+import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.scope.CreatedBean;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.inject.BeanDefinition;
 import jakarta.enterprise.context.spi.CreationalContext;
 
 final class OdiCreationalContext<T> implements CreationalContext<T> {
 
     private final BeanContext beanContext;
+    @Nullable
+    private final BeanResolutionContext resolutionContext;
     private CreatedBean<T> createdBean;
 
-    OdiCreationalContext(BeanContext beanContext) {
+    OdiCreationalContext(BeanContext beanContext, @Nullable BeanResolutionContext resolutionContext) {
         this.beanContext = beanContext;
+        this.resolutionContext = resolutionContext;
     }
 
     @Override
@@ -54,6 +59,11 @@ final class OdiCreationalContext<T> implements CreationalContext<T> {
 
     CreatedBean<T> getCreatedBean() {
         return createdBean;
+    }
+
+    @Nullable
+    public BeanResolutionContext getResolutionContext() {
+        return resolutionContext;
     }
 
     void setCreatedBean(CreatedBean<T> createdBean) {

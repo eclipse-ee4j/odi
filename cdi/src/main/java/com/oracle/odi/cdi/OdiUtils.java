@@ -15,7 +15,6 @@
  */
 package com.oracle.odi.cdi;
 
-import io.micronaut.context.BeanContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.InjectionPoint;
@@ -31,16 +30,16 @@ public final class OdiUtils {
 
     /**
      * Creates an ODI injection point.
-     * @param beanContext The bean context
+     * @param beanContainer The bean container
      * @param injectionPoint The injection point
      * @param argument The argument
      * @return The injection point
      */
     public static jakarta.enterprise.inject.spi.InjectionPoint createCDIInjectionPoint(
-            BeanContext beanContext,
+            OdiBeanContainer beanContainer,
             InjectionPoint<?> injectionPoint,
             Argument<?> argument) {
-        OdiBeanImpl<?> bean = new OdiBeanImpl<>(beanContext, injectionPoint.getDeclaringBean());
+        OdiBean<?> bean = beanContainer.getBean(injectionPoint.getDeclaringBean());
         return new OdiInjectionPoint(bean, injectionPoint, argument);
     }
 

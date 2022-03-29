@@ -15,15 +15,6 @@
  */
 package com.oracle.odi.cdi;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
@@ -35,6 +26,15 @@ import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.qualifiers.AnyQualifier;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.inject.Named;
+
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The internal annotation utils class.
@@ -86,6 +86,11 @@ public final class AnnotationUtils {
     public static <U> Qualifier<U> qualifierFromQualifierAnnotations(@Nullable Annotation[] annotations) {
         if (annotations == null || annotations.length == 0) {
             return null;
+        }
+        for (Annotation annotation : annotations) {
+            if (annotation.annotationType().getAnnotation(jakarta.inject.Qualifier.class) == null) {
+                throw new IllegalArgumentException("Annotation: " + annotation + " is not a qualifier!");
+            }
         }
         AnnotationMetadata annotationMetadata = annotationMetadataFromQualifierAnnotations(annotations);
         return qualifierFromQualifierAnnotations(annotationMetadata, annotations);

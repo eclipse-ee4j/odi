@@ -15,14 +15,6 @@
  */
 package com.oracle.odi.cdi.processor;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import io.micronaut.aop.InterceptorBean;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationUtil;
@@ -36,10 +28,19 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Singleton;
 import jakarta.interceptor.AroundConstruct;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
+
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Processes {@link jakarta.interceptor.Interceptor} elements to correctly handle it using Micronaut.
@@ -69,7 +70,10 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
         interceptorBean.removeStereotype(AnnotationUtil.ANN_AROUND);
         interceptorBean.removeStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
         interceptorBean.removeAnnotation(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
-        interceptorBean.annotate(Singleton.class);
+        // Investigate why `.hasAnnotation(Scope.class)` doesn't work
+        if (!originatingElement.hasAnnotation(Dependent.class)) {
+            interceptorBean.annotate(Singleton.class);
+        }
         final ClassElement interceptorElement = context.getClassElement(INTERCEPTOR_ADAPTER).orElse(null);
         if (interceptorElement != null) {
 

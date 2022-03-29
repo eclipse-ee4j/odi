@@ -23,6 +23,7 @@ import io.micronaut.context.scope.CustomScope;
 import io.micronaut.context.scope.CustomScopeRegistry;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
 import io.micronaut.inject.BeanType;
 import jakarta.enterprise.context.Dependent;
@@ -45,9 +46,17 @@ import java.util.stream.Collectors;
 final class OdiCustomScopeRegistry implements CustomScopeRegistry {
     private final BeanContext beanContext;
     private volatile Map<String, Context> contextMap = null;
+    private OdiBeanContainer beanContainer;
 
     OdiCustomScopeRegistry(BeanContext beanContext) {
         this.beanContext = beanContext;
+    }
+
+    private OdiBeanContainer getBeanContainer() {
+        if (beanContainer == null) {
+            beanContainer = beanContext.getBean(OdiBeanContainer.class);
+        }
+        return beanContainer;
     }
 
     @Override
@@ -80,7 +89,7 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                 }
             }
         }
-        return Optional.ofNullable(contextMap.get(scopeAnnotation)).map(OdiCustomScope::new);
+        return Optional.ofNullable(contextMap.get(scopeAnnotation)).map(context -> new OdiCustomScope<Annotation>(context));
     }
 
     @Override
@@ -89,7 +98,8 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
     }
 
     private <T> Contextual<T> createContextual(BeanContext beanContext, BeanCreationContext<T> creationContext) {
-        return new OdiBeanImpl<>(beanContext, creationContext.definition()) {
+        BeanDefinition<T> definition = creationContext.definition();
+        return new OdiBeanImpl<>(definition.asArgument(), definition.getDeclaredQualifier(), beanContext, definition) {
             @Override
             public T create(CreationalContext<T> creationalContext) {
                 if (creationalContext instanceof OdiCreationalContext) {
@@ -140,14 +150,13 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
 
         @Override
         public <T> T getOrCreate(BeanCreationContext<T> creationContext) {
-            final BeanContext beanContext = OdiCustomScopeRegistry.this.beanContext;
-            final OdiBeanImpl<T> contextual = new OdiBeanImpl<>(beanContext, creationContext.definition());
+            final OdiBean<T> contextual = getBeanContainer().getBean(creationContext.definition());
             final T bean = context.get(contextual);
             if (bean != null) {
                 return bean;
             } else {
                 createdContextuals.put(creationContext.id(), contextual);
-                final OdiCreationalContext<T> creationalContext = new OdiCreationalContext<>(beanContext);
+                final OdiCreationalContext<T> creationalContext = new OdiCreationalContext<>(beanContext, null);
                 return context.get(
                         createContextual(beanContext, creationContext),
                         creationalContext

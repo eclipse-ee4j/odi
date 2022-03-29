@@ -15,11 +15,6 @@
  */
 package com.oracle.odi.cdi.intercept;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import com.oracle.odi.cdi.OdiBeanImpl;
 import io.micronaut.aop.ConstructorInterceptor;
 import io.micronaut.aop.ConstructorInvocationContext;
@@ -38,6 +33,11 @@ import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.interceptor.InterceptorBinding;
+
+import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Adapter type for delegating interception to a Jakarta Interceptor implementation.
@@ -68,7 +68,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
     public JakartaInterceptorAdapter(
             BeanDefinition<B> beanDefinition,
             BeanContext beanContext) {
-        super(beanContext, beanDefinition);
+        super(beanDefinition.asArgument(), beanDefinition.getDeclaredQualifier(), beanContext, beanDefinition);
         this.beanContext = beanContext;
         this.beanDefinition = beanContext.getBeanDefinition(beanDefinition.asArgument());
         this.priority = this.beanDefinition.intValue(Priority.class).orElse(0);

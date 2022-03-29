@@ -15,14 +15,8 @@
  */
 package com.oracle.odi.cdi.events;
 
-import java.lang.annotation.Annotation;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
-import java.util.function.Supplier;
-
 import com.oracle.odi.cdi.AnnotationUtils;
-import io.micronaut.context.BeanContext;
+import com.oracle.odi.cdi.OdiBeanContainer;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
 import io.micronaut.context.annotation.Factory;
@@ -39,6 +33,12 @@ import jakarta.enterprise.event.Event;
 import jakarta.enterprise.event.NotificationOptions;
 import jakarta.enterprise.util.TypeLiteral;
 
+import java.lang.annotation.Annotation;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.function.Supplier;
+
 /**
  * The factory of {@link jakarta.enterprise.event.Event}.
  */
@@ -47,17 +47,17 @@ import jakarta.enterprise.util.TypeLiteral;
 @Factory
 final class OdiEventFactory {
 
-    private final BeanContext beanContext;
+    private final OdiBeanContainer beanContainer;
     private final OdiObserverMethodRegistry observerMethodRegistry;
     private final Supplier<Executor> executorSupplier = SupplierUtil.memoized(new Supplier<>() {
         @Override
         public Executor get() {
-            return beanContext.findBean(Executor.class, Qualifiers.byName("scheduled")).orElseGet(ForkJoinPool::commonPool);
+            return beanContainer.getBeanContext().findBean(Executor.class, Qualifiers.byName("scheduled")).orElseGet(ForkJoinPool::commonPool);
         }
     });
 
-    OdiEventFactory(BeanContext beanContext, OdiObserverMethodRegistry observerMethodRegistry) {
-        this.beanContext = beanContext;
+    OdiEventFactory(OdiBeanContainer beanContainer, OdiObserverMethodRegistry observerMethodRegistry) {
+        this.beanContainer = beanContainer;
         this.observerMethodRegistry = observerMethodRegistry;
     }
 
@@ -158,7 +158,7 @@ final class OdiEventFactory {
             Qualifier<K> eventQualifier,
             InjectionPoint<?> injectionPoint) {
         return new OdiEvent<>(
-                beanContext,
+                beanContainer,
                 annotationMetadata,
                 eventType,
                 eventQualifier,
@@ -172,7 +172,7 @@ final class OdiEventFactory {
         AnnotationMetadata annotationMetadata = AnnotationUtils.annotationMetadataFromQualifierAnnotations(qualifiers);
         Qualifier<K> qualifier = AnnotationUtils.qualifierFromQualifierAnnotations(annotationMetadata, qualifiers);
         return new OdiEvent<>(
-                beanContext,
+                beanContainer,
                 annotationMetadata,
                 eventType,
                 qualifier,

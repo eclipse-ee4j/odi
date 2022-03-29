@@ -15,10 +15,8 @@
  */
 package com.oracle.odi.cdi.events;
 
-import java.util.Collection;
-
+import com.oracle.odi.cdi.OdiBeanContainer;
 import com.oracle.odi.cdi.annotation.ObservesMethod;
-import io.micronaut.context.BeanContext;
 import io.micronaut.context.processor.ExecutableMethodProcessor;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
@@ -28,6 +26,8 @@ import io.micronaut.inject.ExecutableMethod;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import java.util.Collection;
+
 /**
  * Implementation of {@link ExecutableMethodProcessor} that collects {@link ObservesMethod} and register them.
  */
@@ -35,19 +35,17 @@ import jakarta.inject.Singleton;
 @Internal
 final class ObservesMethodProcessor implements ExecutableMethodProcessor<ObservesMethod> {
 
-    private final BeanContext beanLocator;
+    private final OdiBeanContainer beanContainer;
     private final OdiObserverMethodRegistry observerMethodRegistry;
 
     /**
      * Default constructor.
-     * @param beanLocator The bean locator
+     * @param beanContainer The bean container
      * @param observerMethodRegistry The observer registry
      */
     @Inject
-    ObservesMethodProcessor(
-            BeanContext beanLocator,
-            OdiObserverMethodRegistry observerMethodRegistry) {
-        this.beanLocator = beanLocator;
+    ObservesMethodProcessor(OdiBeanContainer beanContainer, OdiObserverMethodRegistry observerMethodRegistry) {
+        this.beanContainer = beanContainer;
         this.observerMethodRegistry = observerMethodRegistry;
     }
 
@@ -58,13 +56,13 @@ final class ObservesMethodProcessor implements ExecutableMethodProcessor<Observe
         if (targetBeanDefinition == null) {
             return;
         }
-        observerMethodRegistry.register(new ExecutableObserverMethod(beanLocator, beanDefinition, targetBeanDefinition, method));
+        observerMethodRegistry.register(new ExecutableObserverMethod(beanContainer, beanDefinition, targetBeanDefinition, method));
     }
 
     public BeanDefinition<?> findTargetBeanDefinitions(BeanDefinition<?> originalBeanDefinition) {
         // We need to get all bean definitions and filter them for cases when bean inherit each other
         Collection<BeanDefinition<?>> beanDefinitions =
-                beanLocator.getBeanDefinitions((Argument) originalBeanDefinition.asArgument());
+                beanContainer.getBeanContext().getBeanDefinitions((Argument) originalBeanDefinition.asArgument());
         for (BeanDefinition<?> beanDefinition : beanDefinitions) {
             if (beanDefinition instanceof AdvisedBeanType) {
                 if (((AdvisedBeanType<?>) beanDefinition).getInterceptedType().equals(originalBeanDefinition.getBeanType())) {
