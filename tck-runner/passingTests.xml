@@ -1234,50 +1234,25 @@
                 </methods>
             </class>
             <!--            Extensions-->
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customStereotype.CustomStereotypeTest">
+            </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyMessagesTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementMultipleParams2Test">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParams2Test">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationNoParamTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyMessagesTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyTypesTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementMultipleParamsTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementNoParamTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParamsTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.registration.RegistrationTest">
                 <methods>
@@ -1285,9 +1260,6 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyTypesTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBean.SyntheticBeanTest">
                 <methods>
@@ -1308,6 +1280,8 @@
                 <methods>
                     <exclude name=".*"/>
                 </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeInjectionPoint.ChangeInjectionPointTest">
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.validation.ValidationTest">
                 <methods>

@@ -18,6 +18,7 @@ package com.oracle.odi.tck.arquillian;
 import com.oracle.odi.cdi.OdiApplicationContextBuilder;
 import com.oracle.odi.tck.porting.BeansImpl;
 import io.micronaut.context.ApplicationContext;
+import jakarta.enterprise.inject.spi.DefinitionException;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.protocol.ProtocolDescription;
@@ -137,7 +138,7 @@ public class OdiDeployableContainer implements DeployableContainer<OdiContainerC
             } catch (Exception e) {
                 throw new DeploymentException("Unable to start the application context", t);
             }
-            throw new DeploymentException("Unable to start the application context", nt);
+            throw new DefinitionException("Unable to start the application context", nt);
 
         } finally {
             Thread.currentThread().setContextClassLoader(old);

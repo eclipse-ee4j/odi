@@ -112,7 +112,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
             for (ServiceDefinition<BuildCompatibleExtension> compatibleExtension : loader) {
                 if (compatibleExtension.isPresent()) {
                     final BuildCompatibleExtension buildCompatibleExtension = compatibleExtension.load();
-                    buildTimeExtensions.add(new BuildCompatibleExtensionEntry(buildCompatibleExtension));
+                    buildTimeExtensions.add(new BuildCompatibleExtensionEntry(buildCompatibleExtension, loadErrors));
                 }
             }
         } catch (Exception e) {
@@ -229,6 +229,12 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
             final List<Method> processingMethods = entry.registrationMethods;
             methods:
             for (Method processingMethod : processingMethods) {
+                if (processingMethod.getParameterTypes().length == 0) {
+                    visitorContext.fail("Registration method '"
+                                                + processingMethod.getName()
+                                                + "' of extension: " + extension.getClass().getName() + " specifies no parameters", beanElement);
+                    continue;
+                }
                 final Class<?>[] types = processingMethod.getAnnotation(Registration.class).types();
                 for (Class<?> et : types) {
                     if (et != null && beanTypes.stream().anyMatch(ce -> ce.isAssignable(et))) {
@@ -343,6 +349,12 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
 
         try {
             final Class<?>[] parameterTypes = enhanceMethod.getParameterTypes();
+            if (parameterTypes.length == 0) {
+                visitorContext.fail("Enhancement method '"
+                                            + enhanceMethod.getName()
+                                            + "' of extension: " + extension.getClass().getName() + " specifies no parameters", originatingElement);
+                return;
+            }
             Object[] parameters = new Object[parameterTypes.length];
             final TypesImpl types = new TypesImpl(visitorContext);
             ExtensionParameter extensionParameter = null;
@@ -385,6 +397,11 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                         invokeExtensionMethod(extension, enhanceMethod, parameters);
                     }
                 }
+            } else {
+                visitorContext.fail("Enhancement method '"
+                                            + enhanceMethod.getName()
+                                            + "' of extension: " + extension.getClass().getName() + " does not specify any declaration config or info types", originatingElement);
+
             }
 
         } catch (Throwable e) {
@@ -478,7 +495,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         // phase 5
         private final List<Method> validationMethods;
 
-        BuildCompatibleExtensionEntry(BuildCompatibleExtension extension) {
+        BuildCompatibleExtensionEntry(BuildCompatibleExtension extension, List<String> loadErrors) {
             this.extension = extension;
             final Class<? extends BuildCompatibleExtension> type = extension.getClass();
             final Method[] methods = type.getDeclaredMethods();
@@ -497,6 +514,11 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                     if (method.isAnnotationPresent(Discovery.class)) {
                         discoveryMethods.add(method);
                     } else if (method.isAnnotationPresent(Enhancement.class)) {
+                        final Class<?>[] parameterTypes = method.getParameterTypes();
+                        if (parameterTypes.length == 1 && Messages.class.isAssignableFrom(parameterTypes[0])) {
+                            loadErrors.add("Extension method [" + method + "] of type [" + extension.getClass().getName() + "] cannot define only Messages as a parameter.");
+                            continue;
+                        }
                         enhanceMethods.add(method);
                     } else if (method.isAnnotationPresent(Registration.class)) {
                         registrationMethods.add(method);
