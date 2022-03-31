@@ -93,6 +93,8 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                     }
                 }
             }
+
+            registry.runValidation(visitorContext);
         } finally {
             firstBean = null;
             registry.stop();

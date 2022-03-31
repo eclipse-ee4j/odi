@@ -1255,9 +1255,6 @@
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParamsTest">
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.registration.RegistrationTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyTypesTest">
             </class>
