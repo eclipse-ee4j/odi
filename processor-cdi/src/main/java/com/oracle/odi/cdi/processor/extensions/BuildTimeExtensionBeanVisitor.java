@@ -16,9 +16,11 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.oracle.odi.cdi.annotation.meta.RuntimeMetaAnnotation;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
@@ -26,6 +28,8 @@ import io.micronaut.inject.ast.beans.BeanElement;
 import io.micronaut.inject.visitor.BeanElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
+import jakarta.enterprise.util.Nonbinding;
+import jakarta.inject.Singleton;
 
 /**
  * A {@link io.micronaut.inject.visitor.BeanElementVisitor} that runs the {@link jakarta.enterprise.inject.build.compatible.spi.Synthesis} phase.
@@ -35,11 +39,72 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
 
     @Override
     public BeanElement visitBeanElement(BeanElement beanElement, VisitorContext visitorContext) {
+        final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
+
+        registry.runRegistration(beanElement, visitorContext);
+        final SyntheticComponentsImpl syntheticComponents =
+                registry.runSynthesis(beanElement, visitorContext);
         if (firstBean == null) {
             firstBean = beanElement;
+            final DiscoveryImpl discovery = registry.getDiscovery();
+            if (discovery != null) {
+                final MetaAnnotationsImpl metaAnnotations = discovery.getMetaAnnotations();
+                final Set<MetaAnnotationImpl> qualifiers = metaAnnotations.getQualifiers();
+                for (MetaAnnotationImpl qualifier : qualifiers) {
+                    Set<String> nonBinding = new HashSet<>();
+                    qualifier.getElement().getEnclosedElements(ElementQuery.ALL_METHODS.onlyInstance().onlyDeclared())
+                            .forEach(m -> {
+                                if (m.hasAnnotation(Nonbinding.class)) {
+                                    nonBinding.add(m.getName());
+                                }
+                            });
+                    syntheticComponents.addBean(RuntimeMetaAnnotation.class)
+                            .type(RuntimeMetaAnnotation.class)
+                            .scope(Singleton.class)
+                            .withParam("annotationType", qualifier.getClassConfig().info())
+                            .withParam("nonBinding", nonBinding.toArray(String[]::new))
+                            .withParam("kind", RuntimeMetaAnnotation.MetaAnnotationKind.QUALIFIER)
+                            .createWith(RuntimeMetaAnnotation.Creator.class);
+
+                }
+            }
+
         }
-        final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
-        registry.runRegistration(beanElement, visitorContext);
+        final List<SyntheticBeanBuilderImpl<?>> syntheticBeanBuilders =
+                syntheticComponents.getSyntheticBeanBuilders();
+        for (SyntheticBeanBuilderImpl<?> syntheticBeanBuilder : syntheticBeanBuilders) {
+            final ClassElement beanType = syntheticBeanBuilder.getBeanType();
+            final Class<? extends SyntheticBeanCreator<?>> creatorClass = syntheticBeanBuilder.getCreatorClass();
+            if (creatorClass != null) {
+                final ClassElement creatorElement = visitorContext.getClassElement(creatorClass).orElse(null);
+                if (creatorElement == null) {
+                    final String message = "Synthetic bean creator class of type ["
+                            + creatorClass.getName()
+                            + "] must be present on the classpath of the application";
+                    visitorContext.fail(message, null);
+                } else {
+                    final ElementQuery<MethodElement> creatorMethods = ElementQuery.ALL_METHODS
+                            .named(name -> name.equals("create"))
+                            .filter(method -> method.getParameters().length == 2);
+                    beanElement.addAssociatedBean(creatorElement, visitorContext).inject()
+                            .produceBeans(
+                                    creatorMethods, builder -> {
+                                        builder.typed(beanType);
+                                        final Set<String> exposedTypes = syntheticBeanBuilder
+                                                .getExposedTypes();
+                                        if (exposedTypes.isEmpty()) {
+                                            builder.typed(beanType);
+                                        } else {
+                                            for (String exposedType : exposedTypes) {
+                                                visitorContext.getClassElement(exposedType)
+                                                        .ifPresent(builder::typed);
+                                            }
+                                        }
+                                    }
+                            );
+                }
+            }
+        }
         return beanElement;
     }
 
@@ -48,52 +113,6 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
         ActiveVisitorContext.setVisitorContext(null);
         final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
         try {
-            if (firstBean != null) {
-                final BeanElement beanElement = this.firstBean;
-                firstBean = null;
-                final SyntheticComponentsImpl syntheticComponents = registry.runSynthesis(
-                        beanElement,
-                        visitorContext
-                );
-                if (syntheticComponents != null) {
-                    final List<SyntheticBeanBuilderImpl<?>> syntheticBeanBuilders =
-                            syntheticComponents.getSyntheticBeanBuilders();
-                    for (SyntheticBeanBuilderImpl<?> syntheticBeanBuilder : syntheticBeanBuilders) {
-                        final ClassElement beanType = syntheticBeanBuilder.getBeanType();
-                        final Class<? extends SyntheticBeanCreator<?>> creatorClass = syntheticBeanBuilder.getCreatorClass();
-                        if (creatorClass != null) {
-                            final ClassElement creatorElement = visitorContext.getClassElement(creatorClass).orElse(null);
-                            if (creatorElement == null) {
-                                final String message = "Synthetic bean creator class of type ["
-                                        + creatorClass.getName()
-                                        + "] must be present on the classpath of the application";
-                                visitorContext.fail(message, null);
-                            } else {
-                                final ElementQuery<MethodElement> creatorMethods = ElementQuery.ALL_METHODS
-                                        .named((name) -> name.equals("create"))
-                                        .filter((method) -> method.getParameters().length == 2);
-                                beanElement.addAssociatedBean(creatorElement, visitorContext).inject()
-                                        .produceBeans(
-                                                creatorMethods, (builder) -> {
-                                                    builder.typed(beanType);
-                                                    final Set<String> exposedTypes = syntheticBeanBuilder
-                                                            .getExposedTypes();
-                                                    if (exposedTypes.isEmpty()) {
-                                                        builder.typed(beanType);
-                                                    } else {
-                                                        for (String exposedType : exposedTypes) {
-                                                            visitorContext.getClassElement(exposedType)
-                                                                    .ifPresent(builder::typed);
-                                                        }
-                                                    }
-                                                }
-                                        );
-                            }
-                        }
-                    }
-                }
-            }
-
             registry.runValidation(visitorContext);
         } finally {
             firstBean = null;

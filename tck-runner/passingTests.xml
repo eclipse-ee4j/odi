@@ -1286,9 +1286,6 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customQualifier.CustomQualifierTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customInterceptorBinding.CustomInterceptorBindingTest">
                 <methods>

@@ -15,22 +15,40 @@
  */
 package com.oracle.odi.cdi;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import com.oracle.odi.cdi.context.DependentContext;
 import com.oracle.odi.cdi.context.SingletonContext;
 import com.oracle.odi.cdi.events.OdiObserverMethodRegistry;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
+import io.micronaut.context.Qualifier;
+import io.micronaut.context.annotation.Any;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.context.DefaultBeanResolutionContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.type.Argument;
+import io.micronaut.core.util.ArrayUtils;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
@@ -38,31 +56,20 @@ import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Instance;
-import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
-import jakarta.inject.Qualifier;
-import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
-import jakarta.interceptor.InterceptorBinding;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import static com.oracle.odi.cdi.AnnotationUtils.byAnnotation;
 
 final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     private final ApplicationContext applicationContext;
     private final OdiSeContainer container;
+    private RuntimeMetaAnnotations metaAnnotations;
     private OdiObserverMethodRegistry observerMethodRegistry;
     private Event<Object> objectEvent;
 
@@ -191,7 +198,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        return getBeans(Argument.of(beanType), OdiInstanceImpl.resolveQualifier(qualifiers)).stream()
+        return getBeans(Argument.of(beanType), resolveQualifier(qualifiers)).stream()
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -217,10 +224,86 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
             observerMethodRegistry = applicationContext.getBean(OdiObserverMethodRegistry.class);
         }
         Argument<?> argument = Argument.of(event.getClass());
-        final io.micronaut.context.Qualifier qualifierInstances = AnnotationUtils
-                .qualifierFromQualifierAnnotations(qualifiers);
+        final io.micronaut.context.Qualifier qualifierInstances =
+                qualifierFromQualifierAnnotations(qualifiers);
         return observerMethodRegistry
                 .findSetOfObserverMethods(argument, qualifierInstances);
+    }
+
+    <T1> Qualifier<T1> resolveQualifier(Annotation[] annotations) {
+        if (ArrayUtils.isNotEmpty(annotations)) {
+            return qualifierFromQualifierAnnotations(annotations);
+        }
+        return null;
+    }
+
+    <T1> Qualifier<T1> qualifierFromQualifierAnnotations(Annotation[] annotations) {
+        if (annotations == null || annotations.length == 0) {
+            return null;
+        }
+        AnnotationMetadata annotationMetadata = annotationMetadataFromQualifierAnnotations(annotations);
+        return qualifierFromQualifierAnnotations(annotationMetadata, annotations);
+    }
+
+    /**
+     * Creates a qualifier from the array of {@link Annotation}.
+     * @param annotationMetadata The annotation metadata
+     * @param annotations The annotations
+     * @param <U> The qualifier type
+     * @return The qualifier
+     */
+    @SuppressWarnings("unchecked")
+    private <U> Qualifier<U> qualifierFromQualifierAnnotations(
+            AnnotationMetadata annotationMetadata,
+            Annotation... annotations) {
+        if (annotations.length > 0) {
+            if (annotations.length == 1) {
+                Annotation annotation = annotations[0];
+                if (isQualifier(AnnotationUtils.findAnnotationClass(annotation))) {
+                    return (Qualifier<U>) byAnnotation(annotationMetadata, annotation.annotationType());
+                }
+            } else {
+                Qualifier[] qualifiers = new Qualifier[annotations.length];
+                for (int i = 0; i < annotations.length; i++) {
+                    Annotation annotation = annotations[i];
+                    if (isQualifier(AnnotationUtils.findAnnotationClass(annotation))) {
+                        qualifiers[i] = byAnnotation(annotationMetadata, annotation.annotationType());
+                    }
+                }
+                return Qualifiers.byQualifiers(qualifiers);
+            }
+        }
+        return null;
+    }
+
+    private AnnotationMetadata annotationMetadataFromQualifierAnnotations(Annotation[] annotations) {
+        if (annotations.length == 0) {
+            return AnnotationMetadata.EMPTY_METADATA;
+        }
+        MutableAnnotationMetadata annotationMetadata = new MutableAnnotationMetadata();
+        for (Annotation annotation : annotations) {
+            if (getMetaAnnotations().isQualifier(annotation)) {
+                if (AnnotationUtils.isAny(annotation)) {
+                    annotationMetadata.addDeclaredAnnotation(Any.NAME, Collections.emptyMap());
+                    annotationMetadata.addDeclaredStereotype(
+                            List.of(Any.NAME),
+                            MetaAnnotationSupport.META_ANNOTATION_QUALIFIER, Collections.emptyMap()
+                    );
+                } else {
+                    String[] nonBinding = getMetaAnnotations().getQualifierNonBinding(annotation).toArray(new String[0]);
+                    AnnotationValue<Annotation> value = AnnotationReflection.toAnnotationValue(annotation);
+                    final Map<CharSequence, Object> values = new LinkedHashMap<>(value.getValues());
+                    annotationMetadata.addDeclaredAnnotation(value.getAnnotationName(), values);
+                    annotationMetadata.addDeclaredStereotype(
+                            List.of(value.getAnnotationName()),
+                            MetaAnnotationSupport.META_ANNOTATION_QUALIFIER, Collections.singletonMap(
+                                    "nonBinding", nonBinding
+                            )
+                    );
+                }
+            }
+        }
+        return annotationMetadata;
     }
 
     @Override
@@ -239,33 +322,34 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public boolean isScope(Class<? extends Annotation> annotationType) {
-        return Objects.requireNonNull(annotationType, "Annotation type should not be null")
-                .isAnnotationPresent(Scope.class);
+        return getMetaAnnotations().isScope(annotationType);
     }
 
     @Override
     public boolean isNormalScope(Class<? extends Annotation> annotationType) {
-        return Objects.requireNonNull(annotationType, "Annotation type should not be null")
-                .isAnnotationPresent(NormalScope.class);
+        return getMetaAnnotations().isNormalScope(annotationType);
+    }
+
+    private RuntimeMetaAnnotations getMetaAnnotations() {
+        if (metaAnnotations == null) {
+            metaAnnotations = applicationContext.getBean(RuntimeMetaAnnotations.class);
+        }
+        return metaAnnotations;
     }
 
     @Override
     public boolean isQualifier(Class<? extends Annotation> annotationType) {
-        return Objects.requireNonNull(annotationType, "Annotation type should not be null")
-                .isAnnotationPresent(Qualifier.class);
+        return getMetaAnnotations().isQualifier(annotationType);
     }
 
     @Override
     public boolean isInterceptorBinding(Class<? extends Annotation> annotationType) {
-        final Class<? extends Annotation> t = Objects.requireNonNull(annotationType, "Annotation type should not be null");
-        return t.isAnnotationPresent(InterceptorBinding.class)
-                || t.isAnnotationPresent(io.micronaut.aop.InterceptorBinding.class);
+        return getMetaAnnotations().isInterceptorBinding(annotationType);
     }
 
     @Override
     public boolean isStereotype(Class<? extends Annotation> annotationType) {
-        return Objects.requireNonNull(annotationType, "Annotation type should not be null")
-                .isAnnotationPresent(Stereotype.class);
+        return getMetaAnnotations().isStereotype(annotationType);
     }
 
     @Override

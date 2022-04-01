@@ -15,6 +15,14 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 import com.oracle.odi.cdi.processor.visitors.InterceptorVisitor;
 import com.oracle.odi.cdi.processor.visitors.ObservesMethodVisitor;
 import io.micronaut.context.annotation.Executable;
@@ -37,17 +45,7 @@ import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
-import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
-
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 /**
  * A {@link io.micronaut.inject.visitor.TypeElementVisitor} that implements the build time extension specification.
@@ -103,9 +101,9 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
             finished = false;
             final MetaAnnotationsImpl meta = discovery
                     .getMetaAnnotations();
-            buildInterceptorBindingConfig(visitorContext, meta);
-            buildDiscoveryConfig(visitorContext, meta.getQualifiers(), this.qualifiers);
-            buildDiscoveryConfig(visitorContext, meta.getStereotypes(), this.stereotypes);
+            buildInterceptorBindingConfig(meta);
+            buildDiscoveryConfig(meta.getQualifiers(), this.qualifiers);
+            buildDiscoveryConfig(meta.getStereotypes(), this.stereotypes);
         }
     }
 
@@ -158,7 +156,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 }
 
                 for (String scannedClassName : scannedClassNames) {
-                    visitorContext.getClassElement(scannedClassName).ifPresent((scannedClass) -> {
+                    visitorContext.getClassElement(scannedClassName).ifPresent(scannedClass -> {
                         handleScannedClass(visitorContext, scannedClass);
                     });
                 }
@@ -183,11 +181,12 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 .annotated((annotationMetadata -> annotationMetadata.hasAnnotation(Executable.class)));
         final Predicate<MethodElement> isObservesMethod = m ->
                 m.hasParameters() &&
-                Arrays.stream(m.getParameters()).anyMatch(p -> p.hasDeclaredAnnotation(Observes.class) || p.hasDeclaredAnnotation(ObservesAsync.class)
-        );
+                        Arrays.stream(m.getParameters())
+                                .anyMatch(p -> p.hasDeclaredAnnotation(Observes.class) || p.hasDeclaredAnnotation(ObservesAsync.class)
+                                );
         final ElementQuery<MethodElement> observesMethods = ElementQuery.ALL_METHODS
-                        .onlyInstance()
-                        .filter(isObservesMethod);
+                .onlyInstance()
+                .filter(isObservesMethod);
         final ElementQuery<MethodElement> producesMethods = ElementQuery.ALL_METHODS
                 .onlyInstance()
                 .annotated(ann -> ann.hasDeclaredAnnotation(Produces.class));
@@ -204,13 +203,14 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 }
             }
         };
-        rootClassElement
-                .addAssociatedBean(scannedClass)
-                .withMethods(executableMethods, BeanMethodElement::executable)
+        final BeanElementBuilder beanElementBuilder = rootClassElement
+                .addAssociatedBean(scannedClass);
+        registry.runDiscoveryEnhancements(beanElementBuilder);
+        beanElementBuilder.withMethods(executableMethods, BeanMethodElement::executable)
                 .withMethods(observesMethods, observesMethod -> {
                     if (isObservesMethod.test(observesMethod)) {
                         observesMethod.executable();
-                        observesMethod.annotate(Executable.class, (builder) ->
+                        observesMethod.annotate(Executable.class, builder ->
                                 builder.member("processOnStartup", true)
                         );
                         ObservesMethodVisitor.handleObservesMethod(
@@ -223,6 +223,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 .produceBeans(producesMethods, producesConfigurer)
                 .produceBeans(producesFields, producesConfigurer)
                 .inject();
+
     }
 
     @Override
@@ -235,32 +236,22 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         return VisitorKind.ISOLATING;
     }
 
-    private void buildDiscoveryConfig(VisitorContext visitorContext,
-                                      Set<Class<? extends Annotation>> annotationClassConfigs,
+    private void buildDiscoveryConfig(Set<MetaAnnotationImpl> annotationClassConfigs,
                                       Set<ClassElement> targetElements) {
-        for (Class<? extends Annotation> annotationConfig : annotationClassConfigs) {
-            visitorContext.getClassElement(annotationConfig)
-                    .ifPresent(targetElements::add);
+        for (MetaAnnotationImpl metaAnn : annotationClassConfigs) {
+            targetElements.add(metaAnn.getClassConfig().getElement());
         }
     }
 
-    private void buildInterceptorBindingConfig(VisitorContext visitorContext, MetaAnnotationsImpl meta) {
-        final Set<Class<? extends Annotation>> interceptorBindings = meta
-                .getInterceptorBindings();
+    private void buildInterceptorBindingConfig(MetaAnnotationsImpl meta) {
 
-        buildDiscoveryConfig(visitorContext, interceptorBindings, this.interceptorBindings);
+        buildDiscoveryConfig(meta.getInterceptorBindings(), this.interceptorBindings);
     }
 
-    private void registeredSupportedAnnotations(Set<Class<? extends Annotation>> interceptorBindings) {
-        for (Class<? extends Annotation> interceptorBinding : interceptorBindings) {
-            this.supportedAnnotationNames.add(interceptorBinding.getName());
+    private void registeredSupportedAnnotations(Set<MetaAnnotationImpl> interceptorBindings) {
+        for (MetaAnnotationImpl interceptorBinding : interceptorBindings) {
+            this.supportedAnnotationNames.add(interceptorBinding.getClassConfig().info().name());
         }
-    }
-
-    private List<MethodElement> findAroundInvokeMethods(ClassElement scannedClass) {
-        return scannedClass
-                .getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared()
-                                             .annotated((metadata) -> metadata.hasDeclaredAnnotation(AroundInvoke.class)));
     }
 
 }

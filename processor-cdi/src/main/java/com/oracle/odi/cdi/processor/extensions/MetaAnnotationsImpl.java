@@ -32,9 +32,9 @@ import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
 @Internal
 final class MetaAnnotationsImpl implements MetaAnnotations {
 //    private List<ContextConfig> contextBuilders = new ArrayList<>();
-    private final Set<Class<? extends Annotation>> interceptorBindings = new HashSet<>();
-    private final Set<Class<? extends Annotation>> qualifiers = new HashSet<>();
-    private final Set<Class<? extends Annotation>> stereotypes = new HashSet<>();
+    private final Set<MetaAnnotationImpl> interceptorBindings = new HashSet<>();
+    private final Set<MetaAnnotationImpl> qualifiers = new HashSet<>();
+    private final Set<MetaAnnotationImpl> stereotypes = new HashSet<>();
     private final VisitorContext visitorContext;
 
     public MetaAnnotationsImpl(VisitorContext visitorContext) {
@@ -45,40 +45,43 @@ final class MetaAnnotationsImpl implements MetaAnnotations {
     public ClassConfig addQualifier(Class<? extends Annotation> annotation) {
         final ClassElement classElement = visitorContext.getClassElement(annotation)
                 .orElseThrow(() -> new RuntimeException("Qualifier type [" + annotation.getName() + "] must be on the application classpath"));
-        qualifiers.add(annotation);
         classElement.annotate(AnnotationUtil.QUALIFIER);
-        return new ClassConfigImpl(
+        final ClassConfigImpl qualifierConfig = new ClassConfigImpl(
                 classElement,
                 new TypesImpl(visitorContext),
                 visitorContext
         );
+        qualifiers.add(new MetaAnnotationImpl(qualifierConfig));
+        return qualifierConfig;
     }
 
     @Override
     public ClassConfig addInterceptorBinding(Class<? extends Annotation> annotation) {
         final ClassElement classElement = visitorContext.getClassElement(annotation)
                 .orElseThrow(() -> new RuntimeException("InterceptorBinding type [" + annotation.getName() + "] must be on the application classpath"));
-        interceptorBindings.add(annotation);
         classElement.annotate(AnnotationUtil.ANN_INTERCEPTOR_BINDING);
-        return new ClassConfigImpl(
+        final ClassConfigImpl interceptorConfig = new ClassConfigImpl(
                 classElement,
                 new TypesImpl(visitorContext),
                 visitorContext
         );
+        interceptorBindings.add(new MetaAnnotationImpl(interceptorConfig));
+        return interceptorConfig;
     }
 
     @Override
     public ClassConfig addStereotype(Class<? extends Annotation> annotation) {
         final ClassElement classElement = visitorContext.getClassElement(annotation)
                 .orElseThrow(() -> new RuntimeException("Stereotype [" + annotation.getName() + "] must be on the application classpath"));
-        stereotypes.add(annotation);
         classElement.annotate(Stereotype.class);
         classElement.annotate(Bean.class);
-        return new ClassConfigImpl(
+        final ClassConfigImpl stereotypeConfig = new ClassConfigImpl(
                 classElement,
                 new TypesImpl(visitorContext),
                 visitorContext
         );
+        stereotypes.add(new MetaAnnotationImpl(stereotypeConfig));
+        return stereotypeConfig;
     }
 
     @Override
@@ -95,15 +98,15 @@ final class MetaAnnotationsImpl implements MetaAnnotations {
         // TODO
     }
 
-    public Set<Class<? extends Annotation>> getInterceptorBindings() {
+    public Set<MetaAnnotationImpl> getInterceptorBindings() {
         return interceptorBindings;
     }
 
-    public Set<Class<? extends Annotation>> getQualifiers() {
+    public Set<MetaAnnotationImpl> getQualifiers() {
         return qualifiers;
     }
 
-    public Set<Class<? extends Annotation>> getStereotypes() {
+    public Set<MetaAnnotationImpl> getStereotypes() {
         return stereotypes;
     }
 

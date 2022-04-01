@@ -92,11 +92,6 @@ public final class AnnotationUtils {
         if (annotations == null || annotations.length == 0) {
             return null;
         }
-        for (Annotation annotation : annotations) {
-            if (annotation.annotationType().getAnnotation(jakarta.inject.Qualifier.class) == null) {
-                throw new IllegalArgumentException("Annotation: " + annotation + " is not a qualifier!");
-            }
-        }
         AnnotationMetadata annotationMetadata = annotationMetadataFromQualifierAnnotations(annotations);
         return qualifierFromQualifierAnnotations(annotationMetadata, annotations);
     }
@@ -164,7 +159,7 @@ public final class AnnotationUtils {
         return null;
     }
 
-    private static <T extends Annotation> Qualifier<T> byAnnotation(AnnotationMetadata annotationMetadata, Class<T> annotation) {
+    static <T extends Annotation> Qualifier<T> byAnnotation(AnnotationMetadata annotationMetadata, Class<T> annotation) {
         if (isAny(annotation)) {
             //noinspection unchecked
             return AnyQualifier.INSTANCE;
@@ -172,11 +167,11 @@ public final class AnnotationUtils {
         return Qualifiers.byAnnotation(annotationMetadata, annotation);
     }
 
-    private static <T extends Annotation> boolean isAny(Class<T> annotation) {
+    public static <T extends Annotation> boolean isAny(Class<T> annotation) {
         return annotation == jakarta.enterprise.inject.Any.class;
     }
 
-    private static <T extends Annotation> boolean isAny(T annotation) {
+    static <T extends Annotation> boolean isAny(T annotation) {
         return findAnnotationClass(annotation) == jakarta.enterprise.inject.Any.class;
     }
 
@@ -204,7 +199,7 @@ public final class AnnotationUtils {
         }
     }
 
-    private static Class<? extends Annotation> findAnnotationClass(Annotation annotation) {
+    static Class<? extends Annotation> findAnnotationClass(Annotation annotation) {
         if (annotation.annotationType().isAnnotation()) {
             return annotation.annotationType();
         }

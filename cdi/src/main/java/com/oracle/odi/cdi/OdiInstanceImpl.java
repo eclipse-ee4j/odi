@@ -21,7 +21,6 @@ import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
-import io.micronaut.core.util.ArrayUtils;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.CreationalContext;
@@ -43,7 +42,7 @@ import java.util.stream.Stream;
 final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     private final BeanContext beanContext;
-    private final OdiBeanContainer beanContainer;
+    private final OdiBeanContainerImpl beanContainer;
     private final Context context;
 
     private final Argument<T> beanType;
@@ -55,7 +54,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     private Map<T, CreationalContext<T>> created = new HashMap<>();
 
     OdiInstanceImpl(BeanContext beanContext,
-                    OdiBeanContainer beanContainer,
+                    OdiBeanContainerImpl beanContainer,
                     @Nullable
                     Context context,
                     Argument<T> beanType,
@@ -68,12 +67,12 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     }
 
     OdiInstanceImpl(BeanContext beanContext,
-                    OdiBeanContainer beanContainer,
+                    OdiBeanContainerImpl beanContainer,
                     @Nullable
                     Context context,
                     Argument<T> beanType,
                     Annotation... annotations) {
-        this(beanContext, beanContainer, context, beanType, AnnotationUtils.qualifierFromQualifierAnnotations(annotations));
+        this(beanContext, beanContainer, context, beanType, beanContainer.qualifierFromQualifierAnnotations(annotations));
     }
 
     @Override
@@ -219,7 +218,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     }
 
     private <K> Qualifier<K> withAnnotations(Annotation[] qualifiers) {
-        return withQualifier(resolveQualifier(qualifiers));
+        return withQualifier(beanContainer.resolveQualifier(qualifiers));
     }
 
     private <K> Qualifier<K> withQualifier(Qualifier<?> newQualifier) {
@@ -232,10 +231,4 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
         return (Qualifier<K>) qualifier;
     }
 
-    static <T1> Qualifier<T1> resolveQualifier(Annotation[] annotations) {
-        if (ArrayUtils.isNotEmpty(annotations)) {
-            return AnnotationUtils.qualifierFromQualifierAnnotations(annotations);
-        }
-        return null;
-    }
 }

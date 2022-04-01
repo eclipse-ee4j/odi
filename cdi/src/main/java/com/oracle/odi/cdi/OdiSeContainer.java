@@ -24,14 +24,17 @@ import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.context.annotation.Property;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.context.processor.ExecutableMethodProcessor;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.ArgumentCoercible;
+import io.micronaut.inject.ArgumentInjectionPoint;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.InjectionPoint;
@@ -42,6 +45,7 @@ import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.ResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.spi.BeanContainer;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -56,6 +60,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,7 +71,7 @@ final class OdiSeContainer extends CDI<Object>
     static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = Collections.synchronizedMap(new LinkedHashMap<>(5));
     private static final Logger LOG = LoggerFactory.getLogger(OdiSeContainer.class);
     private final ApplicationContext applicationContext;
-    private final OdiBeanContainer beanContainer;
+    private final OdiBeanContainerImpl beanContainer;
     private final Map<DisposerKey, DisposerDef> disposerMethods = new HashMap<>(20);
 
     protected OdiSeContainer(ApplicationContext context) {
@@ -204,6 +209,43 @@ final class OdiSeContainer extends CDI<Object>
     @Default
     OdiBeanContainer beanContainer() {
         return beanContainer;
+    }
+
+    /**
+     * Creates the parameters object for synthetic beans.
+     * @param injectionPoint The injection point
+     * @return The parameters
+     */
+    @Bean Parameters parameterCreator(ArgumentInjectionPoint<?, ?> injectionPoint) {
+        final BeanDefinition<?> declaringBean = injectionPoint.getDeclaringBean();
+        final List<AnnotationValue<Property>> values = declaringBean.getAnnotationValuesByType(Property.class);
+        Map<String, AnnotationValue<Property>> map = new LinkedHashMap<>(values.size());
+        if (!values.isEmpty()) {
+            for (AnnotationValue<Property> value : values) {
+                value.stringValue("name").ifPresent(n ->
+                    map.put(n, value)
+                );
+            }
+        }
+        return new Parameters() {
+            @Override
+            public <T> T get(String key, Class<T> type) {
+                final AnnotationValue<Property> av = map.get(key);
+                if (av != null) {
+                    return av.getValue(type).orElse(null);
+                }
+                return null;
+            }
+
+            @Override
+            public <T> T get(String key, Class<T> type, T defaultValue) {
+                final AnnotationValue<Property> av = map.get(key);
+                if (av != null) {
+                    return av.getValue(type).orElse(defaultValue);
+                }
+                return defaultValue;
+            }
+        };
     }
 
     @Bean
