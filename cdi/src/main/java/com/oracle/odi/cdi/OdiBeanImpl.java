@@ -17,7 +17,6 @@ package com.oracle.odi.cdi;
 
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
-import io.micronaut.context.DefaultBeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.exceptions.BeanInstantiationException;
 import io.micronaut.context.exceptions.NoSuchBeanException;
@@ -28,7 +27,6 @@ import io.micronaut.core.annotation.Order;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.AdvisedBeanType;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.BeanIdentifier;
 import io.micronaut.inject.ConstructorInjectionPoint;
 import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
@@ -112,24 +110,16 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public T create(CreationalContext<T> creationalContext) {
-        if (!(creationalContext instanceof OdiCreationalContext)) {
-            throw new IllegalArgumentException("Not an ODI Creational Context");
-        }
-        OdiCreationalContext<T> odiCreationalContext = (OdiCreationalContext<T>) creationalContext;
         try {
-            T instance;
-            // TODO: We need "getBean(BeanResolutionContext, BeanDefinition)" in Core
-            if (!definition.getExposedTypes().isEmpty()) {
-                instance = ((DefaultBeanContext) beanContext).getBean(odiCreationalContext.getResolutionContext(), argument, qualifier);
-            } else {
-                instance = ((DefaultBeanContext) beanContext).getBean(
-                        odiCreationalContext.getResolutionContext(),
-                        definition.asArgument(),
-                        definition.getDeclaredQualifier()
-                );
+            BeanRegistration<T> beanRegistration = beanContext.getBeanRegistration(definition);
+            if (creationalContext != null) {
+                creationalContext.push(beanRegistration.bean());
+                if (creationalContext instanceof OdiCreationalContext) {
+                    OdiCreationalContext<T> odiCreationalContext = (OdiCreationalContext<T>) creationalContext;
+                    odiCreationalContext.setCreatedBean(beanRegistration);
+                }
             }
-            odiCreationalContext.setCreatedBean(new BeanRegistration<>(BeanIdentifier.of(""), definition, instance));
-            return instance;
+            return beanRegistration.getBean();
         } catch (NonUniqueBeanException e) {
             throw new AmbiguousResolutionException(e.getMessage(), e);
         } catch (NoSuchBeanException e) {

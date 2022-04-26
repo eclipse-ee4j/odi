@@ -22,6 +22,7 @@ import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.event.Event;
+import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.AnnotatedField;
 import jakarta.enterprise.inject.spi.AnnotatedMember;
@@ -55,7 +56,9 @@ import java.util.Set;
  */
 @Factory
 public class BeanManagerFactory {
+    @Default
     @Singleton
+    @io.micronaut.context.annotation.Bean(typed = BeanManager.class)
     final BeanManager createBeanManager(BeanContainer beanContainer) {
         return new BeanManager() {
             @Override

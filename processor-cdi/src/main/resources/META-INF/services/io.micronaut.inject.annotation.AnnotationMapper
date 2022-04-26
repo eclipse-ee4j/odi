@@ -5,4 +5,3 @@ com.oracle.odi.cdi.processor.InterceptorMapper
 com.oracle.odi.cdi.processor.JakartaPriorityMapper
 com.oracle.odi.cdi.processor.AroundConstructMapper
 com.oracle.odi.cdi.processor.AroundInvokeMapper
-com.oracle.odi.cdi.processor.DefaultMapper

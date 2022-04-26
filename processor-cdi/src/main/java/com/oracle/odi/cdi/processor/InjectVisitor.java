@@ -15,13 +15,6 @@
  */
 package com.oracle.odi.cdi.processor;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
 import io.micronaut.context.annotation.Property;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
@@ -33,6 +26,12 @@ import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.inject.Disposes;
+
+import javax.inject.Inject;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Visits all elements annotated with {@link javax.inject.Inject} to validate them.
@@ -87,6 +86,7 @@ public class InjectVisitor implements TypeElementVisitor<Object, Inject> {
                 element.removeAnnotation(Inject.class);
             }
             CdiUtil.validateInjectedType(context, element.getGenericField(), element);
+            CdiUtil.visitInjectPoint(context, element);
         }
     }
 
@@ -105,6 +105,7 @@ public class InjectVisitor implements TypeElementVisitor<Object, Inject> {
             if (failIfAnnotationPresent(parameter, context, ObservesAsync.class, element instanceof ConstructorElement)) {
                 break;
             }
+            CdiUtil.visitInjectPoint(context, parameter);
         }
     }
 

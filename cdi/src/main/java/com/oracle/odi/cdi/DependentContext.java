@@ -44,6 +44,9 @@ public final class DependentContext implements Context {
 
     @Override
     public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext) {
+        if (creationalContext == null) {
+            return null;
+        }
         contexts.add(creationalContext);
         return contextual.create(creationalContext);
     }

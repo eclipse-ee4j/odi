@@ -84,7 +84,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
         return new OdiInstanceImpl<>(beanContext, beanContainer, context, Argument.of(subtype), withAnnotations(qualifiers));
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     @Override
     public <U extends T> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
         return new OdiInstanceImpl<>(beanContext, beanContainer, context, (Argument<U>) Argument.of(subtype.getType()), withAnnotations(qualifiers));
@@ -149,7 +149,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     throw new IllegalStateException("Instance already destroyed!");
                 }
                 if (creationalContext == null) {
-                    creationalContext = createCreationalContext(odiBean);
+                    creationalContext = beanContainer.createCreationalContext(bean);
                 }
                 return context.get(odiBean, creationalContext);
             }
@@ -186,18 +186,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Override
     public T get() {
         Bean<T> bean = getBean();
-        CreationalContext<T> creationalContext = createCreationalContext(bean);
-        return context.get(bean, creationalContext);
-    }
-
-    private CreationalContext<T> createCreationalContext(Bean<T> bean) {
-        CreationalContext<T> creationalContext;
-        if (context instanceof DependentContext) {
-            creationalContext = beanContainer.createCreationalContext(bean, ((DependentContext) context).getResolutionContext());
-        } else {
-            creationalContext = beanContainer.createCreationalContext(bean);
-        }
-        return creationalContext;
+        return context.get(bean, beanContainer.createCreationalContext(bean));
     }
 
     @Override

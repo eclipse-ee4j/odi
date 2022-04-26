@@ -83,9 +83,6 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
         }
 
         for (ParameterElement parameter : element.getParameters()) {
-            if (CdiUtil.validateInjectedType(context, parameter.getGenericType(), parameter)) {
-                return;
-            }
             for (Class<? extends Annotation> annotation : Arrays.asList(Observes.class, ObservesAsync.class, Disposes.class)) {
                 if (parameter.hasAnnotation(annotation)) {
                     context.fail(
@@ -95,7 +92,11 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
                     return;
                 }
             }
+            if (CdiUtil.visitInjectPoint(context, parameter)) {
+                return;
+            }
         }
+        CdiUtil.visitBeanDefinition(context, element);
         TypeElementVisitor.super.visitMethod(element, context);
         element.annotate(Bean.class);
     }
@@ -118,6 +119,7 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
         if (!this.currentClass.hasAnnotation(Factory.class)) {
             this.currentClass.annotate(Factory.class);
         }
+        CdiUtil.visitBeanDefinition(context, element);
         element.annotate(Bean.class);
     }
 
