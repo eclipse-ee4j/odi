@@ -20,6 +20,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -259,14 +260,22 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         if (annotations.length > 0) {
             if (annotations.length == 1) {
                 Annotation annotation = annotations[0];
-                if (isQualifier(AnnotationUtils.findAnnotationClass(annotation))) {
+                Class<? extends Annotation> annotationClass = AnnotationUtils.findAnnotationClass(annotation);
+                if (isQualifier(annotationClass)) {
                     return (Qualifier<U>) byAnnotation(annotationMetadata, annotation.annotationType());
+                } else {
+                    throw new IllegalArgumentException("Not a valid qualifier annotation type: " + annotationClass.getName());
                 }
             } else {
                 Qualifier[] qualifiers = new Qualifier[annotations.length];
+                Set<Class<? extends Annotation>> qualifierTypes = new HashSet<>(qualifiers.length);
                 for (int i = 0; i < annotations.length; i++) {
                     Annotation annotation = annotations[i];
-                    if (isQualifier(AnnotationUtils.findAnnotationClass(annotation))) {
+                    Class<? extends Annotation> annotationClass = AnnotationUtils.findAnnotationClass(annotation);
+                    if (!qualifierTypes.add(annotationClass)) {
+                        throw new IllegalArgumentException("Qualifier cannot be duplicated for type: " + annotationClass.getName());
+                    }
+                    if (isQualifier(annotationClass)) {
                         qualifiers[i] = byAnnotation(annotationMetadata, annotation.annotationType());
                     }
                 }
