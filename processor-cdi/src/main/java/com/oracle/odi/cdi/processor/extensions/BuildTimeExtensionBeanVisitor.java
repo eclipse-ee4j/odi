@@ -42,9 +42,9 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
         final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
 
         registry.runRegistration(beanElement, visitorContext);
-        final SyntheticComponentsImpl syntheticComponents =
-                registry.runSynthesis(beanElement, visitorContext);
         if (firstBean == null) {
+            final SyntheticComponentsImpl syntheticComponents =
+                    registry.runSynthesis(beanElement, visitorContext);
             firstBean = beanElement;
             final DiscoveryImpl discovery = registry.getDiscovery();
             if (discovery != null) {
@@ -69,39 +69,39 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                 }
             }
 
-        }
-        final List<SyntheticBeanBuilderImpl<?>> syntheticBeanBuilders =
-                syntheticComponents.getSyntheticBeanBuilders();
-        for (SyntheticBeanBuilderImpl<?> syntheticBeanBuilder : syntheticBeanBuilders) {
-            final ClassElement beanType = syntheticBeanBuilder.getBeanType();
-            final Class<? extends SyntheticBeanCreator<?>> creatorClass = syntheticBeanBuilder.getCreatorClass();
-            if (creatorClass != null) {
-                final ClassElement creatorElement = visitorContext.getClassElement(creatorClass).orElse(null);
-                if (creatorElement == null) {
-                    final String message = "Synthetic bean creator class of type ["
-                            + creatorClass.getName()
-                            + "] must be present on the classpath of the application";
-                    visitorContext.fail(message, null);
-                } else {
-                    final ElementQuery<MethodElement> creatorMethods = ElementQuery.ALL_METHODS
-                            .named(name -> name.equals("create"))
-                            .filter(method -> method.getParameters().length == 2);
-                    beanElement.addAssociatedBean(creatorElement, visitorContext).inject()
-                            .produceBeans(
-                                    creatorMethods, builder -> {
-                                        builder.typed(beanType);
-                                        final Set<String> exposedTypes = syntheticBeanBuilder
-                                                .getExposedTypes();
-                                        if (exposedTypes.isEmpty()) {
+            final List<SyntheticBeanBuilderImpl<?>> syntheticBeanBuilders =
+                    syntheticComponents.getSyntheticBeanBuilders();
+            for (SyntheticBeanBuilderImpl<?> syntheticBeanBuilder : syntheticBeanBuilders) {
+                final ClassElement beanType = syntheticBeanBuilder.getBeanType();
+                final Class<? extends SyntheticBeanCreator<?>> creatorClass = syntheticBeanBuilder.getCreatorClass();
+                if (creatorClass != null) {
+                    final ClassElement creatorElement = visitorContext.getClassElement(creatorClass).orElse(null);
+                    if (creatorElement == null) {
+                        final String message = "Synthetic bean creator class of type ["
+                                + creatorClass.getName()
+                                + "] must be present on the classpath of the application";
+                        visitorContext.fail(message, null);
+                    } else {
+                        final ElementQuery<MethodElement> creatorMethods = ElementQuery.ALL_METHODS
+                                .named(name -> name.equals("create"))
+                                .filter(method -> method.getParameters().length == 2);
+                        beanElement.addAssociatedBean(creatorElement, visitorContext).inject()
+                                .produceBeans(
+                                        creatorMethods, builder -> {
                                             builder.typed(beanType);
-                                        } else {
-                                            for (String exposedType : exposedTypes) {
-                                                visitorContext.getClassElement(exposedType)
-                                                        .ifPresent(builder::typed);
+                                            final Set<String> exposedTypes = syntheticBeanBuilder
+                                                    .getExposedTypes();
+                                            if (exposedTypes.isEmpty()) {
+                                                builder.typed(beanType);
+                                            } else {
+                                                for (String exposedType : exposedTypes) {
+                                                    visitorContext.getClassElement(exposedType)
+                                                            .ifPresent(builder::typed);
+                                                }
                                             }
                                         }
-                                    }
-                            );
+                                );
+                    }
                 }
             }
         }
