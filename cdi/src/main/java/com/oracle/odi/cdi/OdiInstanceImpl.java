@@ -15,6 +15,7 @@
  */
 package com.oracle.odi.cdi;
 
+import com.oracle.odi.cdi.context.NoOpDependentContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.NonNull;
@@ -51,18 +52,20 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     OdiInstanceImpl(BeanContext beanContext,
                     OdiBeanContainer beanContainer,
+                    @Nullable
                     Context context,
                     Argument<T> beanType,
                     Qualifier<T> qualifier) {
         this.beanContext = beanContext;
         this.beanContainer = beanContainer;
-        this.context = context;
+        this.context = context == null ? NoOpDependentContext.INSTANCE : context;
         this.beanType = beanType;
         this.qualifier = qualifier;
     }
 
     OdiInstanceImpl(BeanContext beanContext,
                     OdiBeanContainer beanContainer,
+                    @Nullable
                     Context context,
                     Argument<T> beanType,
                     Annotation... annotations) {

@@ -30,6 +30,7 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ConstructorInjectionPoint;
 import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
+import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
@@ -42,6 +43,7 @@ import jakarta.enterprise.inject.spi.Prioritized;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -69,6 +71,36 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
     public OdiBeanImpl(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
         this.definition = Objects.requireNonNull(definition, "Bean definition cannot be null");
+    }
+
+    @Override
+    public boolean isProxy() {
+        return definition.isProxy();
+    }
+
+    @Override
+    public OdiBean<T> getProxyTargetBean() {
+        BeanDefinition<T> targetBeanDefinition = beanContext.getProxyTargetBeanDefinition(
+                ((ProxyBeanDefinition) definition).getTargetType(),
+                definition.getDeclaredQualifier()
+        );
+        return new OdiBeanImpl<>(beanContext, targetBeanDefinition);
+    }
+
+    public BeanDefinition<?> findTargetBeanDefinitions(BeanDefinition<?> originalBeanDefinition) {
+        // We need to get all bean definitions and filter them for cases when bean inherit each other
+        Collection<BeanDefinition<?>> beanDefinitions = beanContext.getBeanDefinitions((Argument) originalBeanDefinition.asArgument());
+        for (BeanDefinition<?> beanDefinition : beanDefinitions) {
+            if (beanDefinition instanceof AdvisedBeanType) {
+                if (((AdvisedBeanType<?>) beanDefinition).getInterceptedType().equals(originalBeanDefinition.getBeanType())) {
+                    return beanDefinition;
+                }
+            } else if (beanDefinition.getBeanType().equals(originalBeanDefinition.getBeanType())) {
+                return beanDefinition;
+            }
+        }
+        // Instance is replaced by something else
+        return null;
     }
 
     @Override

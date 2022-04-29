@@ -13,34 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi;
+package com.oracle.odi.cdi.context;
 
-import jakarta.enterprise.context.RequestScoped;
+import com.oracle.odi.cdi.OdiBean;
+import io.micronaut.core.annotation.Internal;
+import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
-import jakarta.inject.Singleton;
 
-import java.lang.annotation.Annotation;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Simple {@link RequestScoped} Micronaut context.
+ * Simple {@link AlterableContext} context.
  */
-@Singleton
-public class RequestContext implements AlterableContext {
+@Internal
+public abstract class AbstractContext implements AlterableContext {
 
     private final Map<Contextual<?>, Map.Entry<CreationalContext<?>, Object>> storage = new ConcurrentHashMap<>();
-
-    @Override
-    public Class<? extends Annotation> getScope() {
-        return RequestScoped.class;
-    }
+    private boolean active = true;
 
     @Override
     public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext) {
+        chechIfActive();
+        contextual = unwrapProxy(contextual);
         T instance = get(contextual);
         if (instance == null) {
             instance = contextual.create(creationalContext);
@@ -49,9 +47,12 @@ public class RequestContext implements AlterableContext {
         return instance;
     }
 
+
     @Override
     @SuppressWarnings("unchecked")
     public <T> T get(Contextual<T> contextual) {
+        chechIfActive();
+        contextual = unwrapProxy(contextual);
         Map.Entry<CreationalContext<?>, Object> entry = storage.get(contextual);
         if (entry != null) {
             return (T) entry.getValue();
@@ -59,17 +60,49 @@ public class RequestContext implements AlterableContext {
         return null;
     }
 
+    private <T> Contextual<T> unwrapProxy(Contextual<T> contextual) {
+        if (contextual instanceof OdiBean) {
+            OdiBean<T> bean = (OdiBean<T>) contextual;
+            if (bean.isProxy()) {
+                contextual = bean.getProxyTargetBean();
+            }
+        }
+        return contextual;
+    }
+
+    private void chechIfActive() {
+        if (!active) {
+            throw new ContextNotActiveException("Context not active!");
+        }
+    }
+
     @Override
     public boolean isActive() {
-        return true;
+        return active;
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void destroy(Contextual<?> contextual) {
         Map.Entry<CreationalContext<?>, Object> entry = storage.remove(contextual);
-        @SuppressWarnings("rawtypes")
-        Contextual rawContextual = contextual;
-        rawContextual.destroy(entry.getValue(), entry.getKey());
+        if (entry != null) {
+            @SuppressWarnings("rawtypes")
+            Contextual rawContextual = contextual;
+            rawContextual.destroy(entry.getValue(), entry.getKey());
+        }
+    }
+
+    public void destroy() {
+        storage.values().forEach(e -> e.getKey().release());
+        storage.clear();
+        active = false;
+    }
+
+    public void deactivate() {
+        active = false;
+    }
+
+    public void activate() {
+        active = true;
     }
 }

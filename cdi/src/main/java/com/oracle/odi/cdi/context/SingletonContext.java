@@ -13,59 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi;
+package com.oracle.odi.cdi.context;
 
-import io.micronaut.context.BeanResolutionContext;
-import jakarta.enterprise.context.Dependent;
+import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.inject.Singleton;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Simple {@link Dependent} context implementation. {@link BeanResolutionContext} is included to be propagated for dependent beans resolution.
+ * Simple no-op Micronaut context.
  */
-public final class DependentContext implements Context {
+@Internal
+public class SingletonContext implements Context {
 
-    private final BeanResolutionContext resolutionContext;
-    private final List<CreationalContext> contexts = new ArrayList<>();
-
-    public DependentContext(BeanResolutionContext resolutionContext) {
-        this.resolutionContext = resolutionContext;
-    }
+    public static final Context INSTANCE = new SingletonContext();
 
     @Override
     public Class<? extends Annotation> getScope() {
-        return Dependent.class;
+        return Singleton.class;
     }
 
     @Override
     public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext) {
-        if (creationalContext == null) {
-            return null;
-        }
-        contexts.add(creationalContext);
         return contextual.create(creationalContext);
     }
 
     @Override
     public <T> T get(Contextual<T> contextual) {
-        return null;
+        throw new IllegalStateException();
     }
 
     @Override
     public boolean isActive() {
         return true;
-    }
-
-    public BeanResolutionContext getResolutionContext() {
-        return resolutionContext;
-    }
-
-    public void destroy() {
-        contexts.forEach(CreationalContext::release);
     }
 }

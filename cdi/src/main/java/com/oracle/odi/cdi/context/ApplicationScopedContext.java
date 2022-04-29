@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Oracle and/or its affiliates.
+ * Copyright (c) 2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi;
+package com.oracle.odi.cdi.context;
 
-import io.micronaut.core.annotation.NonNull;
-import jakarta.enterprise.inject.spi.Bean;
+import io.micronaut.core.annotation.Internal;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
+
+import java.lang.annotation.Annotation;
 
 /**
- * @param <T>
+ * The implementation of {@link ApplicationScoped} context.
  */
-public interface OdiBean<T> extends Bean<T> {
+@Internal
+@Singleton
+final class ApplicationScopedContext extends AbstractContext {
 
-    boolean isProxy();
-
-    @NonNull
-    OdiBean<T> getProxyTargetBean();
-
+    @Override
+    public Class<? extends Annotation> getScope() {
+        return ApplicationScoped.class;
+    }
 }

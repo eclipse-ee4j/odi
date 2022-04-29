@@ -13,37 +13,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi;
+package com.oracle.odi.cdi.context;
 
+import io.micronaut.context.BeanResolutionContext;
+import io.micronaut.core.annotation.Internal;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
-import jakarta.inject.Singleton;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Simple no-op Micronaut context.
+ * Simple {@link Dependent} context implementation. {@link BeanResolutionContext} is included to be propagated for dependent beans resolution.
  */
-public class MicronautContext implements Context {
+@Internal
+public final class DependentContext implements Context {
+
+    private final BeanResolutionContext resolutionContext;
+    private final List<CreationalContext> contexts = new ArrayList<>();
+
+    public DependentContext(BeanResolutionContext resolutionContext) {
+        this.resolutionContext = resolutionContext;
+    }
 
     @Override
     public Class<? extends Annotation> getScope() {
-        return Singleton.class;
+        return Dependent.class;
     }
 
     @Override
     public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext) {
+        if (creationalContext == null) {
+            return null;
+        }
+        contexts.add(creationalContext);
         return contextual.create(creationalContext);
     }
 
     @Override
     public <T> T get(Contextual<T> contextual) {
-        throw new IllegalStateException();
+        return null;
     }
 
     @Override
     public boolean isActive() {
         return true;
+    }
+
+    public BeanResolutionContext getResolutionContext() {
+        return resolutionContext;
+    }
+
+    public void destroy() {
+        contexts.forEach(CreationalContext::release);
     }
 }

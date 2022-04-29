@@ -69,8 +69,6 @@ final class OdiSeContainer extends CDI<Object>
     private final OdiBeanContainer beanContainer;
     private final Map<DisposerKey, DisposerDef> disposerMethods = new HashMap<>(20);
 
-    private final MicronautContext ctx = new MicronautContext();
-
     protected OdiSeContainer(ApplicationContext context) {
         this.applicationContext = context;
         this.beanContainer = new OdiBeanContainerImpl(this, context);
@@ -107,7 +105,7 @@ final class OdiSeContainer extends CDI<Object>
 
     @Override
     public <U> OdiInstance<U> select(Argument<U> argument, Qualifier<U> qualifier) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx, argument, qualifier);
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, null, argument, qualifier);
     }
 
     @Override
@@ -115,18 +113,18 @@ final class OdiSeContainer extends CDI<Object>
         if (!isRunning()) {
             throw new IllegalStateException("SeContainer already shutdown");
         }
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx, Argument.OBJECT_ARGUMENT, qualifiers);
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, null, Argument.OBJECT_ARGUMENT, qualifiers);
     }
 
     @Override
     public <U> OdiInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx,  Argument.of(subtype), qualifiers);
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, null,  Argument.of(subtype), qualifiers);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public <U> OdiInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl(applicationContext, beanContainer, ctx, Argument.of(subtype.getType()), qualifiers);
+        return new OdiInstanceImpl(applicationContext, beanContainer, null, Argument.of(subtype.getType()), qualifiers);
     }
 
     @Override

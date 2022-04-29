@@ -63,11 +63,6 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.context.dependent.instance.BuiltinInstanceDependentObjectTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest">
                 <methods>
                     <!-- https://github.com/eclipse-ee4j/cdi-tck/issues/372 -->
@@ -80,31 +75,7 @@
                     <exclude name="testLifecycleInterceptorBindings"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.context.DestroyedInstanceReturnedByGetTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.context.GetOnInactiveContextTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.context.GetWithNoCreationalContextTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.context.DestroyForSameCreationalContextTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.context.GetFromContextualTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
+            <!-- Session context-->
             <class name="org.jboss.cdi.tck.tests.context.DestroyForSameCreationalContext2Test">
                 <methods>
                     <exclude name=".*"/>

@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi;
+package com.oracle.odi.cdi.context;
 
-import io.micronaut.core.annotation.NonNull;
-import jakarta.enterprise.inject.spi.Bean;
+import io.micronaut.core.annotation.Internal;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Singleton;
+
+import java.lang.annotation.Annotation;
 
 /**
- * @param <T>
+ * Simple {@link RequestScoped} Micronaut context.
  */
-public interface OdiBean<T> extends Bean<T> {
+@Internal
+@Singleton
+public class RequestContext extends AbstractContext {
 
-    boolean isProxy();
-
-    @NonNull
-    OdiBean<T> getProxyTargetBean();
-
+    public Class<? extends Annotation> getScope() {
+        return RequestScoped.class;
+    }
 }

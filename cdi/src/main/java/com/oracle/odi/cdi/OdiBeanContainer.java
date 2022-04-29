@@ -87,9 +87,7 @@ public interface OdiBeanContainer extends BeanContainer {
     OdiInstance<Object> createInstance();
 
     /**
-     * Basic instance with an associated scope.
-     * <p>
-     * TODO: Consider removing an using contextual context.
+     * Basic instance with an associated context.
      *
      * @param context The context
      * @return Basic instance

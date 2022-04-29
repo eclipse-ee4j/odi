@@ -15,6 +15,7 @@
  */
 package com.oracle.odi.cdi;
 
+import com.oracle.odi.cdi.context.DependentContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;

@@ -19,13 +19,15 @@ import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.qualifiers.AnyQualifier;
 import io.micronaut.inject.qualifiers.Qualifiers;
-import jakarta.inject.Named;
+import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.literal.NamedLiteral;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -58,8 +60,11 @@ public final class AnnotationUtils {
                     if (name.equals(Any.NAME)) {
                         return jakarta.enterprise.inject.Any.Literal.INSTANCE;
                     }
+                    if (name.equals(Default.class.getName())) {
+                        return Default.Literal.INSTANCE;
+                    }
                     if (name.equals(MetaAnnotationSupport.META_ANNOTATION_NAMED)) {
-                        return annotationMetadata.synthesize(Named.class, MetaAnnotationSupport.META_ANNOTATION_NAMED);
+                        return NamedLiteral.of(annotationMetadata.stringValue(AnnotationUtil.NAMED).get());
                     } else {
                         final Class<? extends Annotation> annotationClass = annotationMetadata.getAnnotationType(name)
                                 .orElse(null);

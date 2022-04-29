@@ -15,6 +15,8 @@
  */
 package com.oracle.odi.cdi;
 
+import com.oracle.odi.cdi.context.DependentContext;
+import com.oracle.odi.cdi.context.SingletonContext;
 import com.oracle.odi.cdi.events.OdiObserverMethodRegistry;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.BeanContext;
@@ -44,6 +46,7 @@ import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
+import jakarta.inject.Singleton;
 import jakarta.interceptor.InterceptorBinding;
 
 import java.lang.annotation.Annotation;
@@ -262,9 +265,12 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public Context getContext(Class<? extends Annotation> scopeType) {
-        if (scopeType == Dependent.class) {
+        if (scopeType == Dependent.class || scopeType == null) {
             // TODO: make contextual
             return new DependentContext(null);
+        }
+        if (scopeType == Singleton.class) {
+            return SingletonContext.INSTANCE;
         }
         final List<Context> contexts = applicationContext.streamOfType(Context.class)
                 .filter(c -> c.getScope() == scopeType)
