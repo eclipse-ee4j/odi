@@ -36,8 +36,10 @@ import jakarta.interceptor.InterceptorBinding;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Adapter type for delegating interception to a Jakarta Interceptor implementation.
@@ -224,10 +226,17 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
 
     @SuppressWarnings("rawtypes")
     private ExecutableMethod[] toMethodArray(List<String> methods) {
-        return methods.stream().map(n -> beanDefinition.getRequiredMethod(
-                n,
-                jakarta.interceptor.InvocationContext.class
-        )).toArray(ExecutableMethod[]::new);
+        return methods.stream().flatMap(name -> {
+            Optional<ExecutableMethod<B, Object>> method = beanDefinition.findMethod(name, jakarta.interceptor.InvocationContext.class);
+            if (method.isPresent()) {
+                return method.stream();
+            }
+            method = beanDefinition.findMethod(name);
+            if (method.isPresent()) {
+                return method.stream();
+            }
+            return Stream.empty();
+        }).toArray(ExecutableMethod[]::new);
     }
 
     @Override

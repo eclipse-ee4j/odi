@@ -270,7 +270,7 @@ final class OdiSeContainer extends CDI<Object>
             try {
                 final DisposerDef<Object> disposerDef = disposerMethods.get(new DisposerKey(beanDefinition.asArgument(), beanDefinition.getDeclaredQualifier()));
                 if (disposerDef != null) {
-                    beanContainer.fulfillAndExecuteMethod(disposerDef.definition, disposerDef.definition, disposerDef.executableMethod, argument -> {
+                    beanContainer.fulfillAndExecuteMethod(disposerDef.definition, disposerDef.executableMethod, argument -> {
                         if (argument.getAnnotationMetadata().hasAnnotation(Disposes.class)) {
                             return bean;
                         }

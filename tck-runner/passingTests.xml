@@ -162,9 +162,9 @@
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest">
                 <methods>
-                    <exclude name="testLifeCycleCallbackInterceptorNotInvokedForMethodLevelInterceptor"/>
-                    <exclude name="testPreDestroyInterceptor"/>
+                    <!-- What to do with private method? -->
                     <exclude name="testPrivateLifecycleInterceptorMethod"/>
+                    <!-- PreDestory is called 2x: first when destroying proxy + the actual bean -->
                     <exclude name="testSingleMethodInterposingMultipleLifecycleCallbackEvents"/>
                 </methods>
             </class>
@@ -185,7 +185,7 @@
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testInterceptorInstanceCreatedWhenTargetInstanceCreated"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.definition.bean.types.ManagedBeanTypesTest">
@@ -276,14 +276,10 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest">
                 <methods>
-                    <exclude name="testDefaultNamed"/>
-                    <exclude name="testNameStartingWithDollarCharacter"/>
-                    <exclude name="testNameStartingWithLowerCaseCharacter"/>
+                    <!-- '@Named class JSFBean' should produce name 'jSFBean' -->
                     <exclude name="testNameStartingWithMultipleUpperCaseCharacters"/>
-                    <exclude name="testNameStartingWithUnderScoreCharacter"/>
+                    <!-- Not bean class shouldn't produce Bean instance in CDI lite -->
                     <exclude name="testNamedNotDeclaredByStereotype"/>
-                    <exclude name="testNonDefaultNamed"/>
-                    <exclude name="testStereotypeDefaultsName"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.deployment.discovery.EmptyBeansXmlDiscoveryTest">
@@ -315,7 +311,8 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!-- static observer method -->
+                    <exclude name="testNotifyOnObserverMethod"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.inheritance.ObserverInheritanceTest">
@@ -341,12 +338,6 @@
             <class name="org.jboss.cdi.tck.tests.event.observer.broken.validation.unsatisfied.ObserverMethodParameterInjectionValidationTest">
                 <methods>
                     <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest">
-                <methods>
-                    <exclude name="testFireEventToMultipleObserversWithPriority"/>
-                    <exclude name="testResolveObserversLowerPriorityBeforeDefaultPriority"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.priority.contextLifecycleEvent.ApplicationContextLifecycleEventObserverOrderingTest">

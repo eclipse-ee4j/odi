@@ -17,6 +17,7 @@ package com.oracle.odi.cdi.processor.visitors;
 
 import com.oracle.odi.cdi.processor.AnnotationUtil;
 import com.oracle.odi.cdi.processor.CdiUtil;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -114,11 +115,12 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
             }
             element.annotate(ANN_OBSERVES_METHOD, annotationValueBuilder -> {
                 observesAnnotated.ifPresent(p -> {
+                    AnnotationValue<Observes> observesAnnotation = p.getAnnotation(Observes.class);
                     annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
-                    p.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
+                    observesAnnotation.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
                         annotationValueBuilder.member("notifyObserver", reception);
                     });
-                    p.enumValue("during", TransactionPhase.class).ifPresent(during -> {
+                    observesAnnotation.enumValue("during", TransactionPhase.class).ifPresent(during -> {
                         annotationValueBuilder.member("during", during);
                     });
                     p.intValue(Priority.class).ifPresent(priority -> {
@@ -126,8 +128,9 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
                     });
                 });
                 observesAsyncAnnotated.ifPresent(p -> {
+                    AnnotationValue<ObservesAsync> observesAnnotation = p.getAnnotation(ObservesAsync.class);
                     annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
-                    p.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
+                    observesAnnotation.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
                         annotationValueBuilder.member("notifyObserver", reception);
                     });
                     annotationValueBuilder.member("async", true);

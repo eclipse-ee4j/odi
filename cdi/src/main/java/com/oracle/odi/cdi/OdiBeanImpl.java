@@ -21,6 +21,7 @@ import io.micronaut.context.exceptions.BeanInstantiationException;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.Order;
 import io.micronaut.core.type.Argument;
@@ -32,12 +33,12 @@ import io.micronaut.inject.MethodInjectionPoint;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.CreationException;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.Prioritized;
-import jakarta.inject.Named;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -151,7 +152,10 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return AnnotationUtils.synthesizeQualifierAnnotations(definition.getAnnotationMetadata());
+        Set<Annotation> annotations = AnnotationUtils.synthesizeQualifierAnnotations(definition.getAnnotationMetadata());
+        Set<Annotation> all = new HashSet<>(annotations);
+        all.add(Any.Literal.INSTANCE);
+        return all;
     }
 
     @Override
@@ -165,7 +169,7 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public String getName() {
-        return definition.getAnnotationMetadata().stringValue(Named.class).orElse(null);
+        return definition.getAnnotationMetadata().stringValue(AnnotationUtil.NAMED).orElse(null);
     }
 
     @Override

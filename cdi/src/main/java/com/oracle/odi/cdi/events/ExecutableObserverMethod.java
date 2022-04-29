@@ -25,6 +25,7 @@ import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
+import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.inject.spi.InjectionPoint;
@@ -55,7 +56,7 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
     private final io.micronaut.context.Qualifier<E> eventQualifier;
     private final boolean isAsync;
     private final int priority;
-    private final Reception reception;
+    private final Reception notifyObserver;
     private final TransactionPhase transactionPhase;
 
     private Set<Annotation> observedQualifiers;
@@ -74,9 +75,9 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
         }
         this.isAsync = observesMethodAnnotationValue.isTrue("async");
         this.priority = observesMethodAnnotationValue.intValue("priority").orElse(DEFAULT_PRIORITY);
-        this.reception = observesMethodAnnotationValue.enumValue("reception", Reception.class).orElse(Reception.ALWAYS);
+        this.notifyObserver = observesMethodAnnotationValue.enumValue("notifyObserver", Reception.class).orElse(Reception.ALWAYS);
         this.transactionPhase = observesMethodAnnotationValue
-                .enumValue("transactionPhase", TransactionPhase.class)
+                .enumValue("during", TransactionPhase.class)
                 .orElse(TransactionPhase.IN_PROGRESS);
         int eventArgumentsIndex = observesMethodAnnotationValue.intValue("eventArgumentIndex").getAsInt();
         this.eventArgument = Objects.requireNonNull((Argument<E>) executableMethod.getArguments()[eventArgumentsIndex]);
@@ -86,6 +87,11 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
     @Override
     public Class<?> getBeanClass() {
         return executableMethod.getDeclaringType();
+    }
+
+    @Override
+    public Bean<?> getDeclaringBean() {
+        return beanContainer.getBean(originalBeanDefinition);
     }
 
     @Override
@@ -122,7 +128,7 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
 
     @Override
     public Reception getReception() {
-        return reception;
+        return notifyObserver;
     }
 
     @Override
@@ -146,10 +152,10 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
     }
 
     private void notify(E event, EventContext eventContext) {
-        if (reception == Reception.IF_EXISTS && !beanContainer.getBeanContext().containsBean(beanDefinition.asArgument())) {
+        if (notifyObserver == Reception.IF_EXISTS && !beanContainer.getBeanContext().containsBean(beanDefinition.asArgument())) {
             return;
         }
-        beanContainer.fulfillAndExecuteMethod(beanDefinition, originalBeanDefinition, executableMethod, argument -> {
+        beanContainer.fulfillAndExecuteMethod(beanDefinition, executableMethod, argument -> {
             if (Objects.equals(argument, eventArgument)) {
                 return event;
             } else if (argument.getType() == EventMetadata.class) {

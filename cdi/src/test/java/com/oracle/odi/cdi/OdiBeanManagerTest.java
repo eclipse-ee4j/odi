@@ -25,7 +25,6 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.junit.jupiter.api.Test;
 
-import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,14 +61,6 @@ public class OdiBeanManagerTest {
                     Simple.class,
                     bean.getTypes().iterator().next()
             );
-
-            final Bean<?> foo1 = beanManager.getBeans(Foo1.class).iterator().next();
-
-            final Set<Annotation> qualifiers = foo1.getQualifiers();
-            assertEquals(1, qualifiers.size());
-            final Named named = (Named) qualifiers.iterator().next();
-            assertEquals("one", named.value());
-
         }
     }
 

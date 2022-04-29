@@ -109,7 +109,6 @@ public interface OdiBeanContainer extends BeanContainer {
      * Fulfill and execute method. (event handler, disposer)
      *
      * @param beanDefinition         The bean definition
-     * @param originalBeanDefinition The original bean definition (proxy one etc)
      * @param executableMethod       The method to be fulfilled and executed
      * @param valueSupplier          The argument value supplier
      * @param <B>                    The bean type
@@ -117,7 +116,6 @@ public interface OdiBeanContainer extends BeanContainer {
      * @return
      */
     <B, R> Object fulfillAndExecuteMethod(BeanDefinition<B> beanDefinition,
-                                          BeanDefinition<B> originalBeanDefinition,
                                           ExecutableMethod<B, R> executableMethod,
                                           Function<Argument<?>, Object> valueSupplier);
 

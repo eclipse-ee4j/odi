@@ -70,7 +70,6 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public <B, R> Object fulfillAndExecuteMethod(BeanDefinition<B> beanDefinition,
-                                                 BeanDefinition<B> originalBeanDefinition,
                                                  ExecutableMethod<B, R> executableMethod,
                                                  Function<Argument<?>, Object> valueSupplier) {
         Argument<?>[] arguments = executableMethod.getArguments();
@@ -84,7 +83,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     values[i] = value;
                 } else {
                     try (BeanResolutionContext.Path ignore = resolutionContext.getPath().pushMethodArgumentResolve(
-                            originalBeanDefinition,
+                            beanDefinition,
                             executableMethod.getMethodName(),
                             argument,
                             arguments,
