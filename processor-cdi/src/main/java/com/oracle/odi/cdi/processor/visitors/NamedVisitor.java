@@ -13,14 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.visitors;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import javax.inject.Named;
-
+import com.oracle.odi.cdi.processor.AnnotationUtil;
+import com.oracle.odi.cdi.processor.CdiUtil;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
@@ -31,6 +27,11 @@ import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.Stereotype;
+
+import javax.inject.Named;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Validates elements annotated with {@link javax.inject.Named}.

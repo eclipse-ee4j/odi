@@ -13,29 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.transformers;
 
-import java.util.Collections;
 import java.util.List;
 
+import io.micronaut.context.annotation.Bean;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.annotation.TypedAnnotationTransformer;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Default;
 
 /**
- * Transforms {@link jakarta.enterprise.inject.Any} into {@link io.micronaut.context.annotation.Any}.
+ * Makes components annotated with {@link Default} beans.
  */
-public class AnyQualifierTransformer implements TypedAnnotationTransformer<Any> {
+public class DefaultQualifierTransformer implements TypedAnnotationTransformer<Default> {
     @Override
-    public Class<Any> annotationType() {
-        return Any.class;
+    public Class<Default> annotationType() {
+        return Default.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> transform(AnnotationValue<Any> annotation, VisitorContext visitorContext) {
-        return Collections.singletonList(
-                AnnotationValue.builder(io.micronaut.context.annotation.Any.class).build()
+    public List<AnnotationValue<?>> transform(AnnotationValue<Default> annotation, VisitorContext visitorContext) {
+        return List.of(
+                AnnotationValue.builder(Bean.class).build(),
+                AnnotationValue.builder(Default.class).build()
         );
     }
 }

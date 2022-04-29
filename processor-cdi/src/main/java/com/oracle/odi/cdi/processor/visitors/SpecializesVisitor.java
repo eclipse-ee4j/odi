@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.visitors;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import javax.inject.Qualifier;
 
+import com.oracle.odi.cdi.processor.CdiUtil;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;

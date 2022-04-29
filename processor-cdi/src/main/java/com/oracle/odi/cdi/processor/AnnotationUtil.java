@@ -15,28 +15,31 @@
  */
 package com.oracle.odi.cdi.processor;
 
-import javax.inject.Named;
-import javax.inject.Scope;
-
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.interceptor.Interceptor;
 
-final class AnnotationUtil {
+import javax.inject.Named;
+import javax.inject.Scope;
 
-    static final String ANN_NAME = Named.class.getName();
-    static final String ANN_DISPOSER_METHOD = "com.oracle.odi.cdi.annotation.DisposerMethod";
-    static final String ANN_OBSERVES_METHOD = "com.oracle.odi.cdi.annotation.ObservesMethod";
+@Internal
+public final class AnnotationUtil {
+
+    public static final String ANN_NAME = Named.class.getName();
+    public static final String ANN_DISPOSER_METHOD = "com.oracle.odi.cdi.annotation.DisposerMethod";
+    public static final String ANN_OBSERVES_METHOD = "com.oracle.odi.cdi.annotation.ObservesMethod";
+    public static final String ANN_APPLICATION_SCOPE = "com.oracle.odi.cdi.annotation.ApplicationScope";
 
     private AnnotationUtil() {
     }
 
     @SuppressWarnings("unchecked")
-    static boolean hasBeanDefiningAnnotation(AnnotationMetadata annotationMetadata) {
+    public static boolean hasBeanDefiningAnnotation(AnnotationMetadata annotationMetadata) {
         return annotationMetadata.hasStereotype(
                 Factory.class,
                 Dependent.class,

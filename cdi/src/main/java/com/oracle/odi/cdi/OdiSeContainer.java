@@ -28,6 +28,7 @@ import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.context.processor.ExecutableMethodProcessor;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.ArgumentCoercible;
@@ -153,7 +154,7 @@ final class OdiSeContainer extends CDI<Object>
 
             @Override
             public jakarta.enterprise.inject.spi.Bean<Object> getBean() {
-                return new OdiBeanImpl(Argument.of(OdiSeContainer.class), null, OdiSeContainer.this.applicationContext, new BeanDefinition() {
+                return new OdiBeanImpl(OdiSeContainer.this.applicationContext, new BeanDefinition() {
 
                     @Override
                     public boolean isEnabled(BeanContext context, BeanResolutionContext resolutionContext) {
@@ -208,6 +209,12 @@ final class OdiSeContainer extends CDI<Object>
     }
 
     @Bean
+    @Default
+    SeContainer seContainer() {
+        return this;
+    }
+
+    @Bean
     @Any
     jakarta.enterprise.inject.spi.Bean<?> getBean(InjectionPoint<?> injectionPoint) {
         if (injectionPoint instanceof ArgumentCoercible) {
@@ -237,8 +244,12 @@ final class OdiSeContainer extends CDI<Object>
         for (Argument<?> argument : arguments) {
             if (argument.getAnnotationMetadata().isAnnotationPresent(Disposes.class)) {
                 //noinspection unchecked
+                Qualifier<Object> qualifier = Qualifiers.forArgument(argument);
+                if (qualifier == null) {
+                    qualifier = Qualifiers.byAnnotation(AnnotationMetadata.EMPTY_METADATA, Default.class);
+                }
                 this.disposerMethods.put(
-                        new DisposerKey(argument, Qualifiers.forArgument(argument)),
+                        new DisposerKey(argument, qualifier),
                         new DisposerDef(beanDefinition, method)
                 );
                 break;

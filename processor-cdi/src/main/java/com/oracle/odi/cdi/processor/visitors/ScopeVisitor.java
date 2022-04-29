@@ -13,32 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.visitors;
 
+import com.oracle.odi.cdi.processor.CdiUtil;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
-import io.micronaut.runtime.context.scope.ScopedProxy;
-import jakarta.enterprise.context.NormalScope;
 
 import javax.inject.Scope;
 
 /**
- * Customizations for normal scope beans.
+ * Customizations for declared beans.
  */
-public class NormalScopeVisitor implements TypeElementVisitor<NormalScope, Object> {
+public class ScopeVisitor implements TypeElementVisitor<Scope, Object> {
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        if (element.hasAnnotation(NormalScope.class)) {
+        if (element.hasStereotype(Scope.class)) {
             CdiUtil.visitBeanDefinition(context, element);
-            // NormalScope beans are proxied, lazy and scoped by default
-            // which translates to the scoped proxy scope of Micronaut
-            element.annotate(ScopedProxy.class);
-            element.annotate(Scope.class);
         }
     }
 
+    @Override
+    public void visitMethod(MethodElement element, VisitorContext context) {
+        if (element.hasDeclaredAnnotation(Executable.class) && element.isPrivate()) {
+            element.removeAnnotation(Executable.class);
+        }
+    }
+
+    @Override
     public VisitorKind getVisitorKind() {
         return VisitorKind.ISOLATING;
     }

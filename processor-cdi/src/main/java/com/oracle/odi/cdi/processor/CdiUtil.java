@@ -19,6 +19,7 @@ import io.micronaut.annotation.processing.visitor.JavaClassElement;
 import io.micronaut.annotation.processing.visitor.JavaClassElementHelper;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.naming.NameUtils;
 import io.micronaut.inject.annotation.AnnotationMetadataHierarchy;
 import io.micronaut.inject.ast.ClassElement;
@@ -32,13 +33,14 @@ import jakarta.enterprise.inject.Instance;
 import java.util.List;
 import java.util.stream.Collectors;
 
-final class CdiUtil {
+@Internal
+public final class CdiUtil {
     public static final String SPEC_LOCATION = "https://jakarta.ee/specifications/cdi/3.0/jakarta-cdi-spec-3.0.html";
 
     private CdiUtil() {
     }
 
-    static String toAnnotationDescription(List<String> annotations) {
+    public static String toAnnotationDescription(List<String> annotations) {
         return annotations.stream().map(n -> "@" + NameUtils.getSimpleName(n)).collect(Collectors.joining(" and "));
     }
 

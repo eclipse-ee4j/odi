@@ -15,7 +15,7 @@
  */
 package com.oracle.odi.cdi.processor.extensions.javax;
 
-import com.oracle.odi.cdi.processor.InterceptorBindingTransformer;
+import com.oracle.odi.cdi.processor.transformers.InterceptorBindingTransformer;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationValue;

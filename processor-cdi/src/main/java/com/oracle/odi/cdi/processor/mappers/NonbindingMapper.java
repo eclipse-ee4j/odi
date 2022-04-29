@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Oracle and/or its affiliates.
+ * Copyright (c) 2022 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.mappers;
 
 import java.util.Collections;
 import java.util.List;
 
-import io.micronaut.context.annotation.Bean;
+import io.micronaut.context.annotation.NonBinding;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.annotation.TypedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.interceptor.Interceptor;
+import jakarta.enterprise.util.Nonbinding;
 
 /**
- * Maps {@link jakarta.interceptor.Interceptor} annotation to {@link io.micronaut.context.annotation.Bean}.
+ * Mapper for the non-binding annotation.
  */
-public class InterceptorMapper implements TypedAnnotationMapper<Interceptor> {
+public class NonbindingMapper implements TypedAnnotationMapper<Nonbinding> {
     @Override
-    public Class<Interceptor> annotationType() {
-        return Interceptor.class;
+    public Class<Nonbinding> annotationType() {
+        return Nonbinding.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> map(AnnotationValue<Interceptor> annotation, VisitorContext visitorContext) {
+    public List<AnnotationValue<?>> map(AnnotationValue<Nonbinding> annotation, VisitorContext visitorContext) {
         return Collections.singletonList(
-                AnnotationValue.builder(Bean.class).build()
+                AnnotationValue.builder(NonBinding.class).build()
         );
     }
 }

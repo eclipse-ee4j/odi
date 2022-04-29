@@ -171,7 +171,7 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
                         }
                     };
                 }
-                return eventContext;
+                return eventContext.getMetadata();
             }
             return null;
         });

@@ -13,30 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.transformers;
 
 import java.util.Collections;
 import java.util.List;
 
-import io.micronaut.context.annotation.Executable;
+import io.micronaut.context.annotation.Bean;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.annotation.TypedAnnotationMapper;
+import io.micronaut.inject.annotation.TypedAnnotationTransformer;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.interceptor.AroundInvoke;
+import jakarta.enterprise.inject.Typed;
 
 /**
- * Maps {@link AroundInvoke} to be {@link Executable}.
+ * Transforms {@link jakarta.enterprise.inject.Typed} to {@link io.micronaut.context.annotation.Bean#typed()}.
  */
-public class AroundInvokeMapper implements TypedAnnotationMapper<AroundInvoke> {
+public class TypedTransformer implements TypedAnnotationTransformer<Typed> {
     @Override
-    public Class<AroundInvoke> annotationType() {
-        return AroundInvoke.class;
+    public Class<Typed> annotationType() {
+        return Typed.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> map(AnnotationValue<AroundInvoke> annotation, VisitorContext visitorContext) {
+    public List<AnnotationValue<?>> transform(AnnotationValue<Typed> annotation, VisitorContext visitorContext) {
         return Collections.singletonList(
-                AnnotationValue.builder(Executable.class).build()
+                AnnotationValue.builder(Bean.class)
+                        .member("typed", annotation.annotationClassValues(AnnotationMetadata.VALUE_MEMBER))
+                        .build()
         );
     }
 }

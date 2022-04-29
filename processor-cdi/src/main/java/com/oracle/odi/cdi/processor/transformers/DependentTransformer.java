@@ -13,30 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.transformers;
 
-import java.util.Collections;
 import java.util.List;
 
-import io.micronaut.context.annotation.Bean;
+import io.micronaut.context.annotation.Prototype;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.annotation.TypedAnnotationMapper;
+import io.micronaut.inject.annotation.TypedAnnotationTransformer;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.inject.Specializes;
+import jakarta.enterprise.context.Dependent;
 
 /**
- * Maps {@link jakarta.enterprise.inject.Specializes} annotation to {@link io.micronaut.context.annotation.Bean}.
+ * Transforms {@link jakarta.enterprise.context.Dependent} to {@link io.micronaut.context.annotation.Bean}.
  */
-public class SpecializesMapper implements TypedAnnotationMapper<Specializes> {
+public class DependentTransformer implements TypedAnnotationTransformer<Dependent> {
     @Override
-    public Class<Specializes> annotationType() {
-        return Specializes.class;
+    public Class<Dependent> annotationType() {
+        return Dependent.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> map(AnnotationValue<Specializes> annotation, VisitorContext visitorContext) {
-        return Collections.singletonList(
-                AnnotationValue.builder(Bean.class).build()
+    public List<AnnotationValue<?>> transform(AnnotationValue<Dependent> annotation, VisitorContext visitorContext) {
+        return List.of(
+                AnnotationValue.builder(Prototype.class).build()
         );
     }
 }

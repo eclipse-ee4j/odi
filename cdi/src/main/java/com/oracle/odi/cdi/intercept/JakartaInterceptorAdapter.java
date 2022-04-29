@@ -65,10 +65,8 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
      * @param beanDefinition The bean definition
      * @param beanContext    The bean context
      */
-    public JakartaInterceptorAdapter(
-            BeanDefinition<B> beanDefinition,
-            BeanContext beanContext) {
-        super(beanDefinition.asArgument(), beanDefinition.getDeclaredQualifier(), beanContext, beanDefinition);
+    public JakartaInterceptorAdapter(BeanDefinition<B> beanDefinition, BeanContext beanContext) {
+        super(beanContext, beanDefinition);
         this.beanContext = beanContext;
         this.beanDefinition = beanContext.getBeanDefinition(beanDefinition.asArgument());
         this.priority = this.beanDefinition.intValue(Priority.class).orElse(0);

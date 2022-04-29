@@ -13,31 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.transformers;
+
+import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.inject.annotation.TypedAnnotationTransformer;
+import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.inject.Any;
 
 import java.util.Collections;
 import java.util.List;
 
-import io.micronaut.context.annotation.Bean;
-import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.annotation.TypedAnnotationMapper;
-import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.inject.Alternative;
-
 /**
- * Maps {@link jakarta.enterprise.inject.Alternative} annotation to {@link io.micronaut.context.annotation.Bean}.
+ * Transforms {@link jakarta.enterprise.inject.Any} into {@link io.micronaut.context.annotation.Any}.
  */
-public class AlternativeMapper implements TypedAnnotationMapper<Alternative> {
-
+public class AnyQualifierTransformer implements TypedAnnotationTransformer<Any> {
     @Override
-    public Class<Alternative> annotationType() {
-        return Alternative.class;
+    public Class<Any> annotationType() {
+        return Any.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> map(AnnotationValue<Alternative> annotation, VisitorContext visitorContext) {
+    public List<AnnotationValue<?>> transform(AnnotationValue<Any> annotation, VisitorContext visitorContext) {
         return Collections.singletonList(
-                AnnotationValue.builder(Bean.class).build()
+                AnnotationValue.builder(io.micronaut.context.annotation.Any.class).build()
         );
     }
 }

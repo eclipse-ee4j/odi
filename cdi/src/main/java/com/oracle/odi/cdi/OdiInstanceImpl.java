@@ -126,6 +126,10 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     private OdiBean<T> getBean() {
         try {
+            Qualifier<T> qualifier = this.qualifier;
+            if (qualifier == null) {
+                qualifier = DefaultQualifier.instance();
+            }
             if (bean == null) {
                 bean = beanContainer.getBean(beanType, qualifier);
             }

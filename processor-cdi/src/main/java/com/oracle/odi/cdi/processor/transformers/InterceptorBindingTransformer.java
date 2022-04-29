@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.transformers;
 
 import io.micronaut.aop.InterceptorKind;
 import io.micronaut.core.annotation.AnnotationValue;

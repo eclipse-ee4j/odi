@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Oracle and/or its affiliates.
+ * Copyright (c) 2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.mappers;
 
 import java.util.Collections;
 import java.util.List;
 
-import io.micronaut.context.annotation.NonBinding;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.annotation.TypedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.util.Nonbinding;
+import jakarta.interceptor.AroundInvoke;
 
 /**
- * Mapper for the non-binding annotation.
+ * Maps {@link AroundInvoke} to be {@link Executable}.
  */
-public class NonbindingMapper implements TypedAnnotationMapper<Nonbinding> {
+public class AroundInvokeMapper implements TypedAnnotationMapper<AroundInvoke> {
     @Override
-    public Class<Nonbinding> annotationType() {
-        return Nonbinding.class;
+    public Class<AroundInvoke> annotationType() {
+        return AroundInvoke.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> map(AnnotationValue<Nonbinding> annotation, VisitorContext visitorContext) {
+    public List<AnnotationValue<?>> map(AnnotationValue<AroundInvoke> annotation, VisitorContext visitorContext) {
         return Collections.singletonList(
-                AnnotationValue.builder(NonBinding.class).build()
+                AnnotationValue.builder(Executable.class).build()
         );
     }
 }

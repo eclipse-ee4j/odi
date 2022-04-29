@@ -58,8 +58,6 @@ import java.util.stream.Collectors;
 
 final class OdiBeanContainerImpl implements OdiBeanContainer {
 
-    private static final io.micronaut.context.Qualifier DEFAULT_QUALIFIER = new DefaultQualifier<>();
-
     private final ApplicationContext applicationContext;
     private final OdiSeContainer container;
     private OdiObserverMethodRegistry observerMethodRegistry;
@@ -115,7 +113,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public <T> OdiBeanImpl<T> getBean(BeanDefinition<T> beanDefinition) {
-        return new OdiBeanImpl<>(beanDefinition.asArgument(), beanDefinition.getDeclaredQualifier(), applicationContext, beanDefinition);
+        return new OdiBeanImpl<>(applicationContext, beanDefinition);
     }
 
     @Override
@@ -127,20 +125,20 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         if (beanDefinitions.size() > 1) {
             throw new AmbiguousResolutionException("Multiple beans found for argument: " + argument + " and qualifier: " + qualifier);
         }
-        return new OdiBeanImpl<>(argument, qualifier, applicationContext, beanDefinitions.iterator().next());
+        return new OdiBeanImpl<>(applicationContext, beanDefinitions.iterator().next());
     }
 
     @Override
     public <T> Collection<OdiBean<T>> getBeans(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
         return getBeanDefinitions(argument, qualifier).stream()
-                .map(bd -> new OdiBeanImpl<>(argument, qualifier, applicationContext, bd))
+                .map(bd -> new OdiBeanImpl<>(applicationContext, bd))
                 .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public <T> Collection<BeanDefinition<T>> getBeanDefinitions(Argument<T> argument, io.micronaut.context.Qualifier<T> qualifier) {
         if (qualifier == null) {
-            qualifier = DEFAULT_QUALIFIER;
+            qualifier = DefaultQualifier.instance();
         }
         Collection<BeanDefinition<T>> beanDefinitions = applicationContext.getBeanDefinitions(argument, qualifier);
         if (beanDefinitions.isEmpty() || beanDefinitions.size() == 1) {

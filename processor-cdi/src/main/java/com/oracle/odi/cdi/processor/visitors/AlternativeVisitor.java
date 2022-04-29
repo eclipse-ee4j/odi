@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
-
-import java.util.Set;
+package com.oracle.odi.cdi.processor.visitors;
 
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Requires;
@@ -27,6 +25,8 @@ import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.Alternative;
+
+import java.util.Set;
 
 /**
  * Processes {@link jakarta.enterprise.inject.Alternative} elements and adds required Micronaut annotations.

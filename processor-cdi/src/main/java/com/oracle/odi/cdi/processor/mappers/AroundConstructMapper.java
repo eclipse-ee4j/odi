@@ -13,28 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
-
-import io.micronaut.context.annotation.Primary;
-import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.annotation.TypedAnnotationMapper;
-import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.inject.Default;
+package com.oracle.odi.cdi.processor.mappers;
 
 import java.util.Collections;
 import java.util.List;
 
+import io.micronaut.context.annotation.Executable;
+import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.inject.annotation.TypedAnnotationMapper;
+import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.interceptor.AroundConstruct;
+
 /**
- * Maps {@link Default} to be {@link io.micronaut.context.annotation.Primary}.
+ * Maps {@link AroundConstruct} to be {@link Executable}.
  */
-public class DefaultMapper implements TypedAnnotationMapper<Default> {
+public class AroundConstructMapper implements TypedAnnotationMapper<AroundConstruct> {
     @Override
-    public Class<Default> annotationType() {
-        return Default.class;
+    public Class<AroundConstruct> annotationType() {
+        return AroundConstruct.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> map(AnnotationValue<Default> annotation, VisitorContext visitorContext) {
-        return Collections.singletonList(AnnotationValue.builder(Primary.class).build());
+    public List<AnnotationValue<?>> map(AnnotationValue<AroundConstruct> annotation, VisitorContext visitorContext) {
+        return Collections.singletonList(
+                AnnotationValue.builder(Executable.class).build()
+        );
     }
 }

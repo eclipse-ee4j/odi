@@ -70,29 +70,8 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest">
                 <methods>
-                    <!--                    Remove after 3.4.1-->
-                    <exclude name="testContextIsActiveWhenInvokingProducerField"/>
-                    <exclude name="testInstanceUsedForProducerFieldNotShared"/>
-
-                    <!--                    Correctly hande @Default and dependent context-->
-                    <exclude name="testCallingCreationalContextReleaseDestroysDependents"/>
-                    <exclude name="testContextGetWithCreateFalseReturnsNull"/>
-                    <exclude name="testContextGetWithCreationalContextReturnsNewInstance"/>
-                    <exclude name="testContextIsActiveDuringInjection"/>
-                    <exclude name="testContextIsActiveWhenCreatingObserverMethodInstance"/>
-                    <exclude name="testContextIsActiveWhenInvokingDisposalMethod"/>
-                    <exclude name="testContextIsActiveWhenInvokingDisposalMethod"/>
-                    <exclude name="testContextIsActiveWhenInvokingProducerMethod"/>
-                    <exclude name="testDependentsDestroyedWhenDisposerMethodCompletes"/>
-                    <exclude name="testDependentsDestroyedWhenObserverMethodEvaluationCompletes"/>
-                    <exclude name="testDependentsDestroyedWhenProducerFieldCompletes"/>
-                    <exclude name="testDependentsDestroyedWhenProducerMethodCompletes"/>
-                    <exclude name="testDestroyingManagedParentDestroysDependentsOfSameBean"/>
-                    <exclude name="testDestroyingSimpleParentDestroysDependents"/>
-                    <exclude name="testInstanceNotSharedBetweenInjectionPoints"/>
+                    <!-- https://github.com/eclipse-ee4j/cdi-tck/issues/372 -->
                     <exclude name="testInstanceUsedForDisposalMethodNotShared"/>
-                    <exclude name="testInstanceUsedForObserverMethodNotShared"/>
-                    <exclude name="testInstanceUsedForProducerMethodNotShared"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest">
@@ -106,9 +85,9 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest">
+            <class name="org.jboss.cdi.tck.tests.context.GetOnInactiveContextTest">
                 <methods>
-                    <exclude name="testRequestScopedComponent"/>
+                    <exclude name=".*"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.context.GetWithNoCreationalContextTest">

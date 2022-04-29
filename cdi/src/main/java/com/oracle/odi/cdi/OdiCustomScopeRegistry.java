@@ -22,8 +22,6 @@ import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.context.scope.CustomScope;
 import io.micronaut.context.scope.CustomScopeRegistry;
 import io.micronaut.core.annotation.NonNull;
-import io.micronaut.core.type.Argument;
-import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
 import io.micronaut.inject.BeanType;
 import jakarta.enterprise.context.Dependent;
@@ -60,15 +58,6 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
     }
 
     @Override
-    public Optional<CustomScope<?>> findDeclaredScope(@NonNull Argument<?> argument) {
-        final Class<? extends Annotation> scope = MetaAnnotationSupport.resolveDeclaredScope(argument.getAnnotationMetadata());
-        if (scope != Dependent.class) {
-            return findScope(scope.getName());
-        }
-        return Optional.empty();
-    }
-
-    @Override
     public Optional<CustomScope<?>> findDeclaredScope(@NonNull BeanType<?> beanType) {
         final Class<? extends Annotation> scope = MetaAnnotationSupport.resolveDeclaredScope(beanType.getAnnotationMetadata());
         if (scope != Dependent.class) {
@@ -89,7 +78,7 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                 }
             }
         }
-        return Optional.ofNullable(contextMap.get(scopeAnnotation)).map(context -> new OdiCustomScope<Annotation>(context));
+        return Optional.ofNullable(contextMap.get(scopeAnnotation)).map(OdiCustomScope::new);
     }
 
     @Override
@@ -98,8 +87,7 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
     }
 
     private <T> Contextual<T> createContextual(BeanContext beanContext, BeanCreationContext<T> creationContext) {
-        BeanDefinition<T> definition = creationContext.definition();
-        return new OdiBeanImpl<>(definition.asArgument(), definition.getDeclaredQualifier(), beanContext, definition) {
+        return new OdiBeanImpl<>(beanContext, creationContext.definition()) {
             @Override
             public T create(CreationalContext<T> creationalContext) {
                 if (creationalContext instanceof OdiCreationalContext) {

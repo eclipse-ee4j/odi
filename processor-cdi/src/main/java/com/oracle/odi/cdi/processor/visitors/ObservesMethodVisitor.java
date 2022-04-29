@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.visitors;
 
+import com.oracle.odi.cdi.processor.AnnotationUtil;
+import com.oracle.odi.cdi.processor.CdiUtil;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.ObservesAsync;
@@ -118,9 +121,9 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
                     p.enumValue("during", TransactionPhase.class).ifPresent(during -> {
                         annotationValueBuilder.member("during", during);
                     });
-//                        if (p.getAnnotationNamesByStereotype("javax.inject.Qualifier").isEmpty()) {
-//                            p.annotate(Any.class);
-//                        }
+                    p.intValue(Priority.class).ifPresent(priority -> {
+                        annotationValueBuilder.member("priority", priority);
+                    });
                 });
                 observesAsyncAnnotated.ifPresent(p -> {
                     annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
@@ -128,9 +131,9 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
                         annotationValueBuilder.member("notifyObserver", reception);
                     });
                     annotationValueBuilder.member("async", true);
-//                        if (p.getAnnotationNamesByStereotype("javax.inject.Qualifier").isEmpty()) {
-//                            p.annotate(Any.class);
-//                        }
+                    p.intValue(Priority.class).ifPresent(priority -> {
+                        annotationValueBuilder.member("priority", priority);
+                    });
                 });
             });
         }

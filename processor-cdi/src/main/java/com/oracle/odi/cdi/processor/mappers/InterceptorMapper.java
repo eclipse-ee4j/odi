@@ -13,33 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.mappers;
 
 import java.util.Collections;
 import java.util.List;
 
 import io.micronaut.context.annotation.Bean;
-import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.annotation.TypedAnnotationTransformer;
+import io.micronaut.inject.annotation.TypedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.inject.Typed;
+import jakarta.interceptor.Interceptor;
 
 /**
- * Transforms {@link jakarta.enterprise.inject.Typed} to {@link io.micronaut.context.annotation.Bean#typed()}.
+ * Maps {@link jakarta.interceptor.Interceptor} annotation to {@link io.micronaut.context.annotation.Bean}.
  */
-public class TypedTransformer implements TypedAnnotationTransformer<Typed> {
+public class InterceptorMapper implements TypedAnnotationMapper<Interceptor> {
     @Override
-    public Class<Typed> annotationType() {
-        return Typed.class;
+    public Class<Interceptor> annotationType() {
+        return Interceptor.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> transform(AnnotationValue<Typed> annotation, VisitorContext visitorContext) {
+    public List<AnnotationValue<?>> map(AnnotationValue<Interceptor> annotation, VisitorContext visitorContext) {
         return Collections.singletonList(
-                AnnotationValue.builder(Bean.class)
-                        .member("typed", annotation.annotationClassValues(AnnotationMetadata.VALUE_MEMBER))
-                        .build()
+                AnnotationValue.builder(Bean.class).build()
         );
     }
 }

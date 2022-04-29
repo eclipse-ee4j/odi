@@ -13,30 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.mappers;
 
+import java.util.Collections;
 import java.util.List;
 
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.annotation.TypedAnnotationTransformer;
+import io.micronaut.inject.annotation.TypedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.Specializes;
 
 /**
- * Makes components annotated with {@link Default} beans.
+ * Maps {@link jakarta.enterprise.inject.Specializes} annotation to {@link io.micronaut.context.annotation.Bean}.
  */
-public class DefaultQualifierTransformer implements TypedAnnotationTransformer<Default> {
+public class SpecializesMapper implements TypedAnnotationMapper<Specializes> {
     @Override
-    public Class<Default> annotationType() {
-        return Default.class;
+    public Class<Specializes> annotationType() {
+        return Specializes.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> transform(AnnotationValue<Default> annotation, VisitorContext visitorContext) {
-        return List.of(
-                AnnotationValue.builder(Bean.class).build(),
-                AnnotationValue.builder(Default.class).build()
+    public List<AnnotationValue<?>> map(AnnotationValue<Specializes> annotation, VisitorContext visitorContext) {
+        return Collections.singletonList(
+                AnnotationValue.builder(Bean.class).build()
         );
     }
 }

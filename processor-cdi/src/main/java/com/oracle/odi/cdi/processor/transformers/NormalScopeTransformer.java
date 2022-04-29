@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
-
-import java.util.Arrays;
-import java.util.List;
-
-import javax.inject.Scope;
+package com.oracle.odi.cdi.processor.transformers;
 
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.annotation.TypedAnnotationTransformer;
 import io.micronaut.inject.visitor.VisitorContext;
 import io.micronaut.runtime.context.scope.ScopedProxy;
 import jakarta.enterprise.context.NormalScope;
+
+import javax.inject.Scope;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Transforms {@link jakarta.enterprise.context.NormalScope} to

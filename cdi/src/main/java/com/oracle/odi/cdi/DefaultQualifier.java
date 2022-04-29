@@ -1,21 +1,52 @@
+/*
+ * Copyright (c) 2022 Oracle and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.oracle.odi.cdi;
 
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanType;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.Default;
-import jakarta.inject.Named;
 
 import java.util.List;
 import java.util.stream.Stream;
 
-public class DefaultQualifier<T> implements Qualifier<T> {
+/**
+ * Implementation of {@link Default} qualifier.
+ *
+ * @param <T> The qualified type
+ * @author Denis Stepanov
+ */
+@Internal
+public final class DefaultQualifier<T> implements Qualifier<T> {
+
+    public static final DefaultQualifier<?> INSTANCE = new DefaultQualifier<>();
 
     private static final io.micronaut.context.Qualifier DEFAULT_QUALIFIER = Qualifiers.byAnnotation(AnnotationMetadata.EMPTY_METADATA, Default.class);
+
+    private DefaultQualifier() {
+    }
+
+    public static <T> Qualifier<T> instance() {
+        return (Qualifier<T>) INSTANCE;
+    }
 
     @Override
     public <BT extends BeanType<T>> Stream<BT> reduce(Class<T> beanType, Stream<BT> candidates) {
@@ -24,16 +55,16 @@ public class DefaultQualifier<T> implements Qualifier<T> {
                 return false;
             }
             if (candidate instanceof BeanDefinition) {
-                Qualifier<?> declaredQualifier = getDeclaredQualifier(candidate.getAnnotationMetadata());
+                Qualifier<?> declaredQualifier = ((BeanDefinition<?>) candidate).getDeclaredQualifier();
                 return declaredQualifier == null
                         || declaredQualifier.contains(DEFAULT_QUALIFIER)
-                        || declaredQualifier instanceof Named; // CDI applies @Default also on @Named
+                        || declaredQualifier instanceof io.micronaut.core.naming.Named; // CDI applies @Default also on @Named
             }
             return false;
         });
     }
 
-    Qualifier<T> getDeclaredQualifier(AnnotationMetadata annotationMetadata) {
+    private Qualifier<T> getDeclaredQualifier(AnnotationMetadata annotationMetadata) {
         annotationMetadata = annotationMetadata.getDeclaredMetadata();
         final List<String> annotations = annotationMetadata.getAnnotationNamesByStereotype(AnnotationUtil.QUALIFIER);
         if (CollectionUtils.isNotEmpty(annotations)) {
@@ -43,6 +74,10 @@ public class DefaultQualifier<T> implements Qualifier<T> {
                     // primary is the same as null
                     return null;
                 }
+//                AnnotationValue<Annotation> declaredAnnotation = annotationMetadata.getDeclaredAnnotation(annotation);
+//                if (declaredAnnotation != null) {
+//                    return Qualifiers.
+//                }
                 return Qualifiers.byAnnotation(annotationMetadata, annotation);
             } else {
                 Qualifier<T>[] qualifiers = new Qualifier[annotations.size()];
@@ -56,4 +91,11 @@ public class DefaultQualifier<T> implements Qualifier<T> {
         return null;
     }
 
+    @Override
+    public boolean contains(Qualifier<T> qualifier) {
+        if (DEFAULT_QUALIFIER.contains(qualifier)) {
+            return true;
+        }
+        return Qualifier.super.contains(qualifier);
+    }
 }

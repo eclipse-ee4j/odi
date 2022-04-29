@@ -13,30 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi.processor;
+package com.oracle.odi.cdi.processor.mappers;
 
 import java.util.Collections;
 import java.util.List;
 
-import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.annotation.Order;
 import io.micronaut.inject.annotation.TypedAnnotationMapper;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.interceptor.AroundConstruct;
+import jakarta.annotation.Priority;
 
 /**
- * Maps {@link AroundConstruct} to be {@link Executable}.
+ * Transforms {@link jakarta.annotation.Priority} to {@link io.micronaut.core.annotation.Order}.
  */
-public class AroundConstructMapper implements TypedAnnotationMapper<AroundConstruct> {
+public class JakartaPriorityMapper implements TypedAnnotationMapper<Priority> {
     @Override
-    public Class<AroundConstruct> annotationType() {
-        return AroundConstruct.class;
+    public Class<Priority> annotationType() {
+        return Priority.class;
     }
 
     @Override
-    public List<AnnotationValue<?>> map(AnnotationValue<AroundConstruct> annotation, VisitorContext visitorContext) {
+    public List<AnnotationValue<?>> map(AnnotationValue<Priority> annotation, VisitorContext visitorContext) {
+        final int priority = annotation.intValue().orElse(0);
+        // priority annotation models the inverse with higher number being higher priority
+        final int negated = -priority;
         return Collections.singletonList(
-                AnnotationValue.builder(Executable.class).build()
+                AnnotationValue.builder(Order.class)
+                        .value(negated)
+                        .build()
         );
     }
 }

@@ -17,7 +17,6 @@ package com.oracle.odi.cdi;
 
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
-import io.micronaut.context.Qualifier;
 import io.micronaut.context.exceptions.BeanInstantiationException;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
@@ -56,8 +55,6 @@ import java.util.stream.Stream;
 @Internal
 public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
-    private final Argument<T> argument;
-    private final io.micronaut.context.Qualifier<T> qualifier;
     private final BeanDefinition<T> definition;
     private final BeanContext beanContext;
     private Class<? extends Annotation> scope;
@@ -65,14 +62,10 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
     /**
      * Default constructor.
      *
-     * @param argument    The argument
-     * @param qualifier   The qualifier
      * @param beanContext The bean context
      * @param definition  The definition
      */
-    public OdiBeanImpl(Argument<T> argument, Qualifier<T> qualifier, BeanContext beanContext, BeanDefinition<T> definition) {
-        this.argument = argument;
-        this.qualifier = qualifier;
+    public OdiBeanImpl(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
         this.definition = Objects.requireNonNull(definition, "Bean definition cannot be null");
     }
