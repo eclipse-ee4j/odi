@@ -33,8 +33,10 @@ import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -49,6 +51,8 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     private Qualifier<T> qualifier;
     @Nullable
     private OdiBean<T> bean;
+
+    private Map<T, CreationalContext<T>> created = new HashMap<>();
 
     OdiInstanceImpl(BeanContext beanContext,
                     OdiBeanContainer beanContainer,
@@ -119,7 +123,12 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     @Override
     public void destroy(T instance) {
-        beanContext.destroyBean(instance);
+        CreationalContext<T> creationalContext = created.get(instance);
+        if (creationalContext != null) {
+            creationalContext.release();
+        } else {
+            beanContext.destroyBean(instance);
+        }
     }
 
     @Override
@@ -156,7 +165,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     throw new IllegalStateException("Instance already destroyed!");
                 }
                 if (creationalContext == null) {
-                    creationalContext = beanContainer.createCreationalContext(bean);
+                    creationalContext = beanContainer.createCreationalContext(odiBean);
                 }
                 return context.get(odiBean, creationalContext);
             }
@@ -193,7 +202,10 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Override
     public T get() {
         Bean<T> bean = getBean();
-        return context.get(bean, beanContainer.createCreationalContext(bean));
+        CreationalContext<T> creationalContext = beanContainer.createCreationalContext(bean);
+        T instance = context.get(bean, creationalContext);
+        created.put(instance, creationalContext);
+        return instance;
     }
 
     @Override

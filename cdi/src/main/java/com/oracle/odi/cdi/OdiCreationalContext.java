@@ -16,22 +16,34 @@
 package com.oracle.odi.cdi;
 
 import io.micronaut.context.scope.CreatedBean;
+import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 
 final class OdiCreationalContext<T> implements CreationalContext<T> {
 
+    private final Contextual<T> contextual;
     private CreatedBean<T> createdBean;
+    private T instance;
+
+    OdiCreationalContext(Contextual<T> contextual) {
+        this.contextual = contextual;
+    }
 
     @Override
     public void push(T incompleteInstance) {
-        // no-op, not needed for Micronaut
+        instance = incompleteInstance;
     }
 
     @Override
     public void release() {
-        if (createdBean != null) {
-            createdBean.close();
-            this.createdBean = null;
+        if (contextual instanceof OdiBean) {
+            if (createdBean != null) {
+                createdBean.close();
+                this.createdBean = null;
+            }
+        } else {
+            contextual.destroy(instance, this);
+            instance = null;
         }
     }
 

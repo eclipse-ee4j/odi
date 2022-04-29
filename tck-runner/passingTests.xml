@@ -72,13 +72,6 @@
             <class name="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest">
                 <methods>
                     <exclude name="testBusinessMethodInterceptorBindings"/>
-                    <exclude name="testLifecycleInterceptorBindings"/>
-                </methods>
-            </class>
-            <!-- Session context-->
-            <class name="org.jboss.cdi.tck.tests.context.DestroyForSameCreationalContext2Test">
-                <methods>
-                    <exclude name=".*"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.bindings.broken.InvalidStereotypeInterceptorBindingAnnotationsTest">
@@ -126,6 +119,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Empty @Named is not included in qualifiers set -->
             <class name="org.jboss.cdi.tck.tests.definition.stereotype.named.DefaultNamedTest">
                 <methods>
                     <exclude name=".*"/>
@@ -139,11 +133,7 @@
                     <exclude name="testSingleMethodInterposingMultipleLifecycleCallbackEvents"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.definition.stereotype.inheritance.StereotypeInheritenceTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
+            <!-- Inherited stereotypes [@AnimalStereotype] include more than one defined scope -->
             <class name="org.jboss.cdi.tck.tests.definition.stereotype.StereotypeDefinitionTest">
                 <methods>
                     <exclude name=".*"/>
@@ -156,6 +146,7 @@
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest">
                 <methods>
+                    <!-- Strange usecase with Instance and interceptors -->
                     <exclude name="testInterceptorInstanceCreatedWhenTargetInstanceCreated"/>
                 </methods>
             </class>
@@ -186,7 +177,11 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!-- Implement BeanAttributes#getTypes -->
+                    <exclude name="testAbstractApiType"/>
+                    <exclude name="testBeanTypes"/>
+                    <exclude name="testGenericBeanTypes"/>
+                    <exclude name="testRawBeanTypes"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.bindings.AroundInvokeInterceptorTest">
@@ -200,22 +195,6 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.definition.qualifier.repeatable.RepeatableQualifiersTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest">
-                <methods>
-                    <exclude name="testMultipleQualifiers"/>
-                    <exclude name="testQualifierDeclaredInheritedIsBlockedByIntermediateClass"/>
-                    <exclude name="testQualifierDeclaredInheritedIsInherited"/>
-                    <exclude name="testQualifierNotDeclaredInheritedIsNotIndirectlyInherited"/>
-                    <exclude name="testQualifierNotDeclaredInheritedIsNotInherited"/>
-                    <exclude name="testQualifiersDeclaredInJava"/>
-                    <exclude name="testQualifierDeclaredInheritedIsIndirectlyInherited"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
@@ -353,13 +332,10 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.event.fires.FireEventTest">
                 <methods>
-                    <exclude name="testBeanManagerFireEvent"/>
                     <exclude name="testEventFireThrowsExceptionIfEventObjectTypeContainsUnresovableTypeVariable"/>
-                    <exclude name="testEventProvidesMethodForFiringEventsWithCombinationOfTypeAndBindings"/>
                     <exclude name="testEventSelectedFiresAndObserversNotified"/>
                     <exclude name="testFireContainerLifecycleEvent"/>
                     <exclude name="testInjectedAnyEventCanFireEvent"/>
-                    <exclude name="testInjectedEventAcceptsEventObject"/>
                     <exclude name="testInjectedEventCanHaveBindings"/>
                     <exclude name="testInjectedEventCanSpecifyBindingsDynamically"/>
                     <exclude name="testTypeVariableEventTypeFails"/>
@@ -386,7 +362,6 @@
                     <exclude name="testAsyncConditionalObserver"/>
                     <exclude name="testConditionalObserver"/>
                     <exclude name="testConditionalObserverMethodNotInvokedIfNoActiveContext"/>
-                    <exclude name="testObserverMethodInvokedOnReturnedInstanceFromContext"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest">
@@ -687,8 +662,6 @@
                     <exclude name="testCreateFailsIfProducerReturnsNullAndNotDependent"/>
                     <exclude name="testCreateRethrowsUncheckedException"/>
                     <exclude name="testCreateReturnsNullIfProducerDoesAndDependent"/>
-                    <exclude name="testCreateWrapsCheckedExceptionAndRethrows"/>
-                    <exclude name="testProducerMethodBeanCreate"/>
                     <exclude name="testProducerMethodBeanDestroy"/>
                 </methods>
             </class>
@@ -934,6 +907,7 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest">
                 <methods>
+                    <!-- Not supported in CDI lite -->
                     <exclude name="testDisposerMethodsAreIntercepted"/>
                 </methods>
             </class>
@@ -1178,39 +1152,32 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.dynamic.handle.InstanceHandleTest">
                 <methods>
-                    <exclude name="testGetAfterDestroyingContextualInstance"/>
+                    <!-- FIX proper proxy destroy callback -->
                     <exclude name="testGetHandle"/>
-                    <exclude name="testHandles"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.dependent.DestroyingDependentInstanceTest">
                 <methods>
+                    <!-- Properly destroy scoped instance -->
                     <exclude name="testDestroyingDependentInstances"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.normal.DestroyingNormalScopedInstanceTest">
                 <methods>
+                    <!-- Tests expect scoped component returns nulls after context is destroyed-->
                     <exclude name="testApplicationScopedComponent"/>
                     <exclude name="testRequestScopedComponent"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest">
                 <methods>
+                    <!-- Compilation error -->
                     <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest">
-                <methods>
-                    <!--                    Correctly handle @Default-->
-                    <exclude name="beanManageCreateInstance"/>
-                    <exclude name="cdiSelectLookup"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest">
                 <methods>
-                    <exclude name="testGetReferenceWithIllegalBeanType"/>
-                    <exclude name="testManagerBeanHasCurrentBinding"/>
-                    <exclude name="testManagerBeanIsDependentScoped"/>
+                    <!-- Shouldn't be in CDI lite-->
                     <exclude name="testManagerBeanIsPassivationCapable"/>
                 </methods>
             </class>

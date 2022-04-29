@@ -146,7 +146,7 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                 createdContextuals.put(creationContext.id(), contextual);
                 return context.get(
                         createContextual(beanContext, creationContext),
-                        new OdiCreationalContext<>()
+                        new OdiCreationalContext<>(contextual)
                 );
 
             }

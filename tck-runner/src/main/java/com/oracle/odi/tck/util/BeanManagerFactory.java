@@ -18,6 +18,7 @@ package com.oracle.odi.tck.util;
 import io.micronaut.context.annotation.Factory;
 import jakarta.el.ELResolver;
 import jakarta.el.ExpressionFactory;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
@@ -42,7 +43,6 @@ import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.enterprise.inject.spi.ProducerFactory;
-import jakarta.inject.Singleton;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -57,7 +57,7 @@ import java.util.Set;
 @Factory
 public class BeanManagerFactory {
     @Default
-    @Singleton
+    @Dependent
     @io.micronaut.context.annotation.Bean(typed = BeanManager.class)
     final BeanManager createBeanManager(BeanContainer beanContainer) {
         return new BeanManager() {

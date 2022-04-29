@@ -45,18 +45,17 @@ public class OdiInjectionEnricher implements TestEnricher {
         while (!Object.class.equals(testClass)) {
             for (Field field : testClass.getDeclaredFields()) {
                 if (hasInjectAnnotation(field)) {
-                    // TODO qualifiers?
-                    Object value = applicationContext.getBean(field.getType());
-
                     try {
+                        field.setAccessible(true);
+                        if (field.get(testCase) != null) {
+                            continue;
+                        }
+                        // TODO qualifiers?
+                        Object value = applicationContext.getBean(field.getType());
+
                         field.set(testCase, value);
                     } catch (IllegalAccessException e) {
-                        field.setAccessible(true);
-                        try {
-                            field.set(testCase, value);
-                        } catch (IllegalAccessException ex) {
-                            throw new RuntimeException(e);
-                        }
+                        throw new RuntimeException(e);
                     }
                 }
             }
@@ -85,8 +84,8 @@ public class OdiInjectionEnricher implements TestEnricher {
         Class<?> aClass = classes.get(method.getDeclaringClass().getName());
         try {
             method = aClass.getMethod(method.getName(), Arrays.stream(method.getParameterTypes())
-                            .map(clazz -> ClassUtils.forName(clazz.getName(), aClass.getClassLoader()).get())
-                            .toArray(Class[]::new));
+                    .map(clazz -> ClassUtils.forName(clazz.getName(), aClass.getClassLoader()).get())
+                    .toArray(Class[]::new));
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }

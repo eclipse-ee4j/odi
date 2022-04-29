@@ -36,14 +36,15 @@ import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.CreationException;
+import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.Prioritized;
+import jakarta.inject.Named;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -85,22 +86,6 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
                 definition.getDeclaredQualifier()
         );
         return new OdiBeanImpl<>(beanContext, targetBeanDefinition);
-    }
-
-    public BeanDefinition<?> findTargetBeanDefinitions(BeanDefinition<?> originalBeanDefinition) {
-        // We need to get all bean definitions and filter them for cases when bean inherit each other
-        Collection<BeanDefinition<?>> beanDefinitions = beanContext.getBeanDefinitions((Argument) originalBeanDefinition.asArgument());
-        for (BeanDefinition<?> beanDefinition : beanDefinitions) {
-            if (beanDefinition instanceof AdvisedBeanType) {
-                if (((AdvisedBeanType<?>) beanDefinition).getInterceptedType().equals(originalBeanDefinition.getBeanType())) {
-                    return beanDefinition;
-                }
-            } else if (beanDefinition.getBeanType().equals(originalBeanDefinition.getBeanType())) {
-                return beanDefinition;
-            }
-        }
-        // Instance is replaced by something else
-        return null;
     }
 
     @Override
@@ -187,6 +172,9 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
         Set<Annotation> annotations = AnnotationUtils.synthesizeQualifierAnnotations(definition.getAnnotationMetadata());
         Set<Annotation> all = new HashSet<>(annotations);
         all.add(Any.Literal.INSTANCE);
+        if (all.size() == 1 || all.stream().allMatch(e -> e instanceof Named || e instanceof Any)) {
+            all.add(Default.Literal.INSTANCE);
+        }
         return all;
     }
 

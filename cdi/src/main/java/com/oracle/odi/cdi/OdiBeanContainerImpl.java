@@ -168,12 +168,16 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public Object getReference(Bean<?> bean, Type beanType, CreationalContext<?> ctx) {
-        if (bean instanceof OdiBeanImpl) {
+        if (bean instanceof OdiBean) {
             if (!(beanType instanceof Class)) {
                 throw new IllegalStateException("Not implemented");
             }
-            OdiBeanImpl odiBean = (OdiBeanImpl) bean;
-            return odiBean.create(ctx);
+            OdiBean<Object> odiBean = (OdiBean<Object>) bean;
+            Object instance = odiBean.create((CreationalContext) ctx);
+            if (!((Class<?>) beanType).isInstance(instance)) {
+                throw new IllegalArgumentException("Invalid instance!");
+            }
+            return instance;
         } else {
             throw new IllegalArgumentException("Unsupported by bean type: " + bean.getClass());
         }
@@ -181,11 +185,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public <T> CreationalContext<T> createCreationalContext(Contextual<T> contextual) {
-        if (contextual instanceof OdiBeanImpl || contextual == null) {
-            return new OdiCreationalContext<>();
-        } else {
-            throw new IllegalArgumentException("Unsupported by contextual type: " + contextual.getClass());
-        }
+        return new OdiCreationalContext<>(contextual);
     }
 
     @Override

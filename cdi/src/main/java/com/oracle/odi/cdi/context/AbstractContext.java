@@ -22,7 +22,6 @@ import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 
-import java.util.AbstractMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Internal
 public abstract class AbstractContext implements AlterableContext {
 
-    private final Map<Contextual<?>, Map.Entry<CreationalContext<?>, Object>> storage = new ConcurrentHashMap<>();
+    private final Map<Contextual<?>, Entry> storage = new ConcurrentHashMap<>();
     private boolean active = true;
 
     @Override
@@ -42,7 +41,7 @@ public abstract class AbstractContext implements AlterableContext {
         T instance = get(contextual);
         if (instance == null) {
             instance = contextual.create(creationalContext);
-            storage.put(contextual, new AbstractMap.SimpleEntry<>(creationalContext, instance));
+            storage.put(contextual, new Entry<>(creationalContext, instance));
         }
         return instance;
     }
@@ -53,9 +52,9 @@ public abstract class AbstractContext implements AlterableContext {
     public <T> T get(Contextual<T> contextual) {
         chechIfActive();
         contextual = unwrapProxy(contextual);
-        Map.Entry<CreationalContext<?>, Object> entry = storage.get(contextual);
+        Entry<T> entry = storage.get(contextual);
         if (entry != null) {
-            return (T) entry.getValue();
+            return entry.instance;
         }
         return null;
     }
@@ -84,16 +83,16 @@ public abstract class AbstractContext implements AlterableContext {
     @Override
     @SuppressWarnings("unchecked")
     public void destroy(Contextual<?> contextual) {
-        Map.Entry<CreationalContext<?>, Object> entry = storage.remove(contextual);
+        Entry entry = storage.remove(contextual);
         if (entry != null) {
             @SuppressWarnings("rawtypes")
             Contextual rawContextual = contextual;
-            rawContextual.destroy(entry.getValue(), entry.getKey());
+            rawContextual.destroy(entry.instance, entry.creationalContext);
         }
     }
 
     public void destroy() {
-        storage.values().forEach(e -> e.getKey().release());
+        storage.values().forEach(e -> e.creationalContext.release());
         storage.clear();
         active = false;
     }
@@ -104,5 +103,15 @@ public abstract class AbstractContext implements AlterableContext {
 
     public void activate() {
         active = true;
+    }
+
+    private static final class Entry<T> {
+        private final CreationalContext<T> creationalContext;
+        private final T instance;
+
+        private Entry(CreationalContext<T> creationalContext, T instance) {
+            this.creationalContext = creationalContext;
+            this.instance = instance;
+        }
     }
 }
