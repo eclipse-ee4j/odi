@@ -13,23 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.oracle.odi.cdi;
+package com.oracle.odi.cdi.annotated;
+
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.Internal;
+import jakarta.enterprise.inject.spi.Annotated;
+import jakarta.inject.Inject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Set;
 
-import io.micronaut.core.annotation.AnnotationMetadata;
-import io.micronaut.core.annotation.Internal;
-import jakarta.enterprise.inject.spi.Annotated;
-
+/**
+ * The implementation of {@link Annotated}.
+ */
 @Internal
-final class OdiAnnotated implements Annotated {
-    private final Type type;
-    private final Set<Type> exposedTypes;
-    private final AnnotationMetadata annotationMetadata;
+public class OdiAnnotated implements Annotated {
+    protected final Type type;
+    protected final Set<Type> exposedTypes;
+    protected final AnnotationMetadata annotationMetadata;
 
-    OdiAnnotated(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata) {
+    public OdiAnnotated(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata) {
         this.type = type;
         this.exposedTypes = exposedTypes;
         this.annotationMetadata = annotationMetadata;
@@ -62,6 +67,9 @@ final class OdiAnnotated implements Annotated {
 
     @Override
     public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
+        if (annotationType == Inject.class) {
+            return annotationMetadata.isAnnotationPresent(AnnotationUtil.INJECT);
+        }
         return annotationMetadata.isAnnotationPresent(annotationType);
     }
 }

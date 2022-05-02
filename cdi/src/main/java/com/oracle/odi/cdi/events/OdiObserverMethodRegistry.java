@@ -40,9 +40,9 @@ import java.util.Set;
 @Internal
 public final class OdiObserverMethodRegistry {
 
-    private final List<OdiObserverMethod<?>> observerMethods = new ArrayList<>();
-
     private static final io.micronaut.context.Qualifier DEFAULT_QUALIFIER = Qualifiers.byAnnotation(AnnotationMetadata.EMPTY_METADATA, Default.class);
+
+    private final List<OdiObserverMethod<?>> observerMethods = new ArrayList<>();
 
     /**
      * Registers an observed ODI method.

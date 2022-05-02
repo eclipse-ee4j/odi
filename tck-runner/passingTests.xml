@@ -35,7 +35,8 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierInheritedTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!-- 'bean.getBeanClass()' expects factory class -->
+                    <exclude name="testResolution"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative02Test">
@@ -333,11 +334,9 @@
             <class name="org.jboss.cdi.tck.tests.event.fires.FireEventTest">
                 <methods>
                     <exclude name="testEventFireThrowsExceptionIfEventObjectTypeContainsUnresovableTypeVariable"/>
-                    <exclude name="testEventSelectedFiresAndObserversNotified"/>
                     <exclude name="testFireContainerLifecycleEvent"/>
-                    <exclude name="testInjectedAnyEventCanFireEvent"/>
+                    <!-- Cannot match synthesize annotation -->
                     <exclude name="testInjectedEventCanHaveBindings"/>
-                    <exclude name="testInjectedEventCanSpecifyBindingsDynamically"/>
                     <exclude name="testTypeVariableEventTypeFails"/>
                 </methods>
             </class>
@@ -366,7 +365,8 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!-- Spec shouldn't do equals Type -->
+                    <exclude name="testGetType"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.metadata.broken.initializer.InvalidEventMetadataInjectionPointTest">
@@ -482,6 +482,7 @@
                     <exclude name="testImplicitEventIsPassivationCapable"/>
                 </methods>
             </class>
+            <!-- Methods with parameters annotated with @Observes cannot be private -->
             <class name="org.jboss.cdi.tck.tests.event.EventTest">
                 <methods>
                     <exclude name=".*"/>
@@ -527,11 +528,13 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+<!--            Cannot apply AOP advice to final class-->
             <class name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
+<!--            Beans produced from fields cannot be static-->
             <class name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest">
                 <methods>
                     <exclude name=".*"/>
@@ -587,11 +590,13 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Cannot compile -->
             <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Cannot compile -->
             <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest">
                 <methods>
                     <exclude name=".*"/>
@@ -602,6 +607,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Cannot compile -->
             <class name="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest">
                 <methods>
                     <exclude name=".*"/>
@@ -642,6 +648,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Cannot compile -->
             <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest">
                 <methods>
                     <exclude name=".*"/>
@@ -649,9 +656,11 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!-- Strange qualifiers-->
+                    <exclude name="testProducerMethodQualifiers"/>
                 </methods>
             </class>
+            <!-- Cannot compile -->
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest">
                 <methods>
                     <exclude name=".*"/>
@@ -820,6 +829,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Cannot compile -->
             <class name="org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest">
                 <methods>
                     <exclude name=".*"/>
@@ -961,17 +971,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.lookup.clientProxy.ClientProxyTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.ParameterizedTypesInjectionToRawTypeTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
@@ -1013,7 +1013,8 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!-- Factory returns null -->
+                    <exclude name="testNullInjectionPointInjectedIntoNonInjectedObject"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectableReferenceTest">

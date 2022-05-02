@@ -111,7 +111,7 @@ public interface OdiBeanContainer extends BeanContainer {
      * @param valueSupplier          The argument value supplier
      * @param <B>                    The bean type
      * @param <R>                    The result type
-     * @return
+     * @return return value
      */
     <B, R> Object fulfillAndExecuteMethod(BeanDefinition<B> beanDefinition,
                                           ExecutableMethod<B, R> executableMethod,

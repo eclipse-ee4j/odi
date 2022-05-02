@@ -28,6 +28,7 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.core.util.SupplierUtil;
 import io.micronaut.inject.InjectionPoint;
 import io.micronaut.inject.annotation.AnnotationMetadataHierarchy;
+import io.micronaut.inject.qualifiers.AnyQualifier;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.event.NotificationOptions;
@@ -136,9 +137,13 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             );
             final Qualifier<U> resolvedQualifiers = AnnotationUtils
                     .qualifierFromQualifierAnnotations(annotationMetadata, annotations);
-            qualifier = Qualifiers.byQualifiers(
-                    resolvedQualifiers, (Qualifier<U>) this.qualifier
-            );
+            if (this.qualifier.equals(AnyQualifier.INSTANCE)) {
+                qualifier = resolvedQualifiers;
+            } else {
+                qualifier = Qualifiers.byQualifiers(
+                        resolvedQualifiers, (Qualifier<U>) this.qualifier
+                );
+            }
         }
         return new OdiEvent<>(
                 beanContainer,

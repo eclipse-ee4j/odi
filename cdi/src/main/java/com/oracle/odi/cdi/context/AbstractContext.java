@@ -46,7 +46,6 @@ public abstract class AbstractContext implements AlterableContext {
         return instance;
     }
 
-
     @Override
     @SuppressWarnings("unchecked")
     public <T> T get(Contextual<T> contextual) {
@@ -91,16 +90,25 @@ public abstract class AbstractContext implements AlterableContext {
         }
     }
 
+    /**
+     * Destroy the context.
+     */
     public void destroy() {
         storage.values().forEach(e -> e.creationalContext.release());
         storage.clear();
         active = false;
     }
 
+    /**
+     * Deactivate the context.
+     */
     public void deactivate() {
         active = false;
     }
 
+    /**
+     * Activate the context.
+     */
     public void activate() {
         active = true;
     }

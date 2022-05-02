@@ -27,13 +27,15 @@ import jakarta.interceptor.Interceptor;
 import javax.inject.Named;
 import javax.inject.Scope;
 
+/**
+ * Internal annotation utils.
+ */
 @Internal
 public final class AnnotationUtil {
 
     public static final String ANN_NAME = Named.class.getName();
     public static final String ANN_DISPOSER_METHOD = "com.oracle.odi.cdi.annotation.DisposerMethod";
     public static final String ANN_OBSERVES_METHOD = "com.oracle.odi.cdi.annotation.ObservesMethod";
-    public static final String ANN_APPLICATION_SCOPE = "com.oracle.odi.cdi.annotation.ApplicationScope";
 
     private AnnotationUtil() {
     }

@@ -33,6 +33,9 @@ import jakarta.enterprise.inject.Instance;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Internal CDI utils.
+ */
 @Internal
 public final class CdiUtil {
     public static final String SPEC_LOCATION = "https://jakarta.ee/specifications/cdi/3.0/jakarta-cdi-spec-3.0.html";

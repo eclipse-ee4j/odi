@@ -28,6 +28,7 @@ import java.lang.annotation.Annotation;
 @Singleton
 public class SessionContext extends AbstractContext {
 
+    @Override
     public Class<? extends Annotation> getScope() {
         return SessionScoped.class;
     }
