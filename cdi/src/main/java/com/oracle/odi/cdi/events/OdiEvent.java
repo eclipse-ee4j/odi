@@ -137,7 +137,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             );
             final Qualifier<U> resolvedQualifiers = AnnotationUtils
                     .qualifierFromQualifierAnnotations(annotationMetadata, annotations);
-            if (this.qualifier.equals(AnyQualifier.INSTANCE)) {
+            if (this.qualifier != null && this.qualifier.equals(AnyQualifier.INSTANCE)) {
                 qualifier = resolvedQualifiers;
             } else {
                 qualifier = Qualifiers.byQualifiers(
