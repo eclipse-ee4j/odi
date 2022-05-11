@@ -80,6 +80,11 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
     }
 
     @Override
+    public BeanDefinition<T> getBeanDefinition() {
+        return definition;
+    }
+
+    @Override
     public OdiBean<T> getProxyTargetBean() {
         BeanDefinition<T> targetBeanDefinition = beanContext.getProxyTargetBeanDefinition(
                 ((ProxyBeanDefinition) definition).getTargetType(),

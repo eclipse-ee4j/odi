@@ -130,8 +130,6 @@
                 <methods>
                     <!-- What to do with private method? -->
                     <exclude name="testPrivateLifecycleInterceptorMethod"/>
-                    <!-- PreDestory is called 2x: first when destroying proxy + the actual bean -->
-                    <exclude name="testSingleMethodInterposingMultipleLifecycleCallbackEvents"/>
                 </methods>
             </class>
             <!-- Inherited stereotypes [@AnimalStereotype] include more than one defined scope -->

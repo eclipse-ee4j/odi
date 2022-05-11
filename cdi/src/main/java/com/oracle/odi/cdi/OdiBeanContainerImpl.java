@@ -105,9 +105,9 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
             }
             OdiBean<B> bean = getBean(beanDefinition);
             CreationalContext<B> creationalContext = createCreationalContext(bean);
-            B beanInstance = bean.create(creationalContext);
+            Context beanContext = isDependent(bean.getScope()) ? dependentContext : getContext(bean.getScope());
+            B beanInstance = beanContext.get(bean, creationalContext);
             Object result = executableMethod.invoke(beanInstance, values);
-            creationalContext.release();
             dependentContext.destroy();
             return result;
         }
@@ -173,7 +173,8 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                 throw new IllegalStateException("Not implemented");
             }
             OdiBean<Object> odiBean = (OdiBean<Object>) bean;
-            Object instance = odiBean.create((CreationalContext) ctx);
+            CreationalContext creationalContext = ctx;
+            Object instance = odiBean.create(creationalContext);
             if (!((Class<?>) beanType).isInstance(instance)) {
                 throw new IllegalArgumentException("Invalid instance!");
             }
@@ -185,7 +186,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public <T> CreationalContext<T> createCreationalContext(Contextual<T> contextual) {
-        return new OdiCreationalContext<>(contextual);
+        return new OdiCreationalContext<>(getBeanContext(), contextual);
     }
 
     @Override
@@ -230,6 +231,10 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     return c.intercepts(type);
                 })
                 .collect(Collectors.toList());
+    }
+
+    private boolean isDependent(Class<? extends Annotation> annotationType) {
+        return annotationType == Dependent.class;
     }
 
     @Override

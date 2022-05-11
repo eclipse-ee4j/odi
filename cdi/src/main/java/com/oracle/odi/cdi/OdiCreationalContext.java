@@ -15,17 +15,22 @@
  */
 package com.oracle.odi.cdi;
 
+import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.scope.CreatedBean;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 
 final class OdiCreationalContext<T> implements CreationalContext<T> {
 
+    private final BeanContext beanContext;
     private final Contextual<T> contextual;
     private CreatedBean<T> createdBean;
     private T instance;
 
-    OdiCreationalContext(Contextual<T> contextual) {
+    OdiCreationalContext(BeanContext beanContext, Contextual<T> contextual) {
+        this.beanContext = beanContext;
         this.contextual = contextual;
     }
 
@@ -37,7 +42,19 @@ final class OdiCreationalContext<T> implements CreationalContext<T> {
     @Override
     public void release() {
         if (contextual instanceof OdiBean) {
-            if (createdBean != null) {
+            if (createdBean instanceof BeanRegistration) {
+                BeanRegistration<T> beanRegistration = (BeanRegistration<T>) createdBean;
+//                if (isDependent(beanRegistration)) {
+//                    List<BeanRegistration<?>> dependent = DependentUtils.getDependent(beanRegistration);
+//                    BeanRegistration<T> registration = BeanRegistration.of(beanContext,
+//                            beanRegistration.getIdentifier(),
+//                            beanRegistration.getBeanDefinition(),
+//                            beanRegistration.bean(),
+//                            dependent.stream().filter(this::isDependent).collect(Collectors.toList())
+//                    );
+                    beanContext.destroyBean(beanRegistration);
+//                }
+            } else if (createdBean != null) {
                 createdBean.close();
                 this.createdBean = null;
             }
@@ -45,6 +62,10 @@ final class OdiCreationalContext<T> implements CreationalContext<T> {
             contextual.destroy(instance, this);
             instance = null;
         }
+    }
+
+    private Boolean isDependent(BeanRegistration<?> beanRegistration) {
+        return beanRegistration.getBeanDefinition().getScope().map(scope -> scope.equals(Dependent.class)).orElse(false);
     }
 
     CreatedBean<T> getCreatedBean() {

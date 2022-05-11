@@ -106,15 +106,14 @@ public interface OdiBeanContainer extends BeanContainer {
     /**
      * Fulfill and execute method. (event handler, disposer)
      *
-     * @param beanDefinition         The bean definition
-     * @param executableMethod       The method to be fulfilled and executed
-     * @param valueSupplier          The argument value supplier
-     * @param <B>                    The bean type
-     * @param <R>                    The result type
+     * @param beanDefinition   The bean definition
+     * @param executableMethod The method to be fulfilled and executed
+     * @param valueSupplier    The argument value supplier
+     * @param <B>              The bean type
+     * @param <R>              The result type
      * @return return value
      */
     <B, R> Object fulfillAndExecuteMethod(BeanDefinition<B> beanDefinition,
                                           ExecutableMethod<B, R> executableMethod,
                                           Function<Argument<?>, Object> valueSupplier);
-
 }
