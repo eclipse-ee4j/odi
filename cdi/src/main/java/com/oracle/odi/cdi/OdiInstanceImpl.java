@@ -15,6 +15,7 @@
  */
 package com.oracle.odi.cdi;
 
+import com.oracle.odi.cdi.context.NoOpDependentContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.NonNull;
@@ -32,8 +33,10 @@ import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -49,20 +52,24 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Nullable
     private OdiBean<T> bean;
 
+    private Map<T, CreationalContext<T>> created = new HashMap<>();
+
     OdiInstanceImpl(BeanContext beanContext,
                     OdiBeanContainer beanContainer,
+                    @Nullable
                     Context context,
                     Argument<T> beanType,
                     Qualifier<T> qualifier) {
         this.beanContext = beanContext;
         this.beanContainer = beanContainer;
-        this.context = context;
+        this.context = context == null ? NoOpDependentContext.INSTANCE : context;
         this.beanType = beanType;
         this.qualifier = qualifier;
     }
 
     OdiInstanceImpl(BeanContext beanContext,
                     OdiBeanContainer beanContainer,
+                    @Nullable
                     Context context,
                     Argument<T> beanType,
                     Annotation... annotations) {
@@ -84,7 +91,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
         return new OdiInstanceImpl<>(beanContext, beanContainer, context, Argument.of(subtype), withAnnotations(qualifiers));
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     @Override
     public <U extends T> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
         return new OdiInstanceImpl<>(beanContext, beanContainer, context, (Argument<U>) Argument.of(subtype.getType()), withAnnotations(qualifiers));
@@ -116,7 +123,12 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     @Override
     public void destroy(T instance) {
-        beanContext.destroyBean(instance);
+        CreationalContext<T> creationalContext = created.get(instance);
+        if (creationalContext != null) {
+            creationalContext.release();
+        } else {
+            beanContext.destroyBean(instance);
+        }
     }
 
     @Override
@@ -126,6 +138,10 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     private OdiBean<T> getBean() {
         try {
+            Qualifier<T> qualifier = this.qualifier;
+            if (qualifier == null) {
+                qualifier = DefaultQualifier.instance();
+            }
             if (bean == null) {
                 bean = beanContainer.getBean(beanType, qualifier);
             }
@@ -149,7 +165,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     throw new IllegalStateException("Instance already destroyed!");
                 }
                 if (creationalContext == null) {
-                    creationalContext = createCreationalContext(odiBean);
+                    creationalContext = beanContainer.createCreationalContext(odiBean);
                 }
                 return context.get(odiBean, creationalContext);
             }
@@ -186,18 +202,10 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Override
     public T get() {
         Bean<T> bean = getBean();
-        CreationalContext<T> creationalContext = createCreationalContext(bean);
-        return context.get(bean, creationalContext);
-    }
-
-    private CreationalContext<T> createCreationalContext(Bean<T> bean) {
-        CreationalContext<T> creationalContext;
-        if (context instanceof DependentContext) {
-            creationalContext = beanContainer.createCreationalContext(bean, ((DependentContext) context).getResolutionContext());
-        } else {
-            creationalContext = beanContainer.createCreationalContext(bean);
-        }
-        return creationalContext;
+        CreationalContext<T> creationalContext = beanContainer.createCreationalContext(bean);
+        T instance = context.get(bean, creationalContext);
+        created.put(instance, creationalContext);
+        return instance;
     }
 
     @Override

@@ -15,22 +15,17 @@
  */
 package com.oracle.odi.cdi.events;
 
-import com.oracle.odi.cdi.DependentContext;
-import com.oracle.odi.cdi.OdiBean;
 import com.oracle.odi.cdi.OdiBeanContainer;
 import com.oracle.odi.cdi.annotation.ObservesMethod;
-import io.micronaut.context.BeanResolutionContext;
-import io.micronaut.context.DefaultBeanResolutionContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.qualifiers.Qualifiers;
-import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
-import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.inject.spi.InjectionPoint;
@@ -56,12 +51,12 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
     private final OdiBeanContainer beanContainer;
     private final BeanDefinition<B> originalBeanDefinition;
     private final BeanDefinition<B> beanDefinition;
-    private final ExecutableMethod<Object, Object> executableMethod;
+    private final ExecutableMethod<B, Object> executableMethod;
     private final Argument<E> eventArgument;
     private final io.micronaut.context.Qualifier<E> eventQualifier;
     private final boolean isAsync;
     private final int priority;
-    private final Reception reception;
+    private final Reception notifyObserver;
     private final TransactionPhase transactionPhase;
 
     private Set<Annotation> observedQualifiers;
@@ -69,7 +64,7 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
     ExecutableObserverMethod(OdiBeanContainer beanContainer,
                              BeanDefinition<B> originalBeanDefinition,
                              BeanDefinition<B> beanDefinition,
-                             ExecutableMethod<Object, Object> executableMethod) {
+                             ExecutableMethod<B, Object> executableMethod) {
         this.beanContainer = beanContainer;
         this.originalBeanDefinition = originalBeanDefinition;
         this.beanDefinition = beanDefinition;
@@ -80,9 +75,9 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
         }
         this.isAsync = observesMethodAnnotationValue.isTrue("async");
         this.priority = observesMethodAnnotationValue.intValue("priority").orElse(DEFAULT_PRIORITY);
-        this.reception = observesMethodAnnotationValue.enumValue("reception", Reception.class).orElse(Reception.ALWAYS);
+        this.notifyObserver = observesMethodAnnotationValue.enumValue("notifyObserver", Reception.class).orElse(Reception.ALWAYS);
         this.transactionPhase = observesMethodAnnotationValue
-                .enumValue("transactionPhase", TransactionPhase.class)
+                .enumValue("during", TransactionPhase.class)
                 .orElse(TransactionPhase.IN_PROGRESS);
         int eventArgumentsIndex = observesMethodAnnotationValue.intValue("eventArgumentIndex").getAsInt();
         this.eventArgument = Objects.requireNonNull((Argument<E>) executableMethod.getArguments()[eventArgumentsIndex]);
@@ -92,6 +87,11 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
     @Override
     public Class<?> getBeanClass() {
         return executableMethod.getDeclaringType();
+    }
+
+    @Override
+    public Bean<?> getDeclaringBean() {
+        return beanContainer.getBean(originalBeanDefinition);
     }
 
     @Override
@@ -128,7 +128,7 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
 
     @Override
     public Reception getReception() {
-        return reception;
+        return notifyObserver;
     }
 
     @Override
@@ -152,65 +152,35 @@ final class ExecutableObserverMethod<B, E> implements OdiObserverMethod<E> {
     }
 
     private void notify(E event, EventContext eventContext) {
-        Argument<?>[] arguments = executableMethod.getArguments();
-        Object[] values = new Object[arguments.length];
-        try (BeanResolutionContext resolutionContext = new DefaultBeanResolutionContext(beanContainer.getBeanContext(), beanDefinition)) {
-            DependentContext dependentContext = new DependentContext(resolutionContext);
-            for (int i = 0; i < arguments.length; i++) {
-                Argument<?> argument = arguments[i];
-                if (argument == eventArgument) {
-                    values[i] = event;
-                } else if (argument.getType() == EventMetadata.class) {
-                    if (eventContext == null) {
-                        values[i] = new EventMetadata() {
-                            @Override
-                            public Set<Annotation> getQualifiers() {
-                                return Collections.emptySet();
-                            }
-
-                            @Override
-                            public InjectionPoint getInjectionPoint() {
-                                return null;
-                            }
-
-                            @Override
-                            public Type getType() {
-                                return event.getClass();
-                            }
-                        };
-                    } else {
-                        values[i] = eventContext.getMetadata();
-                    }
-                } else {
-                    try (BeanResolutionContext.Path ignore = resolutionContext.getPath().pushMethodArgumentResolve(
-                            originalBeanDefinition,
-                            executableMethod.getMethodName(),
-                            argument,
-                            arguments,
-                            false
-                    )) {
-                        if (argument.getType() == Instance.class) {
-                            Instance<?> instance = beanContainer.createInstance(dependentContext).select(argument.getFirstTypeVariable()
-                                    .orElseThrow(() -> new IllegalArgumentException("Expected the type of Instance!")));
-                            values[i] = instance;
-                        } else {
-                            Instance<?> instance = beanContainer.createInstance(dependentContext).select(argument);
-                            values[i] = instance.get();
-                        }
-                    }
-                }
-            }
-            if (reception == Reception.IF_EXISTS && !beanContainer.getBeanContext().containsBean(beanDefinition.asArgument())) {
-                dependentContext.destroy();
-                return;
-            }
-            OdiBean<B> bean = beanContainer.getBean(beanDefinition);
-            CreationalContext<B> creationalContext = beanContainer.createCreationalContext(bean);
-            B beanInstance = bean.create(creationalContext);
-            executableMethod.invoke(beanInstance, values);
-            creationalContext.release();
-            dependentContext.destroy();
+        if (notifyObserver == Reception.IF_EXISTS && !beanContainer.getBeanContext().containsBean(beanDefinition.asArgument())) {
+            return;
         }
+        beanContainer.fulfillAndExecuteMethod(beanDefinition, executableMethod, argument -> {
+            if (Objects.equals(argument, eventArgument)) {
+                return event;
+            } else if (argument.getType() == EventMetadata.class) {
+                if (eventContext == null) {
+                    return new EventMetadata() {
+                        @Override
+                        public Set<Annotation> getQualifiers() {
+                            return Collections.emptySet();
+                        }
+
+                        @Override
+                        public InjectionPoint getInjectionPoint() {
+                            return null;
+                        }
+
+                        @Override
+                        public Type getType() {
+                            return event.getClass();
+                        }
+                    };
+                }
+                return eventContext.getMetadata();
+            }
+            return null;
+        });
     }
 
     @Override

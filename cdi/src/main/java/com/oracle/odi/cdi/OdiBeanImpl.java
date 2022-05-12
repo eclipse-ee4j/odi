@@ -17,25 +17,26 @@ package com.oracle.odi.cdi;
 
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
-import io.micronaut.context.DefaultBeanContext;
-import io.micronaut.context.Qualifier;
 import io.micronaut.context.exceptions.BeanInstantiationException;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.Order;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.AdvisedBeanType;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.BeanIdentifier;
 import io.micronaut.inject.ConstructorInjectionPoint;
 import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
+import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.CreationException;
+import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.InjectionPoint;
@@ -58,8 +59,6 @@ import java.util.stream.Stream;
 @Internal
 public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
-    private final Argument<T> argument;
-    private final io.micronaut.context.Qualifier<T> qualifier;
     private final BeanDefinition<T> definition;
     private final BeanContext beanContext;
     private Class<? extends Annotation> scope;
@@ -67,16 +66,31 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
     /**
      * Default constructor.
      *
-     * @param argument    The argument
-     * @param qualifier   The qualifier
      * @param beanContext The bean context
      * @param definition  The definition
      */
-    public OdiBeanImpl(Argument<T> argument, Qualifier<T> qualifier, BeanContext beanContext, BeanDefinition<T> definition) {
-        this.argument = argument;
-        this.qualifier = qualifier;
+    public OdiBeanImpl(BeanContext beanContext, BeanDefinition<T> definition) {
         this.beanContext = beanContext;
         this.definition = Objects.requireNonNull(definition, "Bean definition cannot be null");
+    }
+
+    @Override
+    public boolean isProxy() {
+        return definition.isProxy();
+    }
+
+    @Override
+    public BeanDefinition<T> getBeanDefinition() {
+        return definition;
+    }
+
+    @Override
+    public OdiBean<T> getProxyTargetBean() {
+        BeanDefinition<T> targetBeanDefinition = beanContext.getProxyTargetBeanDefinition(
+                ((ProxyBeanDefinition) definition).getTargetType(),
+                definition.getDeclaredQualifier()
+        );
+        return new OdiBeanImpl<>(beanContext, targetBeanDefinition);
     }
 
     @Override
@@ -112,24 +126,16 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public T create(CreationalContext<T> creationalContext) {
-        if (!(creationalContext instanceof OdiCreationalContext)) {
-            throw new IllegalArgumentException("Not an ODI Creational Context");
-        }
-        OdiCreationalContext<T> odiCreationalContext = (OdiCreationalContext<T>) creationalContext;
         try {
-            T instance;
-            // TODO: We need "getBean(BeanResolutionContext, BeanDefinition)" in Core
-            if (!definition.getExposedTypes().isEmpty()) {
-                instance = ((DefaultBeanContext) beanContext).getBean(odiCreationalContext.getResolutionContext(), argument, qualifier);
-            } else {
-                instance = ((DefaultBeanContext) beanContext).getBean(
-                        odiCreationalContext.getResolutionContext(),
-                        definition.asArgument(),
-                        definition.getDeclaredQualifier()
-                );
+            BeanRegistration<T> beanRegistration = beanContext.getBeanRegistration(definition);
+            if (creationalContext != null) {
+                creationalContext.push(beanRegistration.bean());
+                if (creationalContext instanceof OdiCreationalContext) {
+                    OdiCreationalContext<T> odiCreationalContext = (OdiCreationalContext<T>) creationalContext;
+                    odiCreationalContext.setCreatedBean(beanRegistration);
+                }
             }
-            odiCreationalContext.setCreatedBean(new BeanRegistration<>(BeanIdentifier.of(""), definition, instance));
-            return instance;
+            return beanRegistration.getBean();
         } catch (NonUniqueBeanException e) {
             throw new AmbiguousResolutionException(e.getMessage(), e);
         } catch (NoSuchBeanException e) {
@@ -168,7 +174,13 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return AnnotationUtils.synthesizeQualifierAnnotations(definition.getAnnotationMetadata());
+        Set<Annotation> annotations = AnnotationUtils.synthesizeQualifierAnnotations(definition.getAnnotationMetadata());
+        Set<Annotation> all = new HashSet<>(annotations);
+        all.add(Any.Literal.INSTANCE);
+        if (all.size() == 1 || all.stream().allMatch(e -> e instanceof Named || e instanceof Any)) {
+            all.add(Default.Literal.INSTANCE);
+        }
+        return all;
     }
 
     @Override
@@ -182,7 +194,7 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public String getName() {
-        return definition.getAnnotationMetadata().stringValue(Named.class).orElse(null);
+        return definition.getAnnotationMetadata().stringValue(AnnotationUtil.NAMED).orElse(null);
     }
 
     @Override

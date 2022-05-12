@@ -17,38 +17,55 @@ package com.oracle.odi.cdi.processor;
 
 import io.micronaut.annotation.processing.visitor.JavaClassElement;
 import io.micronaut.annotation.processing.visitor.JavaClassElementHelper;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.naming.NameUtils;
+import io.micronaut.inject.annotation.AnnotationMetadataHierarchy;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.ast.TypedElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Instance;
-import jakarta.inject.Qualifier;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-final class CdiUtil {
+/**
+ * Internal CDI utils.
+ */
+@Internal
+public final class CdiUtil {
     public static final String SPEC_LOCATION = "https://jakarta.ee/specifications/cdi/3.0/jakarta-cdi-spec-3.0.html";
 
     private CdiUtil() {
     }
 
-    static String toAnnotationDescription(List<String> annotations) {
+    public static String toAnnotationDescription(List<String> annotations) {
         return annotations.stream().map(n -> "@" + NameUtils.getSimpleName(n)).collect(Collectors.joining(" and "));
     }
 
+    private static boolean needsDefaultQualifier(AnnotationMetadata declaredMetadata) {
+        return !declaredMetadata.hasStereotype(AnnotationUtil.QUALIFIER);
+    }
+
     public static void visitBeanDefinition(VisitorContext context, Element beanDefinition) {
-        if (!beanDefinition.hasAnnotation(Qualifier.class)) {
+        AnnotationMetadata annotationMetadata = beanDefinition.getAnnotationMetadata();
+        if (annotationMetadata instanceof AnnotationMetadataHierarchy) {
+            annotationMetadata = annotationMetadata.getDeclaredMetadata();
+        }
+        if (needsDefaultQualifier(annotationMetadata)) {
             beanDefinition.annotate(Default.class);
         }
     }
 
-    public static void visitInjectPoint(VisitorContext context, Element injectPoint) {
-        if (!injectPoint.hasAnnotation(Qualifier.class)) {
+    public static boolean visitInjectPoint(VisitorContext context, TypedElement injectPoint) {
+        if (needsDefaultQualifier(injectPoint)) {
             injectPoint.annotate(Default.class);
         }
+        return CdiUtil.validateInjectedType(context, injectPoint.getGenericType(), injectPoint);
     }
 
     public static boolean validateInjectedType(VisitorContext context, ClassElement classElement, Element owningElement) {
@@ -58,7 +75,7 @@ final class CdiUtil {
         }
         if (classElement.getName().equals(Event.class.getName()) && isNoGenericType(classElement)) {
             context.fail("jakarta.enterprise.event.Event must have a required type parameter specified", owningElement);
-            return false;
+            return true;
         }
         return false;
     }

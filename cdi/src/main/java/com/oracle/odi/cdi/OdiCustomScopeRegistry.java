@@ -16,13 +16,13 @@
 package com.oracle.odi.cdi;
 
 import io.micronaut.context.BeanContext;
+import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.exceptions.BeanCreationException;
 import io.micronaut.context.scope.BeanCreationContext;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.context.scope.CustomScope;
 import io.micronaut.context.scope.CustomScopeRegistry;
 import io.micronaut.core.annotation.NonNull;
-import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.BeanIdentifier;
 import io.micronaut.inject.BeanType;
@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 final class OdiCustomScopeRegistry implements CustomScopeRegistry {
     private final BeanContext beanContext;
     private volatile Map<String, Context> contextMap = null;
+    private volatile Map<Context, CustomScope<?>> scopesMap = new ConcurrentHashMap<>();
     private OdiBeanContainer beanContainer;
 
     OdiCustomScopeRegistry(BeanContext beanContext) {
@@ -57,15 +58,6 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
             beanContainer = beanContext.getBean(OdiBeanContainer.class);
         }
         return beanContainer;
-    }
-
-    @Override
-    public Optional<CustomScope<?>> findDeclaredScope(@NonNull Argument<?> argument) {
-        final Class<? extends Annotation> scope = MetaAnnotationSupport.resolveDeclaredScope(argument.getAnnotationMetadata());
-        if (scope != Dependent.class) {
-            return findScope(scope.getName());
-        }
-        return Optional.empty();
     }
 
     @Override
@@ -89,7 +81,8 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                 }
             }
         }
-        return Optional.ofNullable(contextMap.get(scopeAnnotation)).map(context -> new OdiCustomScope<Annotation>(context));
+        return Optional.ofNullable(contextMap.get(scopeAnnotation))
+                .map(context -> scopesMap.computeIfAbsent(context, OdiCustomScope::new));
     }
 
     @Override
@@ -98,8 +91,7 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
     }
 
     private <T> Contextual<T> createContextual(BeanContext beanContext, BeanCreationContext<T> creationContext) {
-        BeanDefinition<T> definition = creationContext.definition();
-        return new OdiBeanImpl<>(definition.asArgument(), definition.getDeclaredQualifier(), beanContext, definition) {
+        return new OdiBeanImpl<>(beanContext, creationContext.definition()) {
             @Override
             public T create(CreationalContext<T> creationalContext) {
                 if (creationalContext instanceof OdiCreationalContext) {
@@ -156,10 +148,9 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                 return bean;
             } else {
                 createdContextuals.put(creationContext.id(), contextual);
-                final OdiCreationalContext<T> creationalContext = new OdiCreationalContext<>(beanContext, null);
                 return context.get(
                         createContextual(beanContext, creationContext),
-                        creationalContext
+                        new OdiCreationalContext<>(beanContext, contextual)
                 );
 
             }
@@ -174,6 +165,25 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                     if (bean != null) {
                         ((AlterableContext) context).destroy(contextual);
                         return Optional.of(bean);
+                    }
+                }
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public <T> Optional<BeanRegistration<T>> findBeanRegistration(BeanDefinition<T> beanDefinition) {
+            for (Map.Entry<BeanIdentifier, Contextual<?>> e : createdContextuals.entrySet()) {
+                BeanIdentifier identifier = e.getKey();
+                Contextual<?> contextual = e.getValue();
+                if (contextual instanceof OdiBean) {
+                    OdiBean<T> odiBean = (OdiBean) contextual;
+                    BeanDefinition<T> odiBeanDefinition = odiBean.getBeanDefinition();
+                    if (odiBeanDefinition.equals(beanDefinition)) {
+                        final T bean = (T) context.get(contextual);
+                        return Optional.of(
+                                BeanRegistration.of(beanContext, identifier, odiBeanDefinition, bean)
+                        );
                     }
                 }
             }

@@ -15,7 +15,8 @@
  */
 package com.oracle.odi.tck.porting;
 
-import com.oracle.odi.cdi.DependentContext;
+import com.oracle.odi.cdi.context.AbstractContext;
+import com.oracle.odi.cdi.context.DependentContext;
 import jakarta.enterprise.context.spi.Context;
 import org.jboss.cdi.tck.spi.Contexts;
 
@@ -26,12 +27,20 @@ public class ContextsImpl implements Contexts<Context> {
 
     @Override
     public void setActive(Context context) {
-        throw new UnsupportedOperationException();
+        if (context instanceof AbstractContext) {
+            ((AbstractContext) context).activate();
+        } else {
+            throw new IllegalStateException("Unknown context");
+        }
     }
 
     @Override
     public void setInactive(Context context) {
-        throw new UnsupportedOperationException();
+        if (context instanceof AbstractContext) {
+            ((AbstractContext) context).deactivate();
+        } else {
+            throw new IllegalStateException("Unknown context");
+        }
     }
 
     @Override
@@ -46,7 +55,11 @@ public class ContextsImpl implements Contexts<Context> {
 
     @Override
     public void destroyContext(Context context) {
-        throw new UnsupportedOperationException();
+        if (context instanceof AbstractContext) {
+            ((AbstractContext) context).destroy();
+        } else {
+            throw new IllegalStateException("Unknown context");
+        }
     }
 
 }

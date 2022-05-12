@@ -16,18 +16,17 @@
 package com.oracle.odi.cdi;
 
 import io.micronaut.context.BeanContext;
-import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ExecutableMethod;
 import jakarta.enterprise.context.spi.Context;
-import jakarta.enterprise.context.spi.Contextual;
-import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanContainer;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * ODI specific {@link BeanContainer} implementation.
@@ -67,7 +66,7 @@ public interface OdiBeanContainer extends BeanContainer {
      */
     @NonNull
     <T> OdiBean<T> getBean(@NonNull Argument<T> argument,
-                               @Nullable io.micronaut.context.Qualifier<T> qualifier);
+                           @Nullable io.micronaut.context.Qualifier<T> qualifier);
 
     /**
      * Get beans resolved by an argument and a qualifier.
@@ -79,7 +78,7 @@ public interface OdiBeanContainer extends BeanContainer {
      */
     @NonNull
     <T> Collection<OdiBean<T>> getBeans(@NonNull Argument<T> argument,
-                                            @Nullable io.micronaut.context.Qualifier<T> qualifier);
+                                        @Nullable io.micronaut.context.Qualifier<T> qualifier);
 
     /**
      * @return Basic instance
@@ -88,27 +87,13 @@ public interface OdiBeanContainer extends BeanContainer {
     OdiInstance<Object> createInstance();
 
     /**
-     * Basic instance with an associated scope.
-     * <p>
-     * TODO: Consider removing an using contextual context.
+     * Basic instance with an associated context.
      *
      * @param context The context
      * @return Basic instance
      */
     @NonNull
     OdiInstance<Object> createInstance(@NonNull Context context);
-
-    /**
-     * Create a custom {@link CreationalContext} that is propagating {@link BeanResolutionContext}.
-     *
-     * @param contextual        The Contextual
-     * @param resolutionContext THe resolution context
-     * @param <T>               The type
-     * @return The creational context
-     */
-    @NonNull
-    <T> CreationalContext<T> createCreationalContext(@NonNull Contextual<T> contextual,
-                                                     @NonNull BeanResolutionContext resolutionContext);
 
     /**
      * Gets {@link BeanContext}.
@@ -118,4 +103,17 @@ public interface OdiBeanContainer extends BeanContainer {
     @NonNull
     BeanContext getBeanContext();
 
+    /**
+     * Fulfill and execute method. (event handler, disposer)
+     *
+     * @param beanDefinition   The bean definition
+     * @param executableMethod The method to be fulfilled and executed
+     * @param valueSupplier    The argument value supplier
+     * @param <B>              The bean type
+     * @param <R>              The result type
+     * @return return value
+     */
+    <B, R> Object fulfillAndExecuteMethod(BeanDefinition<B> beanDefinition,
+                                          ExecutableMethod<B, R> executableMethod,
+                                          Function<Argument<?>, Object> valueSupplier);
 }

@@ -15,10 +15,21 @@
  */
 package com.oracle.odi.cdi;
 
+import io.micronaut.core.annotation.NonNull;
+import io.micronaut.inject.BeanDefinition;
 import jakarta.enterprise.inject.spi.Bean;
 
 /**
  * @param <T>
  */
 public interface OdiBean<T> extends Bean<T> {
+
+    boolean isProxy();
+
+    @NonNull
+    OdiBean<T> getProxyTargetBean();
+
+    @NonNull
+    BeanDefinition<T> getBeanDefinition();
+
 }

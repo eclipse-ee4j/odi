@@ -1,8 +1,6 @@
-#com.oracle.odi.cdi.processor.DependentTransformer
-com.oracle.odi.cdi.processor.TypedTransformer
-com.oracle.odi.cdi.processor.AnyQualifierTransformer
-com.oracle.odi.cdi.processor.DefaultQualifierTransformer
-com.oracle.odi.cdi.processor.NormalScopeTransformer
-com.oracle.odi.cdi.processor.InterceptorBindingTransformer
+com.oracle.odi.cdi.processor.transformers.TypedTransformer
+com.oracle.odi.cdi.processor.transformers.AnyQualifierTransformer
+com.oracle.odi.cdi.processor.transformers.NormalScopeTransformer
+com.oracle.odi.cdi.processor.transformers.InterceptorBindingTransformer
 com.oracle.odi.cdi.processor.extensions.javax.JavaxPriorityTransformer
 com.oracle.odi.cdi.processor.extensions.mp.ConfigPropertyTransformer

@@ -15,13 +15,6 @@
  */
 package com.oracle.odi.cdi.processor;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.inject.Qualifier;
-import javax.inject.Scope;
-
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.inject.ast.ClassElement;
@@ -30,8 +23,15 @@ import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.Stereotype;
+
+import javax.inject.Qualifier;
+import javax.inject.Scope;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Validate elements annotated with {@link jakarta.enterprise.inject.Stereotype}.
@@ -80,6 +80,10 @@ public class ClassStereotypeValidator implements TypeElementVisitor<Object, Ster
     private void validateScopes(Element element, VisitorContext context, List<String> stereotypes) {
         final List<String> scopes = resolveDeclaredScopes(element, stereotypes);
         if (scopes.size() > 1) {
+            if (scopes.size() == 2 && scopes.contains(Dependent.class.getName())) {
+                element.removeAnnotation(Dependent.class);
+                return;
+            }
             context.fail("Inherited stereotypes [" + CdiUtil
                                  .toAnnotationDescription(stereotypes) + "] include more than one defined scope: " + CdiUtil
                                  .toAnnotationDescription(scopes) + ". To resolve this problem declare the selected scope on "

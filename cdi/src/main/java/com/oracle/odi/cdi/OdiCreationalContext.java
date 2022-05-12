@@ -17,53 +17,46 @@ package com.oracle.odi.cdi;
 
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
-import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.scope.CreatedBean;
-import io.micronaut.core.annotation.Nullable;
-import io.micronaut.inject.BeanDefinition;
+import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 
 final class OdiCreationalContext<T> implements CreationalContext<T> {
 
     private final BeanContext beanContext;
-    @Nullable
-    private final BeanResolutionContext resolutionContext;
+    private final Contextual<T> contextual;
     private CreatedBean<T> createdBean;
+    private T instance;
 
-    OdiCreationalContext(BeanContext beanContext, @Nullable BeanResolutionContext resolutionContext) {
+    OdiCreationalContext(BeanContext beanContext, Contextual<T> contextual) {
         this.beanContext = beanContext;
-        this.resolutionContext = resolutionContext;
+        this.contextual = contextual;
     }
 
     @Override
     public void push(T incompleteInstance) {
-        // no-op, not needed for Micronaut
+        instance = incompleteInstance;
     }
 
     @Override
     public void release() {
-        if (createdBean != null) {
-            if (createdBean.getClass() == BeanRegistration.class) {
-                // TODO in Core: BeanRegistration#close is no-op
-                BeanDefinition<T> definition = createdBean.definition();
-                Object bean = beanContext.destroyBean(definition.asArgument(), definition.getDeclaredQualifier());
-                if (bean == null) {
-                    beanContext.destroyBean(createdBean.bean());
-                }
-            } else {
+        if (contextual instanceof OdiBean) {
+            if (createdBean instanceof BeanRegistration) {
+                BeanRegistration<T> beanRegistration = (BeanRegistration<T>) createdBean;
+                    beanContext.destroyBean(beanRegistration);
+//                }
+            } else if (createdBean != null) {
                 createdBean.close();
+                this.createdBean = null;
             }
-            this.createdBean = null;
+        } else {
+            contextual.destroy(instance, this);
+            instance = null;
         }
     }
 
     CreatedBean<T> getCreatedBean() {
         return createdBean;
-    }
-
-    @Nullable
-    public BeanResolutionContext getResolutionContext() {
-        return resolutionContext;
     }
 
     void setCreatedBean(CreatedBean<T> createdBean) {

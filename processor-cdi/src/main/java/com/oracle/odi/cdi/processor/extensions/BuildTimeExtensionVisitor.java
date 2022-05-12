@@ -15,8 +15,8 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
-import com.oracle.odi.cdi.processor.InterceptorVisitor;
-import com.oracle.odi.cdi.processor.ObservesMethodVisitor;
+import com.oracle.odi.cdi.processor.visitors.InterceptorVisitor;
+import com.oracle.odi.cdi.processor.visitors.ObservesMethodVisitor;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.Internal;

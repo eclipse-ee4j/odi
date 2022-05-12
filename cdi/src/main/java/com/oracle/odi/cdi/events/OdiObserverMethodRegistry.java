@@ -40,10 +40,8 @@ import java.util.Set;
 @Internal
 public final class OdiObserverMethodRegistry {
 
-    private static final Qualifier DEFAULT = Qualifiers.byAnnotation(
-            AnnotationMetadata.EMPTY_METADATA,
-            Default.Literal.INSTANCE.annotationType()
-    );
+    private static final io.micronaut.context.Qualifier DEFAULT_QUALIFIER = Qualifiers.byAnnotation(AnnotationMetadata.EMPTY_METADATA, Default.class);
+
     private final List<OdiObserverMethod<?>> observerMethods = new ArrayList<>();
 
     /**
@@ -97,10 +95,10 @@ public final class OdiObserverMethodRegistry {
             Qualifier observedQualifier = observer.getObservedQualifier();
             if (observedQualifier != null) {
                 if (qualifier == null) {
-                    if (!observedQualifier.contains(DEFAULT)) {
+                    if (!observedQualifier.contains(DEFAULT_QUALIFIER) && !observedQualifier.contains(AnyQualifier.INSTANCE)) {
                         continue;
                     }
-                } else if (!qualifier.contains(observedQualifier) && !observedQualifier.equals(AnyQualifier.INSTANCE)) {
+                } else if (!qualifier.contains(observedQualifier) && !observedQualifier.contains(AnyQualifier.INSTANCE)) {
                     continue;
                 }
             }

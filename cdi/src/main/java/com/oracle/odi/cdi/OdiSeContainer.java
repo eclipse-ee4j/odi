@@ -28,6 +28,8 @@ import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.context.processor.ExecutableMethodProcessor;
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.ArgumentCoercible;
 import io.micronaut.inject.BeanDefinition;
@@ -36,6 +38,7 @@ import io.micronaut.inject.InjectionPoint;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
+import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.ResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
@@ -54,6 +57,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @SuppressWarnings("CdiManagedBeanInconsistencyInspection")
 @Factory
@@ -64,8 +68,6 @@ final class OdiSeContainer extends CDI<Object>
     private final ApplicationContext applicationContext;
     private final OdiBeanContainer beanContainer;
     private final Map<DisposerKey, DisposerDef> disposerMethods = new HashMap<>(20);
-
-    private final MicronautContext ctx = new MicronautContext();
 
     protected OdiSeContainer(ApplicationContext context) {
         this.applicationContext = context;
@@ -93,7 +95,6 @@ final class OdiSeContainer extends CDI<Object>
     }
 
     @Override
-    @Singleton
     public BeanContainer getBeanContainer() {
         return beanContainer;
     }
@@ -104,7 +105,7 @@ final class OdiSeContainer extends CDI<Object>
 
     @Override
     public <U> OdiInstance<U> select(Argument<U> argument, Qualifier<U> qualifier) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx, argument, qualifier);
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, null, argument, qualifier);
     }
 
     @Override
@@ -112,18 +113,18 @@ final class OdiSeContainer extends CDI<Object>
         if (!isRunning()) {
             throw new IllegalStateException("SeContainer already shutdown");
         }
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx, Argument.OBJECT_ARGUMENT, qualifiers);
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, null, Argument.OBJECT_ARGUMENT, qualifiers);
     }
 
     @Override
     public <U> OdiInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, ctx,  Argument.of(subtype), qualifiers);
+        return new OdiInstanceImpl<>(applicationContext, beanContainer, null,  Argument.of(subtype), qualifiers);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public <U> OdiInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl(applicationContext, beanContainer, ctx, Argument.of(subtype.getType()), qualifiers);
+        return new OdiInstanceImpl(applicationContext, beanContainer, null, Argument.of(subtype.getType()), qualifiers);
     }
 
     @Override
@@ -151,7 +152,7 @@ final class OdiSeContainer extends CDI<Object>
 
             @Override
             public jakarta.enterprise.inject.spi.Bean<Object> getBean() {
-                return new OdiBeanImpl(Argument.of(OdiSeContainer.class), null, OdiSeContainer.this.applicationContext, new BeanDefinition() {
+                return new OdiBeanImpl(OdiSeContainer.this.applicationContext, new BeanDefinition() {
 
                     @Override
                     public boolean isEnabled(BeanContext context, BeanResolutionContext resolutionContext) {
@@ -200,8 +201,15 @@ final class OdiSeContainer extends CDI<Object>
     }
 
     @Bean
+    @Default
     OdiBeanContainer beanContainer() {
         return beanContainer;
+    }
+
+    @Bean
+    @Default
+    SeContainer seContainer() {
+        return this;
     }
 
     @Bean
@@ -234,9 +242,13 @@ final class OdiSeContainer extends CDI<Object>
         for (Argument<?> argument : arguments) {
             if (argument.getAnnotationMetadata().isAnnotationPresent(Disposes.class)) {
                 //noinspection unchecked
+                Qualifier<Object> qualifier = Qualifiers.forArgument(argument);
+                if (qualifier == null) {
+                    qualifier = Qualifiers.byAnnotation(AnnotationMetadata.EMPTY_METADATA, Default.class);
+                }
                 this.disposerMethods.put(
-                        new DisposerKey(argument),
-                        new DisposerDef(beanDefinition, (ExecutableMethod<Object, ?>) method)
+                        new DisposerKey(argument, qualifier),
+                        new DisposerDef(beanDefinition, method)
                 );
                 break;
             }
@@ -254,22 +266,14 @@ final class OdiSeContainer extends CDI<Object>
             final Object bean = event.getBean();
             final BeanDefinition<?> beanDefinition = event.getBeanDefinition();
             try {
-                final DisposerDef disposerDef = disposerMethods.get(new DisposerKey(beanDefinition.asArgument()));
+                final DisposerDef<Object> disposerDef = disposerMethods.get(new DisposerKey(beanDefinition.asArgument(), beanDefinition.getDeclaredQualifier()));
                 if (disposerDef != null) {
-                    final ExecutableMethod<Object, ?> method = disposerDef.executableMethod;
-                    final BeanDefinition<?> targetBean = disposerDef.definition;
-                    final Object disposerBean = applicationContext.getBean(targetBean);
-                    final Argument<?>[] parameters = method.getArguments();
-                    Object[] arguments = new Object[parameters.length];
-                    for (int i = 0; i < parameters.length; i++) {
-                        Argument<?> parameter = parameters[i];
-                        if (parameter.getAnnotationMetadata().hasAnnotation(Disposes.class)) {
-                            arguments[i] = bean;
-                        } else {
-                            arguments[i] = applicationContext.getBean(parameter, Qualifiers.forArgument(parameter));
+                    beanContainer.fulfillAndExecuteMethod(disposerDef.definition, disposerDef.executableMethod, argument -> {
+                        if (argument.getAnnotationMetadata().hasAnnotation(Disposes.class)) {
+                            return bean;
                         }
-                    }
-                    method.invoke(disposerBean, arguments);
+                        return null;
+                    });
                 }
             } catch (Throwable e) {
                 if (LOG.isErrorEnabled()) {
@@ -283,10 +287,12 @@ final class OdiSeContainer extends CDI<Object>
 
     static final class DisposerKey {
         private final Argument<?> argument;
+        private final Qualifier<?> qualifier;
         private final int typeHashCode;
 
-        DisposerKey(Argument<?> argument) {
+        DisposerKey(Argument<?> argument, @Nullable Qualifier<?> qualifier) {
             this.argument = argument;
+            this.qualifier = qualifier;
             this.typeHashCode = argument.typeHashCode();
         }
 
@@ -299,7 +305,7 @@ final class OdiSeContainer extends CDI<Object>
                 return false;
             }
             DisposerKey that = (DisposerKey) o;
-            return argument.equalsType(that.argument);
+            return argument.equalsType(that.argument) && Objects.equals(qualifier, that.qualifier);
         }
 
         @Override
@@ -308,11 +314,11 @@ final class OdiSeContainer extends CDI<Object>
         }
     }
 
-    static final class DisposerDef {
-        private final BeanDefinition<?> definition;
-        private final ExecutableMethod<Object, ?> executableMethod;
+    static final class DisposerDef<B> {
+        private final BeanDefinition<B> definition;
+        private final ExecutableMethod<B, Object> executableMethod;
 
-        DisposerDef(BeanDefinition<?> definition, ExecutableMethod<Object, ?> executableMethod) {
+        DisposerDef(BeanDefinition<B> definition, ExecutableMethod<B, Object> executableMethod) {
             this.definition = definition;
             this.executableMethod = executableMethod;
         }
