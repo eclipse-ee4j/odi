@@ -19,7 +19,6 @@ import io.micronaut.context.AbstractBeanResolutionContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.annotation.Any;
 import io.micronaut.context.annotation.Factory;
-import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.ArgumentInjectionPoint;
 import io.micronaut.inject.InjectionPoint;
@@ -45,7 +44,6 @@ public class OdiInjectPointFactory {
      */
     @Any
     @Dependent
-    @Nullable
     public <T> jakarta.enterprise.inject.spi.InjectionPoint build(BeanResolutionContext resolutionContext,
                                                                   OdiBeanContainer beanContainer) {
         ArgumentInjectionPoint<T, ?> injectionPoint = (ArgumentInjectionPoint<T, ?>) provideInjectionPoint(resolutionContext);

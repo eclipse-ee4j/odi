@@ -18,12 +18,14 @@ package com.oracle.odi.cdi.annotated;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.reflect.ReflectionUtils;
+import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.AnnotatedMethod;
 import jakarta.enterprise.inject.spi.AnnotatedParameter;
 import jakarta.enterprise.inject.spi.AnnotatedType;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -37,12 +39,14 @@ public class OdiAnnotatedMethod<T> extends OdiAnnotated implements AnnotatedMeth
 
     private final String methodName;
     private final Class[] parameterTypes;
+    private final Argument<?>[] arguments;
 
     public OdiAnnotatedMethod(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
-                              String methodName, Class<?>[] parameterTypes) {
+                              String methodName, Class<?>[] parameterTypes, Argument<?>[] arguments) {
         super(type, exposedTypes, annotationMetadata);
         this.methodName = methodName;
         this.parameterTypes = parameterTypes;
+        this.arguments = arguments;
     }
 
     @Override
@@ -52,16 +56,21 @@ public class OdiAnnotatedMethod<T> extends OdiAnnotated implements AnnotatedMeth
 
     @Override
     public boolean isStatic() {
-        return false;
+        throw new IllegalStateException("Not implemented!");
     }
 
     @Override
     public AnnotatedType<T> getDeclaringType() {
-        return null;
+        throw new IllegalStateException("Not implemented!");
     }
 
     @Override
     public List<AnnotatedParameter<T>> getParameters() {
-        return null;
+        List<AnnotatedParameter<T>> parameters = new ArrayList<>(arguments.length);
+        for (int i = 0; i < arguments.length; i++) {
+            Argument<?> argument = arguments[i];
+            parameters.add(new OdiAnnotatedParameter<>(argument.getType(), Set.of(argument.getType()), argument.getAnnotationMetadata(), i, this));
+        }
+        return parameters;
     }
 }

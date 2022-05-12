@@ -18,12 +18,14 @@ package com.oracle.odi.cdi.annotated;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.reflect.ReflectionUtils;
+import io.micronaut.core.type.Argument;
 import jakarta.enterprise.inject.spi.AnnotatedConstructor;
 import jakarta.enterprise.inject.spi.AnnotatedParameter;
 import jakarta.enterprise.inject.spi.AnnotatedType;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -36,11 +38,13 @@ import java.util.Set;
 public class OdiAnnotatedConstructor<T> extends OdiAnnotated implements AnnotatedConstructor<T> {
 
     private final Class[] parameterTypes;
+    private final Argument<?>[] arguments;
 
     public OdiAnnotatedConstructor(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
-                                   Class<?>[] parameterTypes) {
+                                   Class<?>[] parameterTypes, Argument<?>[] arguments) {
         super(type, exposedTypes, annotationMetadata);
         this.parameterTypes = parameterTypes;
+        this.arguments = arguments;
     }
 
     @Override
@@ -50,17 +54,22 @@ public class OdiAnnotatedConstructor<T> extends OdiAnnotated implements Annotate
 
     @Override
     public boolean isStatic() {
-        return false;
+        throw new IllegalStateException("Not implemented!");
     }
 
     @Override
     public AnnotatedType<T> getDeclaringType() {
-        return null;
+        throw new IllegalStateException("Not implemented!");
     }
 
     @Override
     public List<AnnotatedParameter<T>> getParameters() {
-        return null;
+        List<AnnotatedParameter<T>> parameters = new ArrayList<>(arguments.length);
+        for (int i = 0; i < arguments.length; i++) {
+            Argument<?> argument = arguments[i];
+            parameters.add(new OdiAnnotatedParameter<>(argument.getType(), Set.of(argument.getType()), argument.getAnnotationMetadata(), i, this));
+        }
+        return parameters;
     }
 
 }

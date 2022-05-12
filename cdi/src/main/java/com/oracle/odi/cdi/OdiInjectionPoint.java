@@ -147,7 +147,9 @@ final class OdiInjectionPoint implements InjectionPoint {
                 OdiAnnotatedConstructor<Object> annotatedConstructor = new OdiAnnotatedConstructor<>(injectionPoint.getDeclaringBean().getBeanType(),
                         Set.of(getType()),
                         injectionPoint.getAnnotationMetadata(),
-                        Arrays.stream(constructorInjectionPoint.getArguments()).map(TypeInformation::getType).toArray(Class[]::new));
+                        Arrays.stream(constructorInjectionPoint.getArguments()).map(TypeInformation::getType).toArray(Class[]::new),
+                        arguments
+                );
 
                 return new OdiAnnotatedParameter<>(injectionPoint.getDeclaringBean().getBeanType(),
                         Set.of(getType()),
@@ -168,7 +170,10 @@ final class OdiInjectionPoint implements InjectionPoint {
         return new OdiAnnotatedMethod<>(injectionPoint.getDeclaringBean().getBeanType(),
                 Set.of(getType()),
                 injectionPoint.getAnnotationMetadata(),
-                methodSegment.getName(), Arrays.stream(methodSegment.getArguments()).map(TypeInformation::getType).toArray(Class[]::new));
+                methodSegment.getName(),
+                Arrays.stream(methodSegment.getArguments()).map(TypeInformation::getType).toArray(Class[]::new),
+                methodSegment.getArguments()
+        );
     }
 
     @Override

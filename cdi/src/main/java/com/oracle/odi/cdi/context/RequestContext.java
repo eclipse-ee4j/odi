@@ -26,7 +26,7 @@ import java.lang.annotation.Annotation;
  */
 @Internal
 @Singleton
-public class RequestContext extends AbstractContext {
+final class RequestContext extends AbstractContext {
 
     @Override
     public Class<? extends Annotation> getScope() {
