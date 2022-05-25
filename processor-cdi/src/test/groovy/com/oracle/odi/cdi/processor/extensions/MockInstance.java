@@ -1,11 +1,12 @@
 package com.oracle.odi.cdi.processor.extensions;
 
+import java.lang.annotation.Annotation;
+import java.util.Collections;
+import java.util.Iterator;
+
 import io.micronaut.core.annotation.NonNull;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
-
-import java.lang.annotation.Annotation;
-import java.util.Iterator;
 
 // Mock impl, this will need to be implemented at runtime on the ODI module
 public class MockInstance implements Instance<Object> {
@@ -45,7 +46,7 @@ public class MockInstance implements Instance<Object> {
 
     @Override
     public Iterable<Handle<Object>> handles() {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
@@ -56,6 +57,6 @@ public class MockInstance implements Instance<Object> {
     @NonNull
     @Override
     public Iterator<Object> iterator() {
-        return null;
+        return Collections.emptyIterator();
     }
 }
