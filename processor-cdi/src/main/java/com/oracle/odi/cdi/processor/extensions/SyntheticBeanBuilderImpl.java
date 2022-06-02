@@ -16,35 +16,40 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Stream;
+import java.util.function.Predicate;
 
 import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
+import io.micronaut.annotation.processing.visitor.JavaVisitorContext;
 import io.micronaut.context.annotation.Property;
-import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Order;
+import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.Alternative;
+import jakarta.enterprise.inject.build.compatible.spi.AnnotationBuilder;
+import jakarta.enterprise.inject.build.compatible.spi.DeclarationConfig;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.AnnotationInfo;
+import jakarta.enterprise.lang.model.AnnotationTarget;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.Type;
 
-final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements SyntheticBeanBuilder<T>, ElementAnnotationConfig {
+final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements SyntheticBeanBuilder<T>, DeclarationConfig, AnnotationTarget {
     private final ClassElement beanType;
     private final VisitorContext visitorContext;
     private final Set<String> exposedTypes = new HashSet<>();
@@ -53,11 +58,25 @@ final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements 
     private Class<? extends SyntheticBeanCreator<T>> creatorClass;
 
     SyntheticBeanBuilderImpl(ClassElement element,
-                                    Types types,
-                                    VisitorContext visitorContext) {
-        super(element, types, visitorContext);
+                            Types types,
+                            VisitorContext visitorContext) {
+        super(cloneMetadata(element), types, visitorContext);
         this.beanType = element;
         this.visitorContext = visitorContext;
+    }
+
+    @Override
+    public MutableAnnotationMetadata getAnnotationMetadata() {
+        return (MutableAnnotationMetadata) super.getAnnotationMetadata();
+    }
+
+    private static AnnotationMetadata cloneMetadata(ClassElement element) {
+        AnnotationMetadata annotationMetadata = element.getAnnotationMetadata();
+        if (annotationMetadata instanceof MutableAnnotationMetadata) {
+            return ((MutableAnnotationMetadata) annotationMetadata).clone();
+        } else {
+            return new MutableAnnotationMetadata();
+        }
     }
 
     public ClassElement getBeanType() {
@@ -106,7 +125,7 @@ final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements 
 
     @Override
     public SyntheticBeanBuilder<T> qualifier(Class<? extends Annotation> annotationType) {
-        getElement().annotate(annotationType);
+        addAnnotation(annotationType);
         return this;
     }
 
@@ -124,229 +143,160 @@ final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements 
 
     @Override
     public SyntheticBeanBuilder<T> scope(Class<? extends Annotation> scopeAnnotation) {
-        getElement().annotate(scopeAnnotation.getName());
+        addAnnotation(scopeAnnotation);
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> alternative(boolean isAlternative) {
-        getElement().annotate(Alternative.class);
+        addAnnotation(Alternative.class);
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> priority(int priority) {
-        getElement().annotate(Order.class, (builder) -> builder.value(-priority));
+        addAnnotation(AnnotationBuilder.of(Order.class).value(-priority).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> name(String name) {
-        getElement().annotate(AnnotationUtil.NAMED, (builder) -> builder.value(name));
+        getAnnotationMetadata().addAnnotation(AnnotationUtil.NAMED, Collections.singletonMap(AnnotationMetadata.VALUE_MEMBER, name));
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> stereotype(Class<? extends Annotation> stereotypeAnnotation) {
-        getElement().annotate(stereotypeAnnotation);
+        addAnnotation(stereotypeAnnotation);
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> stereotype(ClassInfo stereotypeAnnotation) {
         Objects.requireNonNull(stereotypeAnnotation, "Stereotype annotation cannot be null");
-        getElement().annotate(stereotypeAnnotation.name());
+        getAnnotationMetadata().addAnnotation(stereotypeAnnotation.name(), Collections.emptyMap(), RetentionPolicy.RUNTIME);
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, boolean value) {
-        getElement().annotate(Property.class, builder -> {
-           builder.member("name", key);
-           builder.value(value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, boolean[] value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, int value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.value(value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, int[] value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, long value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, long[] value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, double value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, double[] value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, String value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, String[] value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, Enum<?> value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, Enum<?>[] value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, Class<?> value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, ClassInfo value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(value.name()));
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, Class<?>[] value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, value);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, ClassInfo[] value) {
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, Arrays.stream(value).map(ci -> new AnnotationClassValue<>(ci.name())).toArray(AnnotationClassValue[]::new));
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, AnnotationInfo value) {
         Objects.requireNonNull(value, "Annotation info cannot be null");
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, ((AnnotationInfoImpl) value).getAnnotationValue());
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, Annotation value) {
         Objects.requireNonNull(value, "Annotation cannot be null");
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, AnnotationReflection.toAnnotationValue(value));
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, AnnotationInfo[] value) {
-        final AnnotationValue<?>[] annotationValues = Stream.of(value)
-                .filter(ai -> ai instanceof AnnotationInfoImpl)
-                .map(AnnotationInfoImpl.class::cast)
-                .map(AnnotationInfoImpl::getAnnotationValue)
-                .toArray(AnnotationValue[]::new);
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, annotationValues);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> withParam(String key, Annotation[] value) {
-        final AnnotationValue[] annotationValues = Stream.of(value)
-                .filter(Objects::nonNull)
-                .map(AnnotationReflection::toAnnotationValue)
-                .toArray(AnnotationValue[]::new);
-        getElement().annotate(Property.class, builder -> {
-            builder.member("name", key);
-            builder.member(AnnotationMetadata.VALUE_MEMBER, annotationValues);
-        });
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
 
@@ -360,11 +310,6 @@ final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements 
     public SyntheticBeanBuilder<T> disposeWith(Class<? extends SyntheticBeanDisposer<T>> disposerClass) {
         this.disposerClass = disposerClass;
         return this;
-    }
-
-    @Override
-    public VisitorContext getVisitorContext() {
-        return this.visitorContext;
     }
 
     @Override
@@ -384,5 +329,47 @@ final class SyntheticBeanBuilderImpl<T> extends AnnotationTargetImpl implements 
     @Override
     public DeclarationInfo info() {
         throw new IllegalStateException("Not a declaration");
+    }
+
+    @Override
+    public DeclarationConfig addAnnotation(Class<? extends Annotation> annotationType) {
+        addAnnotation(AnnotationValue.builder(annotationType).build());
+        return this;
+    }
+
+    @Override
+    public DeclarationConfig addAnnotation(AnnotationInfo annotation) {
+        final AnnotationValue<?> av = ((AnnotationInfoImpl) annotation).getAnnotationValue();
+        addAnnotation(av);
+        return this;
+    }
+
+    @Override
+    public DeclarationConfig addAnnotation(Annotation annotation) {
+        final AnnotationValue<Annotation> av = AnnotationReflection.toAnnotationValue(annotation);
+        addAnnotation(av);
+        return this;
+    }
+
+    private void addAnnotation(AnnotationValue<?> av) {
+        // TODO: add public API to avoid this cast
+        ((JavaVisitorContext) visitorContext).getAnnotationUtils()
+                        .newAnnotationBuilder()
+                                .annotate(
+                                        getAnnotationMetadata(),
+                                        av
+                                );
+    }
+
+    @Override
+    public DeclarationConfig removeAnnotation(Predicate<AnnotationInfo> predicate) {
+        getAnnotationMetadata().removeAnnotationIf(annotationValue -> predicate.test(new AnnotationInfoImpl(annotationValue)));
+        return this;
+    }
+
+    @Override
+    public DeclarationConfig removeAllAnnotations() {
+        getAnnotationMetadata().removeAnnotationIf(annotationValue -> true);
+        return this;
     }
 }

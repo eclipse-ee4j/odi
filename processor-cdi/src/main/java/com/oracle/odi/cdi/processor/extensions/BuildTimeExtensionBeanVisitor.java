@@ -18,16 +18,28 @@ package com.oracle.odi.cdi.processor.extensions;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.oracle.odi.cdi.annotation.meta.RuntimeMetaAnnotation;
+import com.oracle.odi.cdi.processor.CdiUtil;
+import io.micronaut.context.annotation.Primary;
+import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.util.CollectionUtils;
+import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.beans.BeanElement;
+import io.micronaut.inject.ast.beans.BeanElementBuilder;
+import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.BeanElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
 import jakarta.enterprise.util.Nonbinding;
 import jakarta.inject.Singleton;
 
@@ -58,25 +70,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                         registry.runSynthesis(firstBean, visitorContext);
                 final DiscoveryImpl discovery = registry.getDiscovery();
                 if (discovery != null) {
-                    final MetaAnnotationsImpl metaAnnotations = discovery.getMetaAnnotations();
-                    final Set<MetaAnnotationImpl> qualifiers = metaAnnotations.getQualifiers();
-                    for (MetaAnnotationImpl qualifier : qualifiers) {
-                        Set<String> nonBinding = new HashSet<>();
-                        qualifier.getElement().getEnclosedElements(ElementQuery.ALL_METHODS.onlyInstance().onlyDeclared())
-                                .forEach(m -> {
-                                    if (m.hasAnnotation(Nonbinding.class)) {
-                                        nonBinding.add(m.getName());
-                                    }
-                                });
-                        syntheticComponents.addBean(RuntimeMetaAnnotation.class)
-                                .type(RuntimeMetaAnnotation.class)
-                                .scope(Singleton.class)
-                                .withParam("annotationType", qualifier.getClassConfig().info())
-                                .withParam("nonBinding", nonBinding.toArray(String[]::new))
-                                .withParam("kind", RuntimeMetaAnnotation.MetaAnnotationKind.QUALIFIER)
-                                .createWith(RuntimeMetaAnnotation.Creator.class);
-
-                    }
+                    addSyntheticAnnotations(syntheticComponents, discovery);
                 }
 
                 final List<SyntheticBeanBuilderImpl<?>> syntheticBeanBuilders =
@@ -84,6 +78,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                 for (SyntheticBeanBuilderImpl<?> syntheticBeanBuilder : syntheticBeanBuilders) {
                     final ClassElement beanType = syntheticBeanBuilder.getBeanType();
                     final Class<? extends SyntheticBeanCreator<?>> creatorClass = syntheticBeanBuilder.getCreatorClass();
+
                     if (creatorClass != null) {
                         final ClassElement creatorElement = visitorContext.getClassElement(creatorClass).orElse(null);
                         if (creatorElement == null) {
@@ -92,25 +87,9 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                                     + "] must be present on the classpath of the application";
                             visitorContext.fail(message, null);
                         } else {
-                            final ElementQuery<MethodElement> creatorMethods = ElementQuery.ALL_METHODS
-                                    .named(name -> name.equals("create"))
-                                    .filter(method -> method.getParameters().length == 2);
-                            firstBean.addAssociatedBean(creatorElement, visitorContext).inject()
-                                    .produceBeans(
-                                            creatorMethods, builder -> {
-                                                builder.typed(beanType);
-                                                final Set<String> exposedTypes = syntheticBeanBuilder
-                                                        .getExposedTypes();
-                                                if (exposedTypes.isEmpty()) {
-                                                    builder.typed(beanType);
-                                                } else {
-                                                    for (String exposedType : exposedTypes) {
-                                                        visitorContext.getClassElement(exposedType)
-                                                                .ifPresent(builder::typed);
-                                                    }
-                                                }
-                                            }
-                                    );
+                            defineSyntheticCreator(visitorContext, syntheticBeanBuilder, beanType, creatorElement);
+                            Class<? extends SyntheticBeanDisposer<?>> disposerClass = syntheticBeanBuilder.getDisposerClass();
+                            defineSyntheticDisposer(visitorContext, syntheticBeanBuilder, disposerClass, beanType);
                         }
                     }
                 }
@@ -120,5 +99,132 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
             firstBean = null;
             registry.stop();
         }
+    }
+
+    private void defineSyntheticDisposer(VisitorContext visitorContext, SyntheticBeanBuilderImpl<?> syntheticBeanBuilder, Class<? extends SyntheticBeanDisposer<?>> disposerClass, ClassElement beanType) {
+        if (disposerClass != null) {
+            ClassElement disposerElement = visitorContext.getClassElement(disposerClass).orElse(null);
+            if (disposerElement == null) {
+                final String message = "Synthetic bean disposer class of type ["
+                        + disposerClass.getName()
+                        + "] must be present on the classpath of the application";
+                visitorContext.fail(message, null);
+            } else {
+                if (disposerElement.isAbstract()) {
+                    final String message = "Synthetic bean disposer class of type ["
+                            + disposerClass.getName()
+                            + "] cannot be abstract";
+                    visitorContext.fail(message, null);
+                } else {
+                    Map<String, ClassElement> classElement = disposerElement.getTypeArguments(SyntheticBeanDisposer.class);
+                    if (classElement.size() != 1 || !beanType.getName().equals(classElement.values().iterator().next().getName())) {
+                        final String message = "Synthetic bean disposer class of type ["
+                                + disposerClass.getName()
+                                + "] does not specific a generic type argument that matches the bean type: " + beanType.getName();
+                        visitorContext.fail(message, null);
+                        return;
+                    }
+
+                    ClassElement disposerInterface = visitorContext.getClassElement(SyntheticBeanDisposer.class)
+                            .orElse(ClassElement.of(SyntheticBeanDisposer.class));
+                    BeanElementBuilder disposerBuilder = firstBean.addAssociatedBean(disposerElement, visitorContext)
+                            .typed(disposerInterface)
+                            .typeArgumentsForType(disposerInterface, beanType);
+                    copySyntheticAnnotationMetadata(
+                            visitorContext,
+                            syntheticBeanBuilder.getAnnotationMetadata(),
+                            disposerBuilder
+                    );
+                    ElementQuery<MethodElement> disposeMethod =
+                            ElementQuery.ALL_METHODS
+                                    .onlyInstance()
+                                    .named(n -> n.equals("dispose"))
+                                    .filter(m -> m.getParameters().length == 3);
+                    disposerBuilder.withMethods(disposeMethod, m ->
+                            m.executable()
+                    );
+                }
+            }
+        }
+    }
+
+    private void addSyntheticAnnotations(SyntheticComponentsImpl syntheticComponents, DiscoveryImpl discovery) {
+        final MetaAnnotationsImpl metaAnnotations = discovery.getMetaAnnotations();
+        final Set<MetaAnnotationImpl> qualifiers = metaAnnotations.getQualifiers();
+        for (MetaAnnotationImpl qualifier : qualifiers) {
+            Set<String> nonBinding = new HashSet<>();
+            qualifier.getElement().getEnclosedElements(ElementQuery.ALL_METHODS.onlyInstance().onlyDeclared())
+                    .forEach(m -> {
+                        if (m.hasAnnotation(Nonbinding.class)) {
+                            nonBinding.add(m.getName());
+                        }
+                    });
+            syntheticComponents.addBean(RuntimeMetaAnnotation.class)
+                    .type(RuntimeMetaAnnotation.class)
+                    .scope(Singleton.class)
+                    .withParam("annotationType", qualifier.getClassConfig().info())
+                    .withParam("nonBinding", nonBinding.toArray(String[]::new))
+                    .withParam("kind", RuntimeMetaAnnotation.MetaAnnotationKind.QUALIFIER)
+                    .createWith(RuntimeMetaAnnotation.Creator.class);
+
+        }
+    }
+
+    private void defineSyntheticCreator(VisitorContext visitorContext, SyntheticBeanBuilderImpl<?> syntheticBeanBuilder, ClassElement beanType, ClassElement creatorElement) {
+        MutableAnnotationMetadata syntheticBeanMetadata = syntheticBeanBuilder.getAnnotationMetadata();
+        final ElementQuery<MethodElement> creatorMethods = ElementQuery.ALL_METHODS
+                .named(name -> name.equals("create"))
+                .filter(method -> method.getParameters().length == 2);
+
+
+        BeanElementBuilder beanFactory = firstBean.addAssociatedBean(creatorElement, visitorContext)
+                .inject()
+                .produceBeans(
+                        creatorMethods, builder -> {
+                            builder.typed(beanType);
+
+                            copySyntheticAnnotationMetadata(visitorContext, syntheticBeanMetadata, builder);
+                            final Set<String> exposedTypes = syntheticBeanBuilder
+                                    .getExposedTypes();
+                            if (exposedTypes.isEmpty()) {
+                                builder.typed(beanType);
+                            } else {
+                                for (String exposedType : exposedTypes) {
+                                    visitorContext.getClassElement(exposedType)
+                                            .ifPresent(builder::typed);
+                                }
+                            }
+                        }
+                );
+
+        copyQualifiersToFactory(syntheticBeanMetadata, beanFactory);
+    }
+
+    private void copyQualifiersToFactory(MutableAnnotationMetadata syntheticBeanMetadata, BeanElementBuilder beanFactory) {
+        List<AnnotationValue<Annotation>> qualifiers = syntheticBeanMetadata
+                .getAnnotationNamesByStereotype(AnnotationUtil.QUALIFIER)
+                .stream()
+                .map(syntheticBeanMetadata::getAnnotation)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isNotEmpty(qualifiers)) {
+            for (AnnotationValue<Annotation> qualifier : qualifiers) {
+                beanFactory.qualifier(qualifier);
+            }
+        } else {
+            beanFactory.qualifier(AnnotationValue.builder(Primary.class).build());
+        }
+    }
+
+    private void copySyntheticAnnotationMetadata(VisitorContext visitorContext, MutableAnnotationMetadata syntheticBeanMetadata, BeanElementBuilder builder) {
+        Set<String> annotationNames = syntheticBeanMetadata.getAnnotationNames();
+        for (String annotationName : annotationNames) {
+            AnnotationValue<Annotation> av = syntheticBeanMetadata.getAnnotation(annotationName);
+            if (av != null) {
+                builder.annotate(av);
+            }
+        }
+        CdiUtil.visitBeanDefinition(visitorContext, builder);
     }
 }

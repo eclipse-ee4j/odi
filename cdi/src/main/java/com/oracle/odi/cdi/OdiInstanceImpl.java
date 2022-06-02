@@ -29,6 +29,7 @@ import jakarta.enterprise.inject.CreationException;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
@@ -46,6 +47,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     private final Context context;
 
     private final Argument<T> beanType;
+    private final InjectionPoint injectionPoint;
     @Nullable
     private Qualifier<T> qualifier;
     @Nullable
@@ -58,12 +60,14 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     @Nullable
                     Context context,
                     Argument<T> beanType,
+                    @Nullable InjectionPoint injectionPoint,
                     Qualifier<T> qualifier) {
         this.beanContext = beanContext;
         this.beanContainer = beanContainer;
         this.context = context == null ? NoOpDependentContext.INSTANCE : context;
         this.beanType = beanType;
         this.qualifier = qualifier;
+        this.injectionPoint = injectionPoint;
     }
 
     OdiInstanceImpl(BeanContext beanContext,
@@ -72,28 +76,47 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     Context context,
                     Argument<T> beanType,
                     Annotation... annotations) {
-        this(beanContext, beanContainer, context, beanType, beanContainer.qualifierFromQualifierAnnotations(annotations));
+        this(beanContext, beanContainer, context, beanType, null, beanContainer.qualifierFromQualifierAnnotations(annotations));
     }
 
     @Override
     public <U extends T> Instance<U> select(@NonNull Argument<U> argument, @Nullable Qualifier<U> qualifier) {
-        return new OdiInstanceImpl<>(beanContext, beanContainer, context, argument, withQualifier(qualifier));
+        if (InjectionPoint.class.equals(argument.getType()) && injectionPoint != null) {
+            //noinspection unchecked
+            return new ResolvedInstanceImpl<>((U) injectionPoint);
+        } else {
+            return new OdiInstanceImpl<>(
+                    beanContext,
+                    beanContainer,
+                    context,
+                    argument,
+                    null,
+                    withQualifier(qualifier)
+            );
+        }
     }
 
     @Override
     public Instance<T> select(Annotation... qualifiers) {
-        return new OdiInstanceImpl<>(beanContext, beanContainer, context, beanType, withAnnotations(qualifiers));
+        return new OdiInstanceImpl<>(
+                beanContext,
+                beanContainer,
+                context,
+                beanType,
+                null,
+                withAnnotations(qualifiers)
+        );
     }
 
     @Override
     public <U extends T> Instance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl<>(beanContext, beanContainer, context, Argument.of(subtype), withAnnotations(qualifiers));
+        return select(Argument.of(subtype), withAnnotations(qualifiers));
     }
 
     @SuppressWarnings({"unchecked"})
     @Override
     public <U extends T> Instance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl<>(beanContext, beanContainer, context, (Argument<U>) Argument.of(subtype.getType()), withAnnotations(qualifiers));
+        return select((Argument<U>) Argument.of(subtype.getType()), withAnnotations(qualifiers));
     }
 
     @Override

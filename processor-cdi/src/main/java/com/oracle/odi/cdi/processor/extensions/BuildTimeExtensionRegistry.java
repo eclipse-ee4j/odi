@@ -374,6 +374,8 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
             Class<?> parameterType = parameterTypes[i];
             if (SyntheticComponents.class == parameterType) {
                 parameters[i] = syntheticComponents;
+            } else if (Types.class == parameterType) {
+                parameters[i] = new TypesImpl(visitorContext);
             } else {
                 unsupportedParameter(
                         originatingBean.getProducingElement(),

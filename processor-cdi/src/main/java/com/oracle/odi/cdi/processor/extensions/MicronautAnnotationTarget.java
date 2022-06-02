@@ -15,9 +15,9 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.ast.Element;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationTarget;
@@ -53,12 +53,12 @@ final class MicronautAnnotationTarget implements AnnotationTarget {
     }
 
     @SuppressWarnings("checkstyle:VisibilityModifier")
-    final Element element;
+    final AnnotationMetadata annotationMetadata;
     @SuppressWarnings("checkstyle:VisibilityModifier")
     final Types types;
 
-    protected MicronautAnnotationTarget(Element element, Types types) {
-        this.element = element;
+    protected MicronautAnnotationTarget(AnnotationMetadata annotationMetadata, Types types) {
+        this.annotationMetadata = annotationMetadata;
         this.types = types;
     }
 
@@ -89,9 +89,9 @@ final class MicronautAnnotationTarget implements AnnotationTarget {
         }
         final String n = META_ANNOTATIONS.get(annotationType.getName());
         if (n != null) {
-            return element.hasAnnotation(n);
+            return annotationMetadata.hasAnnotation(n);
         }
-        return element.hasAnnotation(annotationType);
+        return annotationMetadata.hasAnnotation(annotationType);
     }
 
     @Override
@@ -100,9 +100,9 @@ final class MicronautAnnotationTarget implements AnnotationTarget {
             throw new IllegalArgumentException("Argument predicate cannot be null");
         }
 
-        final Set<String> annotationNames = element.getAnnotationNames();
+        final Set<String> annotationNames = annotationMetadata.getAnnotationNames();
         for (String annotationName : annotationNames) {
-            final AnnotationValue<Annotation> av = element
+            final AnnotationValue<Annotation> av = annotationMetadata
                     .getAnnotation(META_ANNOTATIONS.getOrDefault(annotationName, annotationName));
             if (av != null) {
                 if (predicate.test(new AnnotationInfoImpl(av))) {
@@ -122,9 +122,9 @@ final class MicronautAnnotationTarget implements AnnotationTarget {
         final String n = META_ANNOTATIONS.getOrDefault(annotationName, annotationName);
         final AnnotationValue<T> av;
         if (n != null) {
-            av = element.getAnnotation(n);
+            av = annotationMetadata.getAnnotation(n);
         } else {
-            av = element.getAnnotation(annotationType);
+            av = annotationMetadata.getAnnotation(annotationType);
         }
 
         if (av != null) {
@@ -139,7 +139,7 @@ final class MicronautAnnotationTarget implements AnnotationTarget {
             throw new IllegalArgumentException("Argument annotationType cannot be null");
         }
 
-        return element.getAnnotationValuesByType(annotationType)
+        return annotationMetadata.getAnnotationValuesByType(annotationType)
                 .stream().map(AnnotationInfoImpl::new)
                 .collect(Collectors.toUnmodifiableList());
     }
@@ -149,9 +149,9 @@ final class MicronautAnnotationTarget implements AnnotationTarget {
         if (predicate == null) {
             throw new IllegalArgumentException("Argument predicate cannot be null");
         }
-        return element.getAnnotationNames().stream()
+        return annotationMetadata.getAnnotationNames().stream()
                 .map(name -> new AnnotationInfoImpl(
-                        element.getAnnotation(META_ANNOTATIONS.getOrDefault(name, name))
+                        annotationMetadata.getAnnotation(META_ANNOTATIONS.getOrDefault(name, name))
                 ))
                 .filter(predicate)
                 .collect(Collectors.toUnmodifiableList());
@@ -159,8 +159,8 @@ final class MicronautAnnotationTarget implements AnnotationTarget {
 
     @Override
     public Collection<AnnotationInfo> annotations() {
-        return element.getAnnotationNames().stream()
-                .map(name -> new AnnotationInfoImpl(element.getAnnotation(META_ANNOTATIONS.getOrDefault(name, name))))
+        return annotationMetadata.getAnnotationNames().stream()
+                .map(name -> new AnnotationInfoImpl(annotationMetadata.getAnnotation(META_ANNOTATIONS.getOrDefault(name, name))))
                 .collect(Collectors.toUnmodifiableList());
     }
 
@@ -173,12 +173,12 @@ final class MicronautAnnotationTarget implements AnnotationTarget {
             return false;
         }
         MicronautAnnotationTarget other = (MicronautAnnotationTarget) o;
-        return element.equals(other.element);
+        return annotationMetadata.equals(other.annotationMetadata);
     }
 
     @Override
     public int hashCode() {
-        return element.hashCode();
+        return annotationMetadata.hashCode();
     }
 
 }

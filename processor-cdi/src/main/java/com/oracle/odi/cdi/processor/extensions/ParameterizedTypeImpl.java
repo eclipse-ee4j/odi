@@ -43,8 +43,8 @@ final class ParameterizedTypeImpl extends AnnotationTargetImpl implements Parame
     @Override
     public ClassInfo declaration() {
         return new ClassInfoImpl(
-                visitorContext.getClassElement(getElement().getName())
-                        .orElseThrow(() -> new IllegalStateException("Class not found on classpath: " + getElement().getName())),
+                visitorContext.getClassElement(classElement.getName())
+                        .orElseThrow(() -> new IllegalStateException("Class not found on classpath: " + classElement.getName())),
                 getTypes(),
                 visitorContext);
     }

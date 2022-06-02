@@ -23,10 +23,12 @@ import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 
 final class ClassTypeImpl extends AnnotationTargetImpl implements jakarta.enterprise.lang.model.types.ClassType {
     private final VisitorContext visitorContext;
+    private final ClassElement classElement;
 
     ClassTypeImpl(ClassElement element, Types types, VisitorContext visitorContext) {
         super(element, types, visitorContext);
         this.visitorContext = visitorContext;
+        this.classElement = element;
     }
 
     @Override
@@ -37,8 +39,8 @@ final class ClassTypeImpl extends AnnotationTargetImpl implements jakarta.enterp
     @Override
     public ClassInfo declaration() {
         return new ClassInfoImpl(
-                visitorContext.getClassElement(getElement().getName())
-                .orElseThrow(() -> new IllegalStateException("Class not found on classpath: " + getElement().getName())),
+                visitorContext.getClassElement(classElement.getName())
+                .orElseThrow(() -> new IllegalStateException("Class not found on classpath: " + classElement.getName())),
                 getTypes(),
                 visitorContext);
     }

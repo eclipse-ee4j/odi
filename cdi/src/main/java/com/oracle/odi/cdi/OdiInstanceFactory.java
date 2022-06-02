@@ -15,6 +15,8 @@
  */
 package com.oracle.odi.cdi;
 
+import java.lang.annotation.Annotation;
+
 import com.oracle.odi.cdi.context.DependentContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
@@ -23,9 +25,13 @@ import io.micronaut.context.annotation.Factory;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.ArgumentInjectionPoint;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ConstructorInjectionPoint;
+import io.micronaut.inject.InjectionPoint;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.spi.BeanContainer;
 
 /**
@@ -45,10 +51,12 @@ public class OdiInstanceFactory {
     @Any
     @Dependent
     public <T> Instance<T> build(BeanResolutionContext resolutionContext,
-                                 @Nullable ArgumentInjectionPoint<T, T> argumentInjectionPoint) {
+                                 @Nullable ArgumentInjectionPoint<T, T> argumentInjectionPoint,
+                                 OdiBeanContainer beanContainer) {
         @SuppressWarnings("unchecked")
         Argument<T> injectArgument = (Argument<T>) Argument.OBJECT_ARGUMENT;
         Qualifier<T> qualifier = null;
+        jakarta.enterprise.inject.spi.InjectionPoint cdiInjectionPoint = null;
         if (argumentInjectionPoint != null) {
             Argument<T> argument = argumentInjectionPoint.asArgument();
             Argument[] typeParameters = argument.getTypeParameters();
@@ -56,13 +64,43 @@ public class OdiInstanceFactory {
                 injectArgument = typeParameters[0];
             }
             qualifier = Qualifiers.forArgument(argument);
+            InjectionPoint<?> injectionPoint = resolveInjectionPoint(resolutionContext, argumentInjectionPoint);
+            cdiInjectionPoint = new OdiInjectionPoint(
+                    new OdiBeanImpl<>(beanContainer.getBeanContext(), injectionPoint.getDeclaringBean()),
+                    injectionPoint,
+                    injectionPoint instanceof ArgumentInjectionPoint ? ((ArgumentInjectionPoint<?, ?>) injectionPoint).asArgument() : injectArgument
+            );
         }
+
+
         return new OdiInstanceImpl<>(
                 resolutionContext.getContext(),
                 (OdiBeanContainerImpl) resolutionContext.getContext().getBean(BeanContainer.class),
                 new DependentContext(resolutionContext),
                 injectArgument,
+                cdiInjectionPoint,
                 qualifier
         );
+    }
+
+    private <T> InjectionPoint<?> resolveInjectionPoint(BeanResolutionContext resolutionContext, ArgumentInjectionPoint<T, T> argumentInjectionPoint) {
+        BeanDefinition<T> declaringBean = argumentInjectionPoint.getDeclaringBean();
+        Class<?> creatorType = declaringBean.getDeclaringType().orElse(declaringBean.getBeanType());
+        if (SyntheticBeanCreator.class.isAssignableFrom(creatorType)) {
+            BeanResolutionContext.Path path = resolutionContext.getPath();
+            for (BeanResolutionContext.Segment<?> segment : path) {
+                InjectionPoint<?> injectionPoint = segment.getInjectionPoint();
+                BeanDefinition<?> ipBean = injectionPoint.getDeclaringBean();
+                Class<?> declaring = ipBean.getDeclaringType().orElse(ipBean.getBeanType());
+                if (!SyntheticBeanCreator.class.isAssignableFrom(declaring)) {
+                    return injectionPoint;
+                }
+            }
+        }
+        Class<? extends Annotation> scope = declaringBean.getScope().orElse(Dependent.class);
+        if (scope == Dependent.class) {
+            return argumentInjectionPoint;
+        }
+        return null;
     }
 }

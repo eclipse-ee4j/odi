@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import com.oracle.odi.cdi.processor.CdiUtil;
+import com.oracle.odi.cdi.processor.visitors.InjectVisitor;
 import com.oracle.odi.cdi.processor.visitors.InterceptorVisitor;
 import com.oracle.odi.cdi.processor.visitors.ObservesMethodVisitor;
 import io.micronaut.context.annotation.Executable;
@@ -174,8 +176,13 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
             );
         }
 
-        final ElementQuery<MethodElement> executableMethods = ElementQuery.ALL_METHODS
-                .onlyInstance()
+        ElementQuery<FieldElement> instanceFields = ElementQuery.ALL_FIELDS
+                .onlyInstance();
+        ElementQuery<MethodElement> instanceMethods = ElementQuery.ALL_METHODS
+                .onlyInstance();
+
+
+        final ElementQuery<MethodElement> executableMethods = instanceMethods
                 .onlyDeclared()
                 .onlyConcrete()
                 .annotated((annotationMetadata -> annotationMetadata.hasAnnotation(Executable.class)));
@@ -184,14 +191,11 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                         Arrays.stream(m.getParameters())
                                 .anyMatch(p -> p.hasDeclaredAnnotation(Observes.class) || p.hasDeclaredAnnotation(ObservesAsync.class)
                                 );
-        final ElementQuery<MethodElement> observesMethods = ElementQuery.ALL_METHODS
-                .onlyInstance()
+        final ElementQuery<MethodElement> observesMethods = instanceMethods
                 .filter(isObservesMethod);
-        final ElementQuery<MethodElement> producesMethods = ElementQuery.ALL_METHODS
-                .onlyInstance()
+        final ElementQuery<MethodElement> producesMethods = instanceMethods
                 .annotated(ann -> ann.hasDeclaredAnnotation(Produces.class));
-        final ElementQuery<FieldElement> producesFields = ElementQuery.ALL_FIELDS
-                .onlyInstance()
+        final ElementQuery<FieldElement> producesFields = instanceFields
                 .annotated(ann -> ann.hasDeclaredAnnotation(Produces.class));
         final Consumer<BeanElementBuilder> producesConfigurer = builder -> {
             final Element producingElement = builder.getProducingElement();
@@ -205,8 +209,15 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         };
         final BeanElementBuilder beanElementBuilder = rootClassElement
                 .addAssociatedBean(scannedClass);
+        CdiUtil.visitBeanDefinition(visitorContext, beanElementBuilder);
         registry.runDiscoveryEnhancements(beanElementBuilder);
-        beanElementBuilder.withMethods(executableMethods, BeanMethodElement::executable)
+        InjectVisitor injectVisitor = new InjectVisitor();
+        scannedClass.getEnclosedElements(instanceMethods.onlyInjected())
+                        .forEach(m -> injectVisitor.visitMethod(m, visitorContext));
+        scannedClass.getEnclosedElements(instanceFields.onlyInjected())
+                        .forEach(m -> injectVisitor.visitField(m, visitorContext));
+        beanElementBuilder
+                .withMethods(executableMethods, BeanMethodElement::executable)
                 .withMethods(observesMethods, observesMethod -> {
                     if (isObservesMethod.test(observesMethod)) {
                         observesMethod.executable();
@@ -223,7 +234,6 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 .produceBeans(producesMethods, producesConfigurer)
                 .produceBeans(producesFields, producesConfigurer)
                 .inject();
-
     }
 
     @Override

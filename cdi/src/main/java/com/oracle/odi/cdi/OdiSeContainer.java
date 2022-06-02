@@ -105,12 +105,26 @@ final class OdiSeContainer extends CDI<Object>
     }
 
     OdiInstance<Object> select(Context context) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, context, Argument.OBJECT_ARGUMENT, (Qualifier<Object>) null);
+        return new OdiInstanceImpl<>(
+                applicationContext,
+                beanContainer,
+                context,
+                Argument.OBJECT_ARGUMENT,
+                null,
+                (Qualifier<Object>) null
+        );
     }
 
     @Override
     public <U> OdiInstance<U> select(Argument<U> argument, Qualifier<U> qualifier) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, null, argument, qualifier);
+        return new OdiInstanceImpl<>(
+                applicationContext,
+                beanContainer,
+                null,
+                argument,
+                null,
+                qualifier
+        );
     }
 
     @Override

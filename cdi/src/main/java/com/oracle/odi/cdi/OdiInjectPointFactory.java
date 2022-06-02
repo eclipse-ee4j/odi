@@ -23,6 +23,8 @@ import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.ArgumentInjectionPoint;
 import io.micronaut.inject.InjectionPoint;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.AmbiguousResolutionException;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -47,6 +49,9 @@ public class OdiInjectPointFactory {
     public <T> jakarta.enterprise.inject.spi.InjectionPoint build(BeanResolutionContext resolutionContext,
                                                                   OdiBeanContainer beanContainer) {
         ArgumentInjectionPoint<T, ?> injectionPoint = (ArgumentInjectionPoint<T, ?>) provideInjectionPoint(resolutionContext);
+        if (injectionPoint == null) {
+            throw new UnsatisfiedResolutionException("Unable to resolve injection point for path: " + resolutionContext.getPath());
+        }
         OdiBean<T> bean = beanContainer.getBean(injectionPoint.getDeclaringBean());
 
         return new OdiInjectionPoint(bean, injectionPoint, injectionPoint.asArgument());

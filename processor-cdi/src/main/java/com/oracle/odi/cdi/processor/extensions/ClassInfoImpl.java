@@ -55,14 +55,13 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
         return TypeFactory.createType(classElement, getTypes(), visitorContext);
     }
 
-    @Override
     public ClassElement getElement() {
         return classElement;
     }
 
     @Override
     public String name() {
-        return element.getName();
+        return classElement.getName();
     }
 
     @Override
@@ -208,11 +207,11 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
             return false;
         }
         ClassInfoImpl classInfo = (ClassInfoImpl) o;
-        return element.equals(classInfo.element);
+        return annotationMetadata.equals(classInfo.annotationMetadata);
     }
 
     @Override
     public int hashCode() {
-        return element.hashCode();
+        return annotationMetadata.hashCode();
     }
 }
