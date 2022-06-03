@@ -107,7 +107,6 @@ final class SyntheticObserverMethod<B, E> extends AbstractOdiObserverMethod<E> {
         return observedQualifiers;
     }
 
-
     @Override
     public Bean<?> getDeclaringBean() {
         // undefined for synthetic observers

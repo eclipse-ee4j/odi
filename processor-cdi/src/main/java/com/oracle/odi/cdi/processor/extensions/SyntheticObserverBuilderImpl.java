@@ -39,7 +39,6 @@ final class SyntheticObserverBuilderImpl<T> extends AbstractSyntheticBuilder imp
     @Nullable
     private ClassElement observerClass;
 
-
     SyntheticObserverBuilderImpl(ClassElement eventType, Types types, VisitorContext visitorContext) {
         super(eventType.getAnnotationMetadata(), types, visitorContext);
         this.eventType = eventType;

@@ -38,7 +38,6 @@ import io.micronaut.inject.ast.beans.BeanElementBuilder;
 import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.BeanElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
@@ -102,7 +101,6 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                 for (SyntheticObserverBuilderImpl<?> syntheticObserverBuilder : syntheticObserverBuilders) {
                     ClassElement eventType = syntheticObserverBuilder.getEventType();
                     ClassElement observerClass = syntheticObserverBuilder.getObserverClass();
-                    List<String> qualifiers = syntheticObserverBuilder.getAnnotationMetadata().getAnnotationNamesByStereotype(AnnotationUtil.QUALIFIER);
                     if (eventType != null && observerClass != null) {
                         ClassElement syntheticObserver = visitorContext.getClassElement(SyntheticObserver.class)
                                 .orElse(ClassElement.of(SyntheticObserver.class));

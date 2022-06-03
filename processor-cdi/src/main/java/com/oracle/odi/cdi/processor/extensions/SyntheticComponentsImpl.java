@@ -24,7 +24,6 @@ import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserverBuilder;
-import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.Type;
 
 final class SyntheticComponentsImpl implements SyntheticComponents {

@@ -64,14 +64,22 @@ final class TypesImpl implements Types {
     @Override
     public PrimitiveType ofPrimitive(PrimitiveType.PrimitiveKind kind) {
         switch (kind) {
-            case BOOLEAN: return new PrimitiveTypeImpl(PrimitiveElement.BOOLEAN, this, visitorContext);
-            case BYTE: return new PrimitiveTypeImpl(PrimitiveElement.BYTE, this, visitorContext);
-            case CHAR: return new PrimitiveTypeImpl(PrimitiveElement.CHAR, this, visitorContext);
-            case DOUBLE: return new PrimitiveTypeImpl(PrimitiveElement.DOUBLE, this, visitorContext);
-            case FLOAT: return new PrimitiveTypeImpl(PrimitiveElement.FLOAT, this, visitorContext);
-            case INT: return new PrimitiveTypeImpl(PrimitiveElement.INT, this, visitorContext);
-            case LONG: return new PrimitiveTypeImpl(PrimitiveElement.LONG, this, visitorContext);
-            case SHORT: return new PrimitiveTypeImpl(PrimitiveElement.SHORT, this, visitorContext);
+            case BOOLEAN:
+                return new PrimitiveTypeImpl(PrimitiveElement.BOOLEAN, this, visitorContext);
+            case BYTE:
+                return new PrimitiveTypeImpl(PrimitiveElement.BYTE, this, visitorContext);
+            case CHAR:
+                return new PrimitiveTypeImpl(PrimitiveElement.CHAR, this, visitorContext);
+            case DOUBLE:
+                return new PrimitiveTypeImpl(PrimitiveElement.DOUBLE, this, visitorContext);
+            case FLOAT:
+                return new PrimitiveTypeImpl(PrimitiveElement.FLOAT, this, visitorContext);
+            case INT:
+                return new PrimitiveTypeImpl(PrimitiveElement.INT, this, visitorContext);
+            case LONG:
+                return new PrimitiveTypeImpl(PrimitiveElement.LONG, this, visitorContext);
+            case SHORT:
+                return new PrimitiveTypeImpl(PrimitiveElement.SHORT, this, visitorContext);
             default:
                 throw new IllegalStateException("Unsupported primitive type: " + kind);
         }
@@ -227,6 +235,7 @@ final class TypesImpl implements Types {
 
     private class TypesWildcardUnbounded extends AnnotationTargetImpl implements WildcardType {
         private final int hashCode = "?".hashCode();
+
         TypesWildcardUnbounded() {
             super(AnnotationMetadata.EMPTY_METADATA, TypesImpl.this, TypesImpl.this.visitorContext);
         }
@@ -265,6 +274,7 @@ final class TypesImpl implements Types {
 
     private final class TypesArrayType extends AnnotationTargetImpl implements ArrayType {
         private final Type componentType;
+
         TypesArrayType(Type componentType) {
             super(AnnotationMetadata.EMPTY_METADATA, TypesImpl.this, TypesImpl.this.visitorContext);
             this.componentType = componentType;

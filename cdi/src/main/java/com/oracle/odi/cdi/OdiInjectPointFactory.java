@@ -23,7 +23,6 @@ import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.ArgumentInjectionPoint;
 import io.micronaut.inject.InjectionPoint;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 
 import java.util.ArrayList;
@@ -41,6 +40,7 @@ public class OdiInjectPointFactory {
      * Builds an instance.
      *
      * @param resolutionContext      The resolution context
+     * @param beanContainer          The bean container
      * @param <T>                    The generic type
      * @return The instance
      */

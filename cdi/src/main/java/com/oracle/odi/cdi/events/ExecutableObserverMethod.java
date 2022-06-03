@@ -15,22 +15,6 @@
  */
 package com.oracle.odi.cdi.events;
 
-import com.oracle.odi.cdi.OdiBeanContainer;
-import com.oracle.odi.cdi.annotation.ObservesMethod;
-import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.core.annotation.Internal;
-import io.micronaut.core.type.Argument;
-import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.ExecutableMethod;
-import io.micronaut.inject.qualifiers.Qualifiers;
-import jakarta.enterprise.event.Reception;
-import jakarta.enterprise.event.TransactionPhase;
-import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.EventContext;
-import jakarta.enterprise.inject.spi.EventMetadata;
-import jakarta.enterprise.inject.spi.InjectionPoint;
-import jakarta.inject.Qualifier;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -38,6 +22,20 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.oracle.odi.cdi.OdiBeanContainer;
+import com.oracle.odi.cdi.annotation.ObservesMethod;
+import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ExecutableMethod;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.enterprise.event.Reception;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.EventContext;
+import jakarta.enterprise.inject.spi.EventMetadata;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.inject.Qualifier;
 
 /**
  * Implementation of {@link OdiObserverMethod} that is using {@link ExecutableMethod} to trigger the method.

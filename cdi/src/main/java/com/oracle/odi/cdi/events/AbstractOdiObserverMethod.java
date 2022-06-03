@@ -24,11 +24,11 @@ import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 
 abstract class AbstractOdiObserverMethod<E> implements OdiObserverMethod<E> {
+    protected final AnnotationValue<ObservesMethod> observesMethodAnnotationValue;
     private final boolean isAsync;
     private final int priority;
     private final Reception notifyObserver;
     private final TransactionPhase transactionPhase;
-    protected final AnnotationValue<ObservesMethod> observesMethodAnnotationValue;
 
     AbstractOdiObserverMethod(AnnotationValue<ObservesMethod> observesMethodAnnotationValue) {
         if (observesMethodAnnotationValue == null) {
@@ -43,7 +43,6 @@ abstract class AbstractOdiObserverMethod<E> implements OdiObserverMethod<E> {
                 .orElse(TransactionPhase.IN_PROGRESS);
 
     }
-
 
     @Override
     public final boolean isAsync() {

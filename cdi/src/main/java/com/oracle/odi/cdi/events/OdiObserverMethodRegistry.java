@@ -47,6 +47,7 @@ public final class OdiObserverMethodRegistry {
 
     /**
      * Registers an observed ODI method.
+     *
      * @param observerMethod The observer method.
      */
     public void register(OdiObserverMethod<?> observerMethod) {
@@ -62,10 +63,11 @@ public final class OdiObserverMethodRegistry {
 
     /**
      * Finds observer methods.
-     * @param argument The argument
+     *
+     * @param argument  The argument
      * @param qualifier The qualifier
-     * @param <K> The observer method generic type
-     * @param <T> The argument generic type
+     * @param <K>       The observer method generic type
+     * @param <T>       The argument generic type
      * @return A list of observer methods
      */
     public <K extends T, T> List<ObserverMethod<K>> findListOfObserverMethods(Argument<T> argument, @Nullable Qualifier<T> qualifier) {
@@ -78,10 +80,11 @@ public final class OdiObserverMethodRegistry {
 
     /**
      * Finds observer methods.
-     * @param argument The argument
+     *
+     * @param argument  The argument
      * @param qualifier The qualifier
-     * @param <K> The observer method generic type
-     * @param <T> The argument generic type
+     * @param <K>       The observer method generic type
+     * @param <T>       The argument generic type
      * @return A set of observer methods
      */
     public <K extends T, T> Set<ObserverMethod<K>> findSetOfObserverMethods(Argument<T> argument, @Nullable Qualifier<T> qualifier) {

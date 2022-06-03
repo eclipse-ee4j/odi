@@ -32,7 +32,6 @@ import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.build.compatible.spi.AnnotationBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.DeclarationConfig;
-import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.AnnotationInfo;
 import jakarta.enterprise.lang.model.AnnotationTarget;
@@ -194,7 +193,7 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
         addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
         return this;
     }
-    
+
     private static AnnotationMetadata cloneMetadata(AnnotationMetadata annotationMetadata) {
         if (annotationMetadata instanceof MutableAnnotationMetadata) {
             return ((MutableAnnotationMetadata) annotationMetadata).clone();
@@ -203,8 +202,6 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
         }
     }
 
-
-    @Override
     public final Type asType() {
         return asDeclaration().asType();
     }

@@ -26,7 +26,6 @@ import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.ArgumentInjectionPoint;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.ConstructorInjectionPoint;
 import io.micronaut.inject.InjectionPoint;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.Dependent;
@@ -45,6 +44,7 @@ public class OdiInstanceFactory {
      *
      * @param resolutionContext      The resolution context
      * @param argumentInjectionPoint The argument injection point
+     * @param beanContainer          The bean container
      * @param <T>                    The generic type
      * @return The instance
      */
