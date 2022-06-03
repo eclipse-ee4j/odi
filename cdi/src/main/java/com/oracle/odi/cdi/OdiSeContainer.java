@@ -24,12 +24,10 @@ import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
-import io.micronaut.context.annotation.Property;
 import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.context.processor.ExecutableMethodProcessor;
-import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
@@ -60,7 +58,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -232,34 +229,7 @@ final class OdiSeContainer extends CDI<Object>
      */
     @Bean Parameters parameterCreator(ArgumentInjectionPoint<?, ?> injectionPoint) {
         final BeanDefinition<?> declaringBean = injectionPoint.getDeclaringBean();
-        final List<AnnotationValue<Property>> values = declaringBean.getAnnotationValuesByType(Property.class);
-        Map<String, AnnotationValue<Property>> map = new LinkedHashMap<>(values.size());
-        if (!values.isEmpty()) {
-            for (AnnotationValue<Property> value : values) {
-                value.stringValue("name").ifPresent(n ->
-                    map.put(n, value)
-                );
-            }
-        }
-        return new Parameters() {
-            @Override
-            public <T> T get(String key, Class<T> type) {
-                final AnnotationValue<Property> av = map.get(key);
-                if (av != null) {
-                    return av.getValue(type).orElse(null);
-                }
-                return null;
-            }
-
-            @Override
-            public <T> T get(String key, Class<T> type, T defaultValue) {
-                final AnnotationValue<Property> av = map.get(key);
-                if (av != null) {
-                    return av.getValue(type).orElse(defaultValue);
-                }
-                return defaultValue;
-            }
-        };
+        return OdiUtils.createParameters(declaringBean);
     }
 
     @Bean

@@ -15,9 +15,17 @@
  */
 package com.oracle.odi.cdi;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import io.micronaut.context.annotation.Property;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.InjectionPoint;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 
 /**
  * Internal utils class to create {@link jakarta.enterprise.inject.spi.InjectionPoint}.
@@ -43,4 +51,34 @@ public final class OdiUtils {
         return new OdiInjectionPoint(bean, injectionPoint, argument);
     }
 
+    public static Parameters createParameters(BeanDefinition<?> declaringBean) {
+        final List<AnnotationValue<Property>> values = declaringBean.getAnnotationValuesByType(Property.class);
+        Map<String, AnnotationValue<Property>> map = new LinkedHashMap<>(values.size());
+        if (!values.isEmpty()) {
+            for (AnnotationValue<Property> value : values) {
+                value.stringValue("name").ifPresent(n ->
+                    map.put(n, value)
+                );
+            }
+        }
+        return new Parameters() {
+            @Override
+            public <T> T get(String key, Class<T> type) {
+                final AnnotationValue<Property> av = map.get(key);
+                if (av != null) {
+                    return av.getValue(type).orElse(null);
+                }
+                return null;
+            }
+
+            @Override
+            public <T> T get(String key, Class<T> type, T defaultValue) {
+                final AnnotationValue<Property> av = map.get(key);
+                if (av != null) {
+                    return av.getValue(type).orElse(defaultValue);
+                }
+                return defaultValue;
+            }
+        };
+    }
 }

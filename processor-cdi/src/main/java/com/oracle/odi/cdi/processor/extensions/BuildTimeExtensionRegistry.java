@@ -49,13 +49,16 @@ import jakarta.enterprise.inject.build.compatible.spi.ObserverInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Registration;
 import jakarta.enterprise.inject.build.compatible.spi.ScannedClasses;
 import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserverBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.inject.build.compatible.spi.Validation;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
+import jakarta.enterprise.lang.model.types.Type;
 import jakarta.interceptor.Interceptor;
 
 import java.lang.annotation.Annotation;
@@ -373,7 +376,26 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         for (int i = 0; i < parameterTypes.length; i++) {
             Class<?> parameterType = parameterTypes[i];
             if (SyntheticComponents.class == parameterType) {
-                parameters[i] = syntheticComponents;
+                parameters[i] = new SyntheticComponents() {
+                    @Override
+                    public <T> SyntheticBeanBuilder<T> addBean(Class<T> beanClass) {
+                        return syntheticComponents.addBean(beanClass);
+                    }
+
+                    @Override
+                    public <T> SyntheticObserverBuilder<T> addObserver(Class<T> eventType) {
+                        SyntheticObserverBuilder<T> observerBuilder = syntheticComponents.addObserver(eventType);
+                        observerBuilder.declaringClass(extension.getClass());
+                        return observerBuilder;
+                    }
+
+                    @Override
+                    public <T> SyntheticObserverBuilder<T> addObserver(Type eventType) {
+                        SyntheticObserverBuilder<T> observerBuilder = syntheticComponents.addObserver(eventType);
+                        observerBuilder.declaringClass(extension.getClass());
+                        return observerBuilder;
+                    }
+                };
             } else if (Types.class == parameterType) {
                 parameters[i] = new TypesImpl(visitorContext);
             } else {

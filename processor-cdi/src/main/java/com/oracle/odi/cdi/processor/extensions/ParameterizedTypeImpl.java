@@ -29,7 +29,7 @@ import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.ParameterizedType;
 import jakarta.enterprise.lang.model.types.Type;
 
-final class ParameterizedTypeImpl extends AnnotationTargetImpl implements ParameterizedType {
+class ParameterizedTypeImpl extends AnnotationTargetImpl implements ParameterizedType {
 
     private final VisitorContext visitorContext;
     private final ClassElement classElement;
@@ -38,6 +38,10 @@ final class ParameterizedTypeImpl extends AnnotationTargetImpl implements Parame
         super(element, types, visitorContext);
         this.visitorContext = visitorContext;
         this.classElement = element;
+    }
+
+    public ClassElement getClassElement() {
+        return classElement;
     }
 
     @Override

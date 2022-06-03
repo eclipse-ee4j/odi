@@ -22,13 +22,15 @@ import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 
 final class ClassTypeImpl extends AnnotationTargetImpl implements jakarta.enterprise.lang.model.types.ClassType {
-    private final VisitorContext visitorContext;
     private final ClassElement classElement;
 
     ClassTypeImpl(ClassElement element, Types types, VisitorContext visitorContext) {
         super(element, types, visitorContext);
-        this.visitorContext = visitorContext;
         this.classElement = element;
+    }
+
+    public ClassElement getClassElement() {
+        return classElement;
     }
 
     @Override

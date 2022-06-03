@@ -26,6 +26,7 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.inject.Default;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -97,5 +98,20 @@ public final class DefaultQualifier<T> implements Qualifier<T> {
             return true;
         }
         return Qualifier.super.contains(qualifier);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(toString());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj;
+    }
+
+    @Override
+    public String toString() {
+        return "@Default";
     }
 }

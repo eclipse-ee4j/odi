@@ -1265,9 +1265,6 @@
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBeanInjectionPoint.SyntheticBeanInjectionPointTest">
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserver.SyntheticObserverTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserverOfParameterizedType.SyntheticObserverOfParameterizedTypeTest">
                 <methods>

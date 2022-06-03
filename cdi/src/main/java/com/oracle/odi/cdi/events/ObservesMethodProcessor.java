@@ -23,6 +23,7 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.inject.AdvisedBeanType;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -56,11 +57,18 @@ final class ObservesMethodProcessor implements ExecutableMethodProcessor<Observe
         if (targetBeanDefinition == null) {
             return;
         }
-        observerMethodRegistry.register(new ExecutableObserverMethod(beanContainer, beanDefinition, targetBeanDefinition, method));
+        if (SyntheticObserver.class.isAssignableFrom(targetBeanDefinition.getBeanType())) {
+            observerMethodRegistry.register(new SyntheticObserverMethod(beanContainer, targetBeanDefinition, method));
+        } else {
+            observerMethodRegistry.register(new ExecutableObserverMethod(beanContainer, beanDefinition, targetBeanDefinition, method));
+        }
     }
 
     public BeanDefinition<?> findTargetBeanDefinitions(BeanDefinition<?> originalBeanDefinition) {
         // We need to get all bean definitions and filter them for cases when bean inherit each other
+        if (SyntheticObserver.class.isAssignableFrom(originalBeanDefinition.getBeanType())) {
+            return originalBeanDefinition;
+        }
         Collection<BeanDefinition<?>> beanDefinitions =
                 beanContainer.getBeanContext().getBeanDefinitions((Argument) originalBeanDefinition.asArgument());
         for (BeanDefinition<?> beanDefinition : beanDefinitions) {

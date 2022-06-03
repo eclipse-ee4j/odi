@@ -38,8 +38,12 @@ import io.micronaut.inject.ast.beans.BeanElementBuilder;
 import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.BeanElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
+import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.util.Nonbinding;
 import jakarta.inject.Singleton;
 
@@ -93,6 +97,35 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                         }
                     }
                 }
+
+                List<SyntheticObserverBuilderImpl<?>> syntheticObserverBuilders = syntheticComponents.getSyntheticObserverBuilders();
+                for (SyntheticObserverBuilderImpl<?> syntheticObserverBuilder : syntheticObserverBuilders) {
+                    ClassElement eventType = syntheticObserverBuilder.getEventType();
+                    ClassElement observerClass = syntheticObserverBuilder.getObserverClass();
+                    List<String> qualifiers = syntheticObserverBuilder.getAnnotationMetadata().getAnnotationNamesByStereotype(AnnotationUtil.QUALIFIER);
+                    if (eventType != null && observerClass != null) {
+                        ClassElement syntheticObserver = visitorContext.getClassElement(SyntheticObserver.class)
+                                .orElse(ClassElement.of(SyntheticObserver.class));
+
+                        ElementQuery<MethodElement> notifyMethodFilter = ElementQuery.ALL_METHODS
+                                .onlyInstance()
+                                .named(n -> n.equals("observe"))
+                                .filter(m -> m.getParameters().length == 2 &&
+                                        m.getParameters()[0].getType().isAssignable(EventContext.class) &&
+                                        m.getParameters()[1].getType().isAssignable(Parameters.class)
+                                );
+                        BeanElementBuilder observerBuilder = firstBean
+                                .addAssociatedBean(observerClass, visitorContext)
+                                .typed(syntheticObserver)
+                                .typeArgumentsForType(syntheticObserver, eventType)
+                                .withMethods(notifyMethodFilter, m -> {
+                                        m.executable(true);
+                                        m.annotate("com.oracle.odi.cdi.annotation.ObservesMethod");
+                                    }
+                                );
+                        copySyntheticAnnotationMetadata(visitorContext, syntheticObserverBuilder.getAnnotationMetadata(), observerBuilder);
+                    }
+                }
             }
             registry.runValidation(visitorContext);
         } finally {
@@ -140,9 +173,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                                     .onlyInstance()
                                     .named(n -> n.equals("dispose"))
                                     .filter(m -> m.getParameters().length == 3);
-                    disposerBuilder.withMethods(disposeMethod, m ->
-                            m.executable()
-                    );
+                    disposerBuilder.withMethods(disposeMethod, BeanMethodElement::executable);
                 }
             }
         }
