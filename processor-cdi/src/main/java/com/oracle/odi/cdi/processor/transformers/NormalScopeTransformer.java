@@ -21,7 +21,6 @@ import io.micronaut.inject.visitor.VisitorContext;
 import io.micronaut.runtime.context.scope.ScopedProxy;
 import jakarta.enterprise.context.NormalScope;
 
-import javax.inject.Scope;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class NormalScopeTransformer implements TypedAnnotationTransformer<Normal
         // which translates to the scoped proxy scope of Micronaut
         return Arrays.asList(
                 AnnotationValue.builder(ScopedProxy.class).build(),
-                AnnotationValue.builder(Scope.class).build()
+                AnnotationValue.builder(io.micronaut.core.annotation.AnnotationUtil.SCOPE).build()
         );
     }
 

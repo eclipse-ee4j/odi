@@ -27,8 +27,6 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.Stereotype;
 
-import javax.inject.Qualifier;
-import javax.inject.Scope;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -96,7 +94,7 @@ public class ClassStereotypeValidator implements TypeElementVisitor<Object, Ster
 
         if (!stereotypes.isEmpty()) {
 
-            final List<String> qualifiers = new ArrayList<>(element.getAnnotationNamesByStereotype(Qualifier.class));
+            final List<String> qualifiers = new ArrayList<>(element.getAnnotationNamesByStereotype(io.micronaut.core.annotation.AnnotationUtil.QUALIFIER));
             qualifiers.removeAll(stereotypes);
             if (!qualifiers.isEmpty()) {
                 for (String qualifier : qualifiers) {
@@ -127,12 +125,12 @@ public class ClassStereotypeValidator implements TypeElementVisitor<Object, Ster
             return Collections.emptyList();
         }
         final List<String> scopeStereotypes =
-                new ArrayList<>(annotationMetadata.getDeclaredAnnotationNamesByStereotype(Scope.class.getName()));
+                new ArrayList<>(annotationMetadata.getDeclaredAnnotationNamesByStereotype(io.micronaut.core.annotation.AnnotationUtil.SCOPE));
 
         purgeInternalScopes(stereotypes, scopeStereotypes);
         String n = null;
         if (scopeStereotypes.isEmpty()) {
-            scopeStereotypes.addAll(annotationMetadata.getAnnotationNamesByStereotype(Scope.class.getName()));
+            scopeStereotypes.addAll(annotationMetadata.getAnnotationNamesByStereotype(io.micronaut.core.annotation.AnnotationUtil.SCOPE));
             purgeInternalScopes(stereotypes, scopeStereotypes);
         }
         return scopeStereotypes;

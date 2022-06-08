@@ -31,7 +31,6 @@ import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.interceptor.Interceptor;
 
-import javax.inject.Inject;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
@@ -62,7 +61,7 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
             );
             return;
         }
-        if (element.hasAnnotation(Inject.class)) {
+        if (element.hasAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
             context.fail(
                     "Produces methods cannot be annotated with @Inject. See "
                             + CdiUtil.SPEC_LOCATION
@@ -114,7 +113,7 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
             );
             return;
         }
-        if (element.hasAnnotation(Inject.class)) {
+        if (element.hasAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
             context.fail("Produces field cannot be annotated with @Inject. See " + CdiUtil.SPEC_LOCATION + "#producer_field", element);
             return;
         }

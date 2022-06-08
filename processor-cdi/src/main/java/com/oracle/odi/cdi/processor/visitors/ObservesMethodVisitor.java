@@ -33,7 +33,6 @@ import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.Produces;
 import jakarta.interceptor.Interceptor;
 
-import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -105,7 +104,7 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
             context.fail("Methods with parameters annotated with @Observes cannot be abstract.", element);
         } else if (element.hasDeclaredAnnotation(Produces.class)) {
             context.fail("Methods with parameters annotated with @Observes cannot be annotated with @Produces", element);
-        } else if (element.hasDeclaredAnnotation(Inject.class)) {
+        } else if (element.hasDeclaredAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
             context.fail("Methods annotated with @Inject cannot define parameters annotated with @Observes", element);
         } else if (classElement.hasDeclaredAnnotation(Interceptor.class)) {
             context.fail("Interceptors cannot declare @Observes methods", element);

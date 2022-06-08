@@ -1,0 +1,33 @@
+[versions]
+micronaut = "3.5.0"
+micronaut-docs = "2.0.0"
+
+groovy = "3.0.11"
+
+cdi-tck = "4.0.0-RC8"
+cdi-api = "4.0.0-RC5"
+
+# Testing
+
+helidon = "2.3.2"
+smallrye-fault-tolerance = "5.1.0"
+microprofile-config = "2.0"
+cdi-api2 = "2.0.SP1"
+
+[libraries]
+
+cdi-api = { module = 'jakarta.enterprise:jakarta.enterprise.cdi-api', version.ref = "cdi-api" }
+
+cdi-tck-api = { module = 'jakarta.enterprise:cdi-tck-api', version.ref = "cdi-tck" }
+cdi-tck-impl = { module = 'jakarta.enterprise:cdi-tck-core-impl', version.ref = "cdi-tck" }
+cdi-tck-lang-model = { module = 'jakarta.enterprise:cdi-tck-lang-model', version.ref = "cdi-tck" }
+
+# Testing
+
+jupiter-engine = { module = 'org.junit.jupiter:junit-jupiter-engine' }
+
+helidon-config-mp = { module = 'io.helidon.config:helidon-config-mp', version.ref = "helidon" }
+smallrye-fault-tolerance = { module = 'io.smallrye:smallrye-fault-tolerance', version.ref = "smallrye-fault-tolerance" }
+microprofile-config-api = { module = 'org.eclipse.microprofile.config:microprofile-config-api', version.ref = "microprofile-config" }
+cdi-api2 = { module = 'javax.enterprise:cdi-api', version.ref = "cdi-api2" }
+jul-to-slf4j = { module = "org.slf4j:jul-to-slf4j", version = "" }

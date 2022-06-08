@@ -1,0 +1,10 @@
+plugins {
+    id "io.micronaut.build.internal.module"
+    id "org.eclipse.odi.build.internal.base"
+}
+
+micronautBuild {
+    binaryCompatibility {
+        enabled = false
+    }
+}

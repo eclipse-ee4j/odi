@@ -1,26 +1,37 @@
+plugins {
+    id "org.eclipse.odi.build.internal.base"
+    id "com.adarshr.test-logger"
+}
+
 description = 'CDI TCK runner'
 
 dependencies {
-    annotationProcessor 'io.micronaut:micronaut-inject-java'
-    annotationProcessor 'io.micronaut:micronaut-validation'
-    annotationProcessor project(':odi-processor-cdi')
+    annotationProcessor projects.odiProcessorCdi
 
-    implementation "jakarta.enterprise:jakarta.enterprise.cdi-api:$cdiApiVersion"
-    implementation project(':odi-cdi')
-    implementation project(':odi-processor-cdi')
-    implementation 'org.slf4j:jul-to-slf4j:1.7.30'
-    implementation 'ch.qos.logback:logback-classic'
-    implementation 'io.micronaut:micronaut-inject-java'
-    implementation "jakarta.enterprise:cdi-tck-api:$cdiTckApi"
-    implementation "jakarta.enterprise:cdi-tck-core-impl:$cdiTckApi"
+    implementation projects.odiCdi
+    implementation projects.odiProcessorCdi
+    implementation libs.cdi.api
+    implementation (libs.jul.to.slf4j) {
+        version {
+            require mn.versions.slf4j.get()
+        }
+    }
+    implementation libs.cdi.tck.api
+    implementation libs.cdi.tck.impl
+    implementation mn.logback
+    implementation mn.micronaut.inject.java
 
-    testImplementation "jakarta.enterprise:cdi-tck-core-impl:$cdiTckApi:sources"
-    testCompileOnly "jakarta.enterprise:cdi-tck-core-impl:$cdiTckApi:suite@xml"
-    testImplementation 'commons-lang:commons-lang:2.6'
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'javax.servlet:servlet-api:2.5'
-    testImplementation 'org.apache.ant:ant:1.10.11'
-    testImplementation "org.testng:testng:7.4.0"
+    testImplementation(libs.cdi.tck.impl) {
+        artifact {
+            classifier = "sources"
+        }
+    }
+    testCompileOnly(libs.cdi.tck.impl) {
+        artifact {
+            classifier = "suite"
+            type = "xml"
+        }
+    }
 }
 
 testlogger {
