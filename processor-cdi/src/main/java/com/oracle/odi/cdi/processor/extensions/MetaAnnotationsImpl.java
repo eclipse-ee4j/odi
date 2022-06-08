@@ -16,11 +16,14 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.RetentionPolicy;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.oracle.odi.cdi.processor.transformers.InterceptorBindingTransformer;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
@@ -59,7 +62,9 @@ final class MetaAnnotationsImpl implements MetaAnnotations {
     public ClassConfig addInterceptorBinding(Class<? extends Annotation> annotation) {
         final ClassElement classElement = visitorContext.getClassElement(annotation)
                 .orElseThrow(() -> new RuntimeException("InterceptorBinding type [" + annotation.getName() + "] must be on the application classpath"));
-        classElement.annotate(AnnotationUtil.ANN_INTERCEPTOR_BINDING);
+        for (AnnotationValue<?> av : InterceptorBindingTransformer.INTERCEPTOR_BINDING_VALUES) {
+            classElement.annotate(AnnotationValue.builder(av, RetentionPolicy.RUNTIME).value(annotation).build());
+        }
         final ClassConfigImpl interceptorConfig = new ClassConfigImpl(
                 classElement,
                 new TypesImpl(visitorContext),

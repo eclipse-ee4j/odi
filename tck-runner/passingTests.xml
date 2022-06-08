@@ -1270,18 +1270,17 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeInjectionPoint.ChangeInjectionPointTest">
             </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customQualifier.CustomQualifierTest">
+            </class>
+            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customInterceptorBinding.CustomInterceptorBindingTest">
+            </class>
+            <!--  Requires re-working TCK error handling -->
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.validation.ValidationTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customQualifier.CustomQualifierTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customInterceptorBinding.CustomInterceptorBindingTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
+            <!--  Requires re-working TCK error handling -->
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.inspectAnnotatedSubtypes.InspectAnnotatedSubtypesTest">
                 <methods>
                     <exclude name=".*"/>

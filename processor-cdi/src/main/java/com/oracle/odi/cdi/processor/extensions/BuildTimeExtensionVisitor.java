@@ -27,6 +27,7 @@ import com.oracle.odi.cdi.processor.CdiUtil;
 import com.oracle.odi.cdi.processor.visitors.InjectVisitor;
 import com.oracle.odi.cdi.processor.visitors.InterceptorVisitor;
 import com.oracle.odi.cdi.processor.visitors.ObservesMethodVisitor;
+import io.micronaut.aop.InterceptorBindingDefinitions;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -34,6 +35,7 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.ast.ElementModifier;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
@@ -48,6 +50,7 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
 import jakarta.interceptor.Interceptor;
+import jakarta.interceptor.InterceptorBinding;
 
 /**
  * A {@link io.micronaut.inject.visitor.TypeElementVisitor} that implements the build time extension specification.
@@ -168,8 +171,9 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
 
     private void handleScannedClass(VisitorContext visitorContext, ClassElement scannedClass) {
         this.registry.runEnhancement(scannedClass, scannedClass, visitorContext);
-        if (scannedClass.hasAnnotation(Interceptor.class)) {
-            final BeanElementBuilder interceptorBuilder = InterceptorVisitor.addInterceptor(
+        boolean isInterceptor = scannedClass.hasAnnotation(Interceptor.class);
+        if (isInterceptor) {
+            InterceptorVisitor.addInterceptor(
                     rootClassElement,
                     visitorContext,
                     scannedClass
@@ -186,6 +190,11 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 .onlyDeclared()
                 .onlyConcrete()
                 .annotated((annotationMetadata -> annotationMetadata.hasAnnotation(Executable.class)));
+        final ElementQuery<MethodElement> interceptedMethods = instanceMethods
+                .onlyDeclared()
+                .onlyConcrete()
+                .modifiers(m -> m.contains(ElementModifier.PUBLIC) && !m.contains(ElementModifier.FINAL))
+                .annotated((annotationMetadata -> annotationMetadata.hasAnnotation(InterceptorBindingDefinitions.class)));
         final Predicate<MethodElement> isObservesMethod = m ->
                 m.hasParameters() &&
                         Arrays.stream(m.getParameters())
@@ -207,10 +216,16 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 }
             }
         };
-        final BeanElementBuilder beanElementBuilder = rootClassElement
+        BeanElementBuilder beanElementBuilder = rootClassElement
                 .addAssociatedBean(scannedClass);
         CdiUtil.visitBeanDefinition(visitorContext, beanElementBuilder);
         registry.runDiscoveryEnhancements(beanElementBuilder);
+        if (!isInterceptor && !scannedClass.isFinal()) {
+            if (scannedClass.getAnnotationMetadata().hasDeclaredAnnotation(InterceptorBindingDefinitions.class)) {
+                beanElementBuilder.intercept();
+            }
+            beanElementBuilder = beanElementBuilder.withMethods(interceptedMethods, BeanMethodElement::intercept);
+        }
         InjectVisitor injectVisitor = new InjectVisitor();
         scannedClass.getEnclosedElements(instanceMethods.onlyInjected())
                         .forEach(m -> injectVisitor.visitMethod(m, visitorContext));
