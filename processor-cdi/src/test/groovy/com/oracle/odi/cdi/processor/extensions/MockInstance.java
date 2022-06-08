@@ -1,17 +1,11 @@
 package com.oracle.odi.cdi.processor.extensions;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Iterator;
-import java.util.Set;
-
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.InjectionPoint;
-
+import io.micronaut.core.annotation.NonNull;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.util.TypeLiteral;
-import org.jetbrains.annotations.NotNull;
+
+import java.lang.annotation.Annotation;
+import java.util.Iterator;
 
 // Mock impl, this will need to be implemented at runtime on the ODI module
 public class MockInstance implements Instance<Object> {
@@ -42,7 +36,6 @@ public class MockInstance implements Instance<Object> {
 
     @Override
     public void destroy(Object instance) {
-
     }
 
     @Override
@@ -60,7 +53,7 @@ public class MockInstance implements Instance<Object> {
         return null;
     }
 
-    @NotNull
+    @NonNull
     @Override
     public Iterator<Object> iterator() {
         return null;
