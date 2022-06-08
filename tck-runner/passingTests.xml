@@ -1149,18 +1149,6 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.handle.InstanceHandleTest">
-                <methods>
-                    <!-- FIX proper proxy destroy callback -->
-                    <exclude name="testGetHandle"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.dependent.DestroyingDependentInstanceTest">
-                <methods>
-                    <!-- Properly destroy scoped instance -->
-                    <exclude name="testDestroyingDependentInstances"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.normal.DestroyingNormalScopedInstanceTest">
                 <methods>
                     <!-- Tests expect scoped component returns nulls after context is destroyed-->
