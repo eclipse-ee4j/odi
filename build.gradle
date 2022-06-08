@@ -1,41 +1,4 @@
-subprojects {
-    apply plugin: "io.micronaut.build.internal.module"
-
-    repositories {
-        mavenCentral()
-        maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
-    }
-
-    micronautBuild {
-        sourceCompatibility = '11'
-        targetCompatibility = '11'
-    }
-
-    dependencies {
-        implementation platform("io.micronaut:micronaut-bom:$micronautVersion")
-        testImplementation platform("io.micronaut:micronaut-bom:$micronautVersion")
-        annotationProcessor platform("io.micronaut:micronaut-bom:$micronautVersion")
-        testAnnotationProcessor platform("io.micronaut:micronaut-bom:$micronautVersion")
-
-        implementation platform("org.jboss.arquillian:arquillian-bom:$arquillianVersion")
-        testImplementation platform("org.jboss.arquillian:arquillian-bom:$arquillianVersion")
-    }
-
-    group = 'odi'
-
-    tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
-    }
-
-    tasks.withType(Test) {
-        if (!it.path.contains("tck")) {
-            useJUnitPlatform()
-        }
-    }
-
-}
-
-repositories {
-    mavenCentral()
-    maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
+plugins {
+    id "io.micronaut.build.internal.docs"
+    id "io.micronaut.build.internal.quality-reporting"
 }

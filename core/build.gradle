@@ -1,7 +1,10 @@
+plugins {
+    id "org.eclipse.odi.build.internal.module"
+}
+
 description = 'ODI Core'
 
 dependencies {
-    implementation "jakarta.enterprise:jakarta.enterprise.cdi-api:$cdiApiVersion"
-    implementation 'javax.inject:javax.inject:1'
-    implementation 'io.micronaut:micronaut-inject'
+    implementation libs.cdi.api
+    implementation mn.micronaut.inject
 }

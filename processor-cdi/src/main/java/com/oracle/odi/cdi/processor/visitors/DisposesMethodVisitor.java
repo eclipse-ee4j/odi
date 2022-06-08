@@ -29,22 +29,27 @@ import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.interceptor.Interceptor;
 
-import javax.inject.Inject;
-import javax.inject.Scope;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * Validates disposes methods.
  */
-public class DisposesMethodVisitor implements TypeElementVisitor<Scope, Object> {
+public class DisposesMethodVisitor implements TypeElementVisitor<Object, Object> {
 
     private final List<MethodElement> disposerMethods = new ArrayList<>();
     private ClassElement currentClass;
+
+    @Override
+    public Set<String> getSupportedAnnotationNames() {
+        return Collections.singleton(io.micronaut.core.annotation.AnnotationUtil.SCOPE);
+    }
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
@@ -75,7 +80,7 @@ public class DisposesMethodVisitor implements TypeElementVisitor<Scope, Object> 
                 context.fail("Methods with parameters annotated with @Disposes cannot be abstract.", element);
             } else if (element.hasDeclaredAnnotation(Produces.class)) {
                 context.fail("Methods with parameters annotated with @Disposes cannot be annotated with @Produces", element);
-            } else if (element.hasDeclaredAnnotation(Inject.class)) {
+            } else if (element.hasDeclaredAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
                 context.fail("Methods annotated with @Inject cannot define parameters annotated with @Disposes", element);
             } else if (this.currentClass.hasDeclaredAnnotation(Interceptor.class)) {
                 context.fail("Interceptors cannot declare @Disposes methods", element);

@@ -1,0 +1,49 @@
+import java.time.Duration
+
+plugins {
+    id "java-library"
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
+}
+
+micronautBuild {
+    sourceCompatibility = '11'
+    targetCompatibility = '11'
+}
+
+group "org.eclipse.odi"
+version projectVersion
+
+java {
+    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_11
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.fork = true
+    options.encoding = "UTF-8"
+    options.compilerArgs.addAll([
+            '-parameters',
+            // enables incremental compilation
+            '-Amicronaut.processing.incremental=true',
+            '-Amicronaut.processing.annotations=com.oracle.odi.*,jakarta.enterprise.*,io.micronaut.core.annotation.*',
+            "-Amicronaut.processing.group=$project.group",
+            "-Amicronaut.processing.module=$project.name",
+    ])
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs '-Xmx2048m'
+    systemProperty "micronaut.cloud.platform", "OTHER"
+    if (JavaVersion.current() == JavaVersion.VERSION_15) {
+        jvmArgs "--enable-preview"
+    }
+    timeout = Duration.ofHours(1)
+}
