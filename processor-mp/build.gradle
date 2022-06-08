@@ -1,8 +1,12 @@
+plugins {
+    id "org.eclipse.odi.build.internal.module"
+}
+
 description = 'ODI Processor MP'
 
 dependencies {
-    implementation project(':odi-processor-cdi')
-    implementation 'org.eclipse.microprofile.config:microprofile-config-api:2.0'
-    testImplementation 'org.spockframework:spock-core'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    implementation projects.odiProcessorCdi
+    implementation libs.microprofile.config.api
+
+    testImplementation mn.micronaut.test.spock
 }

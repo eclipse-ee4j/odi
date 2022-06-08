@@ -17,21 +17,20 @@ package com.oracle.odi.cdi.processor.visitors;
 
 import com.oracle.odi.cdi.processor.CdiUtil;
 import io.micronaut.context.annotation.Executable;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 
-import javax.inject.Scope;
-
 /**
  * Customizations for declared beans.
  */
-public class ScopeVisitor implements TypeElementVisitor<Scope, Object> {
+public class ScopeVisitor implements TypeElementVisitor<Object, Object> {
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
-        if (element.hasStereotype(Scope.class)) {
+        if (element.hasStereotype(AnnotationUtil.SCOPE)) {
             CdiUtil.visitBeanDefinition(context, element);
         }
     }

@@ -1,9 +1,13 @@
+plugins {
+    id "org.eclipse.odi.build.internal.base"
+}
+
 description = 'ODI CDI Test'
 
 dependencies {
-    implementation "jakarta.enterprise:jakarta.enterprise.cdi-api:$cdiApiVersion"
-    implementation 'io.micronaut:micronaut-inject'
-    implementation 'io.micronaut.test:micronaut-test-junit5'
-    implementation 'io.micronaut:micronaut-aop'
-    implementation 'org.junit.jupiter:junit-jupiter-api'
+    api libs.cdi.api
+    api mn.micronaut.inject
+    api mn.micronaut.test.junit5
+
+    api libs.jupiter.engine
 }

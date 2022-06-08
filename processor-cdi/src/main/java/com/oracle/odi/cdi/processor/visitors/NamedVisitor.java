@@ -28,19 +28,18 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.Stereotype;
 
-import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Validates elements annotated with {@link javax.inject.Named}.
+ * Validates elements annotated with {@link jakarta.inject.Named}.
  */
-public class NamedVisitor implements TypeElementVisitor<Object, Named> {
+public class NamedVisitor implements TypeElementVisitor<Object, Object> {
 
     @Override
     public Set<String> getSupportedAnnotationNames() {
-        return Collections.singleton(Named.class.getName());
+        return Collections.singleton(io.micronaut.core.annotation.AnnotationUtil.NAMED);
     }
 
     @Override
@@ -49,7 +48,7 @@ public class NamedVisitor implements TypeElementVisitor<Object, Named> {
     }
 
     private void validateElement(Element element, VisitorContext context) {
-        if (element.hasAnnotation(AnnotationUtil.ANN_NAME) || element.hasStereotype(AnnotationUtil.ANN_NAME)) {
+        if (element.hasAnnotation(AnnotationUtil.ANN_NAME)) {
             element.stringValue(AnnotationUtil.ANN_NAME).ifPresent((name) -> validateIdentifier(name, element, context));
             // now validate stereotypes are correct
             // stereotypes can only have an empty @Named qualifier

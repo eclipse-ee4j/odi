@@ -24,16 +24,13 @@ import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.interceptor.Interceptor;
 
-import javax.inject.Named;
-import javax.inject.Scope;
-
 /**
  * Internal annotation utils.
  */
 @Internal
 public final class AnnotationUtil {
 
-    public static final String ANN_NAME = Named.class.getName();
+    public static final String ANN_NAME = io.micronaut.core.annotation.AnnotationUtil.NAMED;
     public static final String ANN_DISPOSER_METHOD = "com.oracle.odi.cdi.annotation.DisposerMethod";
     public static final String ANN_OBSERVES_METHOD = "com.oracle.odi.cdi.annotation.ObservesMethod";
 
@@ -45,11 +42,10 @@ public final class AnnotationUtil {
         return annotationMetadata.hasStereotype(
                 Factory.class,
                 Dependent.class,
-                Scope.class,
                 NormalScope.class,
                 Stereotype.class,
                 Interceptor.class,
                 Bean.class
-        );
+        ) || annotationMetadata.hasStereotype(io.micronaut.core.annotation.AnnotationUtil.SCOPE);
     }
 }

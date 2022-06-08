@@ -15,17 +15,11 @@
  */
 package com.oracle.odi.cdi.processor.visitors;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.inject.Qualifier;
-
 import com.oracle.odi.cdi.processor.CdiUtil;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -36,6 +30,11 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.Specializes;
+
+import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Processes elmeents annotated with {@link jakarta.enterprise.inject.Specializes}.
@@ -124,7 +123,7 @@ public class SpecializesVisitor implements TypeElementVisitor<Object, Specialize
     }
 
     private void inheritQualifiers(Element element, Element sourceElement) {
-        final List<String> qualifiers = sourceElement.getDeclaredAnnotationNamesByStereotype(Qualifier.class.getName());
+        final List<String> qualifiers = sourceElement.getDeclaredAnnotationNamesByStereotype(AnnotationUtil.QUALIFIER);
         for (String qualifier : qualifiers) {
             final AnnotationValue<Annotation> annotation = sourceElement.getAnnotation(qualifier);
             if (annotation != null) {

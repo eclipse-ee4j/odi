@@ -1,20 +1,25 @@
+plugins {
+    id "org.eclipse.odi.build.internal.module"
+}
+
 description = 'ODI Processor CDI'
 
 dependencies {
-    implementation project(':odi-core')
-    implementation 'io.micronaut:micronaut-inject-java'
-    implementation "jakarta.enterprise:jakarta.enterprise.cdi-api:$cdiApiVersion"
-    implementation 'javax.inject:javax.inject:1'
-    implementation 'io.micronaut:micronaut-context'
-    testImplementation 'org.spockframework:spock-core'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api'
-    testImplementation 'io.micronaut:micronaut-inject-java-test'
-    testImplementation 'io.helidon.config:helidon-config-mp:2.3.2'
-    testImplementation 'io.smallrye:smallrye-fault-tolerance:5.1.0'
-    testImplementation 'javax.enterprise:cdi-api:2.0.SP1'
-    testImplementation "jakarta.enterprise:cdi-tck-lang-model:$cdiTckApi"
+    api mn.micronaut.inject.java
 
-    implementation "jakarta.enterprise:cdi-tck-lang-model:$cdiTckApi"
+    implementation projects.odiCore
+    implementation mn.micronaut.context
+    implementation libs.cdi.api
+    implementation libs.cdi.tck.lang.model
+
+    testImplementation mn.micronaut.inject.java.test
+
+    testImplementation libs.cdi.api2
+    testImplementation libs.helidon.config.mp
+    testImplementation libs.smallrye.fault.tolerance
+
+    testImplementation mn.micronaut.test.spock
+    testImplementation mn.micronaut.test.junit5
 }
 
 tasks.withType(JavaCompile).all { JavaCompile jc ->

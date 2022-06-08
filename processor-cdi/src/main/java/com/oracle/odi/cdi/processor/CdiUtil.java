@@ -57,6 +57,7 @@ public final class CdiUtil {
             annotationMetadata = annotationMetadata.getDeclaredMetadata();
         }
         if (needsDefaultQualifier(annotationMetadata)) {
+            System.out.println("ADDD " + beanDefinition);
             beanDefinition.annotate(Default.class);
         }
     }

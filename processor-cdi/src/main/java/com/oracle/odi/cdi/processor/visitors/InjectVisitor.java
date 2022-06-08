@@ -17,6 +17,7 @@ package com.oracle.odi.cdi.processor.visitors;
 
 import com.oracle.odi.cdi.processor.CdiUtil;
 import io.micronaut.context.annotation.Property;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
 import io.micronaut.inject.ast.FieldElement;
@@ -28,18 +29,24 @@ import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.inject.Disposes;
 
-import javax.inject.Inject;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Visits all elements annotated with {@link javax.inject.Inject} to validate them.
+ * Visits all elements annotated with {@link jakarta.inject.Inject} to validate them.
  */
-public class InjectVisitor implements TypeElementVisitor<Object, Inject> {
+public class InjectVisitor implements TypeElementVisitor<Object, Object> {
 
     private List<ConstructorElement> injectConstructors = new ArrayList<>(2);
+
+    @Override
+    public Set<String> getSupportedAnnotationNames() {
+        return Collections.singleton(AnnotationUtil.INJECT);
+    }
 
     @Override
     public int getOrder() {
@@ -54,7 +61,7 @@ public class InjectVisitor implements TypeElementVisitor<Object, Inject> {
 
     @Override
     public void visitConstructor(ConstructorElement element, VisitorContext context) {
-        if (element.hasDeclaredAnnotation(Inject.class)) {
+        if (element.hasDeclaredAnnotation(AnnotationUtil.INJECT)) {
 
             validateInjectMethod(element, context);
             injectConstructors.add(element);
@@ -75,16 +82,16 @@ public class InjectVisitor implements TypeElementVisitor<Object, Inject> {
 
     @Override
     public void visitMethod(MethodElement element, VisitorContext context) {
-        if (element.hasDeclaredAnnotation(Inject.class)) {
+        if (element.hasDeclaredAnnotation(AnnotationUtil.INJECT)) {
             validateInjectMethod(element, context);
         }
     }
 
     @Override
     public void visitField(FieldElement element, VisitorContext context) {
-        if (element.hasDeclaredAnnotation(Inject.class)) {
+        if (element.hasDeclaredAnnotation(AnnotationUtil.INJECT)) {
             if (element.hasDeclaredAnnotation(Property.class)) {
-                element.removeAnnotation(Inject.class);
+                element.removeAnnotation(AnnotationUtil.INJECT);
             }
             CdiUtil.validateInjectedType(context, element.getGenericField(), element);
             CdiUtil.visitInjectPoint(context, element);
