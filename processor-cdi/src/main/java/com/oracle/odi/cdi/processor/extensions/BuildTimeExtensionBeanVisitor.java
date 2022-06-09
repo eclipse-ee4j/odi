@@ -56,9 +56,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
     public BeanElement visitBeanElement(BeanElement beanElement, VisitorContext visitorContext) {
         final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
         boolean isApplicationClass = beanElement.hasDeclaredAnnotation("com.oracle.odi.cdi.annotation.OdiApplication");
-        if (!isApplicationClass) {
-            registry.runRegistration(beanElement, visitorContext);
-        }
+        registry.runRegistration(beanElement, visitorContext);
         if (applicationClassElement == null || isApplicationClass) {
             applicationClassElement = beanElement;
         }
