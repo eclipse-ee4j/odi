@@ -198,7 +198,7 @@ final class ArchiveCompiler {
                 (packageName + ".Application").replace('.', '/') + ".java"
         );
         String sourceCode = "package " + packageName + ";\n" +
-        "@jakarta.inject.Singleton class Application {}";
+        "@com.oracle.odi.cdi.annotation.OdiApplication class Application {}";
         Files.write(
                 applicationSource,
                 sourceCode.getBytes(

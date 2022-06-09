@@ -50,7 +50,6 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
 import jakarta.interceptor.Interceptor;
-import jakarta.interceptor.InterceptorBinding;
 
 /**
  * A {@link io.micronaut.inject.visitor.TypeElementVisitor} that implements the build time extension specification.
@@ -63,7 +62,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
     private final Set<String> supportedAnnotationNames = new HashSet<>();
     private boolean hasErrors;
 
-    private ClassElement rootClassElement = null;
+    private ClassElement applicationClassElement = null;
     private boolean finished = false;
     private final Set<ClassElement> interceptorBindings = new HashSet<>();
     private final Set<ClassElement> qualifiers = new HashSet<>();
@@ -128,10 +127,13 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         if (!hasErrors) {
-            if (rootClassElement == null) {
-                rootClassElement = element;
+            boolean isApplicationClass = element.hasDeclaredAnnotation("com.oracle.odi.cdi.annotation.OdiApplication");
+            if (applicationClassElement == null || isApplicationClass) {
+                applicationClassElement = element;
             }
-            this.registry.runEnhancement(element, element, context);
+            if (!isApplicationClass) {
+                this.registry.runEnhancement(element, element, context);
+            }
         }
     }
 
@@ -139,7 +141,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
     public void finish(VisitorContext visitorContext) {
         if (!hasErrors && !finished) {
             finished = true;
-            if (rootClassElement != null) {
+            if (applicationClassElement != null) {
                 final Set<String> scannedClassNames = this.discovery
                         .getScannedClasses()
                         .getScannedClassNames();
@@ -174,7 +176,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         boolean isInterceptor = scannedClass.hasAnnotation(Interceptor.class);
         if (isInterceptor) {
             InterceptorVisitor.addInterceptor(
-                    rootClassElement,
+                    applicationClassElement,
                     visitorContext,
                     scannedClass
             );
@@ -216,7 +218,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 }
             }
         };
-        BeanElementBuilder beanElementBuilder = rootClassElement
+        BeanElementBuilder beanElementBuilder = applicationClassElement
                 .addAssociatedBean(scannedClass);
         CdiUtil.visitBeanDefinition(visitorContext, beanElementBuilder);
         registry.runDiscoveryEnhancements(beanElementBuilder);

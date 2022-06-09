@@ -50,15 +50,17 @@ import jakarta.inject.Singleton;
  * A {@link io.micronaut.inject.visitor.BeanElementVisitor} that runs the {@link jakarta.enterprise.inject.build.compatible.spi.Synthesis} phase.
  */
 public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<Annotation> {
-    private BeanElement firstBean;
+    private BeanElement applicationClassElement;
 
     @Override
     public BeanElement visitBeanElement(BeanElement beanElement, VisitorContext visitorContext) {
         final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
-
-        registry.runRegistration(beanElement, visitorContext);
-        if (firstBean == null) {
-            firstBean = beanElement;
+        boolean isApplicationClass = beanElement.hasDeclaredAnnotation("com.oracle.odi.cdi.annotation.OdiApplication");
+        if (!isApplicationClass) {
+            registry.runRegistration(beanElement, visitorContext);
+        }
+        if (applicationClassElement == null || isApplicationClass) {
+            applicationClassElement = beanElement;
         }
         return beanElement;
     }
@@ -68,9 +70,9 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
         ActiveVisitorContext.setVisitorContext(null);
         final BuildTimeExtensionRegistry registry = BuildTimeExtensionRegistry.getInstance();
         try {
-            if (firstBean != null) {
+            if (applicationClassElement != null) {
                 final SyntheticComponentsImpl syntheticComponents =
-                        registry.runSynthesis(firstBean, visitorContext);
+                        registry.runSynthesis(applicationClassElement, visitorContext);
                 final DiscoveryImpl discovery = registry.getDiscovery();
                 if (discovery != null) {
                     addSyntheticAnnotations(syntheticComponents, discovery);
@@ -112,7 +114,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                                         m.getParameters()[0].getType().isAssignable(EventContext.class) &&
                                         m.getParameters()[1].getType().isAssignable(Parameters.class)
                                 );
-                        BeanElementBuilder observerBuilder = firstBean
+                        BeanElementBuilder observerBuilder = applicationClassElement
                                 .addAssociatedBean(observerClass, visitorContext)
                                 .typed(syntheticObserver)
                                 .typeArgumentsForType(syntheticObserver, eventType)
@@ -127,7 +129,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
             }
             registry.runValidation(visitorContext);
         } finally {
-            firstBean = null;
+            applicationClassElement = null;
             registry.stop();
         }
     }
@@ -158,7 +160,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
 
                     ClassElement disposerInterface = visitorContext.getClassElement(SyntheticBeanDisposer.class)
                             .orElse(ClassElement.of(SyntheticBeanDisposer.class));
-                    BeanElementBuilder disposerBuilder = firstBean.addAssociatedBean(disposerElement, visitorContext)
+                    BeanElementBuilder disposerBuilder = applicationClassElement.addAssociatedBean(disposerElement, visitorContext)
                             .typed(disposerInterface)
                             .typeArgumentsForType(disposerInterface, beanType);
                     copySyntheticAnnotationMetadata(
@@ -206,7 +208,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                 .filter(method -> method.getParameters().length == 2);
 
 
-        BeanElementBuilder beanFactory = firstBean.addAssociatedBean(creatorElement, visitorContext)
+        BeanElementBuilder beanFactory = applicationClassElement.addAssociatedBean(creatorElement, visitorContext)
                 .inject()
                 .produceBeans(
                         creatorMethods, builder -> {
