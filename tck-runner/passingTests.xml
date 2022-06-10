@@ -1234,46 +1234,6 @@
                 </methods>
             </class>
             <!--            Extensions-->
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customStereotype.CustomStereotypeTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyMessagesTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementMultipleParams2Test">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParams2Test">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationNoParamTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyMessagesTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementOnlyTypesTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementMultipleParamsTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.EnhancementNoParamTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParamsTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.registration.RegistrationTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationOnlyTypesTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBean.SyntheticBeanTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBeanWithLookup.SyntheticBeanWithLookupTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticBeanInjectionPoint.SyntheticBeanInjectionPointTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserver.SyntheticObserverTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.syntheticObserverOfParameterizedType.SyntheticObserverOfParameterizedTypeTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeInjectionPoint.ChangeInjectionPointTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customQualifier.CustomQualifierTest">
-            </class>
-            <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.customInterceptorBinding.CustomInterceptorBindingTest">
-            </class>
             <!--  Requires re-working TCK error handling -->
             <class name="org.jboss.cdi.tck.tests.build.compatible.extensions.validation.ValidationTest">
                 <methods>
