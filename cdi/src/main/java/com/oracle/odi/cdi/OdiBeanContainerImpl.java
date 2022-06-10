@@ -18,33 +18,23 @@ package com.oracle.odi.cdi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.oracle.odi.cdi.annotation.reflect.AnnotationReflection;
 import com.oracle.odi.cdi.context.DependentContext;
 import com.oracle.odi.cdi.context.SingletonContext;
 import com.oracle.odi.cdi.events.OdiObserverMethodRegistry;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
-import io.micronaut.context.Qualifier;
-import io.micronaut.context.annotation.Any;
-import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.context.DefaultBeanResolutionContext;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.type.Argument;
-import io.micronaut.core.util.ArrayUtils;
 import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.Priority;
@@ -64,19 +54,24 @@ import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.inject.Singleton;
 
-import static com.oracle.odi.cdi.AnnotationUtils.byAnnotation;
-
 final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     private final ApplicationContext applicationContext;
     private final OdiSeContainer container;
-    private RuntimeMetaAnnotations metaAnnotations;
+
+    private final OdiAnnotations odiAnnotations;
     private OdiObserverMethodRegistry observerMethodRegistry;
     private Event<Object> objectEvent;
 
-    OdiBeanContainerImpl(OdiSeContainer container, ApplicationContext applicationContext) {
+    OdiBeanContainerImpl(OdiSeContainer container, OdiAnnotations odiAnnotations, ApplicationContext applicationContext) {
         this.container = container;
+        this.odiAnnotations = odiAnnotations;
         this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public OdiAnnotations getOdiAnnotations() {
+        return odiAnnotations;
     }
 
     @Override
@@ -113,7 +108,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
             }
             OdiBean<B> bean = getBean(beanDefinition);
             CreationalContext<B> creationalContext = createCreationalContext(bean);
-            Context beanContext = isDependent(bean.getScope()) ? dependentContext : getContext(bean.getScope());
+            Context beanContext = odiAnnotations.isDependent(bean.getScope()) ? dependentContext : getContext(bean.getScope());
             B beanInstance = beanContext.get(bean, creationalContext);
             Object result = executableMethod.invoke(beanInstance, values);
             dependentContext.destroy();
@@ -199,7 +194,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        return getBeans(Argument.of(beanType), resolveQualifier(qualifiers)).stream()
+        return getBeans(Argument.of(beanType), odiAnnotations.resolveQualifier(qualifiers)).stream()
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -226,93 +221,9 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         }
         Argument<?> argument = Argument.of(event.getClass());
         final io.micronaut.context.Qualifier qualifierInstances =
-                qualifierFromQualifierAnnotations(qualifiers);
+                odiAnnotations.resolveQualifier(qualifiers);
         return observerMethodRegistry
                 .findSetOfObserverMethods(argument, qualifierInstances);
-    }
-
-    <T1> Qualifier<T1> resolveQualifier(Annotation[] annotations) {
-        if (ArrayUtils.isNotEmpty(annotations)) {
-            return qualifierFromQualifierAnnotations(annotations);
-        }
-        return null;
-    }
-
-    <T1> Qualifier<T1> qualifierFromQualifierAnnotations(Annotation[] annotations) {
-        if (annotations == null || annotations.length == 0) {
-            return null;
-        }
-        AnnotationMetadata annotationMetadata = annotationMetadataFromQualifierAnnotations(annotations);
-        return qualifierFromQualifierAnnotations(annotationMetadata, annotations);
-    }
-
-    /**
-     * Creates a qualifier from the array of {@link Annotation}.
-     * @param annotationMetadata The annotation metadata
-     * @param annotations The annotations
-     * @param <U> The qualifier type
-     * @return The qualifier
-     */
-    @SuppressWarnings("unchecked")
-    private <U> Qualifier<U> qualifierFromQualifierAnnotations(
-            AnnotationMetadata annotationMetadata,
-            Annotation... annotations) {
-        if (annotations.length > 0) {
-            if (annotations.length == 1) {
-                Annotation annotation = annotations[0];
-                Class<? extends Annotation> annotationClass = AnnotationUtils.findAnnotationClass(annotation);
-                if (isQualifier(annotationClass)) {
-                    return (Qualifier<U>) byAnnotation(annotationMetadata, annotation.annotationType());
-                } else {
-                    throw new IllegalArgumentException("Not a valid qualifier annotation type: " + annotationClass.getName());
-                }
-            } else {
-                Qualifier[] qualifiers = new Qualifier[annotations.length];
-                Set<Class<? extends Annotation>> qualifierTypes = new HashSet<>(qualifiers.length);
-                for (int i = 0; i < annotations.length; i++) {
-                    Annotation annotation = annotations[i];
-                    Class<? extends Annotation> annotationClass = AnnotationUtils.findAnnotationClass(annotation);
-                    if (!qualifierTypes.add(annotationClass)) {
-                        throw new IllegalArgumentException("Qualifier cannot be duplicated for type: " + annotationClass.getName());
-                    }
-                    if (isQualifier(annotationClass)) {
-                        qualifiers[i] = byAnnotation(annotationMetadata, annotation.annotationType());
-                    }
-                }
-                return Qualifiers.byQualifiers(qualifiers);
-            }
-        }
-        return null;
-    }
-
-    private AnnotationMetadata annotationMetadataFromQualifierAnnotations(Annotation[] annotations) {
-        if (annotations.length == 0) {
-            return AnnotationMetadata.EMPTY_METADATA;
-        }
-        MutableAnnotationMetadata annotationMetadata = new MutableAnnotationMetadata();
-        for (Annotation annotation : annotations) {
-            if (getMetaAnnotations().isQualifier(annotation)) {
-                if (AnnotationUtils.isAny(annotation)) {
-                    annotationMetadata.addDeclaredAnnotation(Any.NAME, Collections.emptyMap());
-                    annotationMetadata.addDeclaredStereotype(
-                            List.of(Any.NAME),
-                            MetaAnnotationSupport.META_ANNOTATION_QUALIFIER, Collections.emptyMap()
-                    );
-                } else {
-                    String[] nonBinding = getMetaAnnotations().getQualifierNonBinding(annotation).toArray(new String[0]);
-                    AnnotationValue<Annotation> value = AnnotationReflection.toAnnotationValue(annotation);
-                    final Map<CharSequence, Object> values = new LinkedHashMap<>(value.getValues());
-                    annotationMetadata.addDeclaredAnnotation(value.getAnnotationName(), values);
-                    annotationMetadata.addDeclaredStereotype(
-                            List.of(value.getAnnotationName()),
-                            MetaAnnotationSupport.META_ANNOTATION_QUALIFIER, Collections.singletonMap(
-                                    "nonBinding", nonBinding
-                            )
-                    );
-                }
-            }
-        }
-        return annotationMetadata;
     }
 
     @Override
@@ -325,40 +236,29 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                 .collect(Collectors.toList());
     }
 
-    private boolean isDependent(Class<? extends Annotation> annotationType) {
-        return annotationType == Dependent.class;
-    }
-
     @Override
     public boolean isScope(Class<? extends Annotation> annotationType) {
-        return getMetaAnnotations().isScope(annotationType);
+        return odiAnnotations.isScope(annotationType);
     }
 
     @Override
     public boolean isNormalScope(Class<? extends Annotation> annotationType) {
-        return getMetaAnnotations().isNormalScope(annotationType);
-    }
-
-    private RuntimeMetaAnnotations getMetaAnnotations() {
-        if (metaAnnotations == null) {
-            metaAnnotations = applicationContext.getBean(RuntimeMetaAnnotations.class);
-        }
-        return metaAnnotations;
+        return odiAnnotations.isNormalScope(annotationType);
     }
 
     @Override
     public boolean isQualifier(Class<? extends Annotation> annotationType) {
-        return getMetaAnnotations().isQualifier(annotationType);
-    }
-
-    @Override
-    public boolean isInterceptorBinding(Class<? extends Annotation> annotationType) {
-        return getMetaAnnotations().isInterceptorBinding(annotationType);
+        return odiAnnotations.isQualifier(annotationType);
     }
 
     @Override
     public boolean isStereotype(Class<? extends Annotation> annotationType) {
-        return getMetaAnnotations().isStereotype(annotationType);
+        return odiAnnotations.isStereotype(annotationType);
+    }
+
+    @Override
+    public boolean isInterceptorBinding(Class<? extends Annotation> annotationType) {
+        return odiAnnotations.isInterceptorBinding(annotationType);
     }
 
     @Override

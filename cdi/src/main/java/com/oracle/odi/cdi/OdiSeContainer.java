@@ -73,7 +73,7 @@ final class OdiSeContainer extends CDI<Object>
 
     protected OdiSeContainer(ApplicationContext context) {
         this.applicationContext = context;
-        this.beanContainer = new OdiBeanContainerImpl(this, context);
+        this.beanContainer = new OdiBeanContainerImpl(this, context.getBean(OdiAnnotations.class), context);
         RUNNING_CONTAINERS.put(context, this);
     }
 
@@ -103,7 +103,6 @@ final class OdiSeContainer extends CDI<Object>
 
     OdiInstance<Object> select(Context context) {
         return new OdiInstanceImpl<>(
-                applicationContext,
                 beanContainer,
                 context,
                 Argument.OBJECT_ARGUMENT,
@@ -115,7 +114,6 @@ final class OdiSeContainer extends CDI<Object>
     @Override
     public <U> OdiInstance<U> select(Argument<U> argument, Qualifier<U> qualifier) {
         return new OdiInstanceImpl<>(
-                applicationContext,
                 beanContainer,
                 null,
                 argument,
@@ -129,18 +127,18 @@ final class OdiSeContainer extends CDI<Object>
         if (!isRunning()) {
             throw new IllegalStateException("SeContainer already shutdown");
         }
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, null, Argument.OBJECT_ARGUMENT, qualifiers);
+        return new OdiInstanceImpl<>(beanContainer, null, Argument.OBJECT_ARGUMENT, qualifiers);
     }
 
     @Override
     public <U> OdiInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, null,  Argument.of(subtype), qualifiers);
+        return new OdiInstanceImpl<>(beanContainer, null,  Argument.of(subtype), qualifiers);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public <U> OdiInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl(applicationContext, beanContainer, null, Argument.of(subtype.getType()), qualifiers);
+        return new OdiInstanceImpl(beanContainer, null, Argument.of(subtype.getType()), qualifiers);
     }
 
     @Override

@@ -74,8 +74,7 @@ public class OdiInstanceFactory {
 
 
         return new OdiInstanceImpl<>(
-                resolutionContext.getContext(),
-                (OdiBeanContainerImpl) resolutionContext.getContext().getBean(BeanContainer.class),
+                (OdiBeanContainer) resolutionContext.getContext().getBean(BeanContainer.class),
                 new DependentContext(resolutionContext),
                 injectArgument,
                 cdiInjectionPoint,

@@ -16,7 +16,6 @@
 package com.oracle.odi.cdi;
 
 import com.oracle.odi.cdi.context.NoOpDependentContext;
-import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
@@ -42,27 +41,24 @@ import java.util.stream.Stream;
 
 final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
-    private final BeanContext beanContext;
-    private final OdiBeanContainerImpl beanContainer;
+    private final OdiBeanContainer beanContainer;
     private final Context context;
 
     private final Argument<T> beanType;
     private final InjectionPoint injectionPoint;
     @Nullable
-    private Qualifier<T> qualifier;
+    private final Qualifier<T> qualifier;
     @Nullable
     private OdiBean<T> bean;
 
-    private Map<T, CreationalContext<T>> created = new HashMap<>();
+    private final Map<T, CreationalContext<T>> created = new HashMap<>();
 
-    OdiInstanceImpl(BeanContext beanContext,
-                    OdiBeanContainerImpl beanContainer,
+    OdiInstanceImpl(OdiBeanContainer beanContainer,
                     @Nullable
                     Context context,
                     Argument<T> beanType,
                     @Nullable InjectionPoint injectionPoint,
-                    Qualifier<T> qualifier) {
-        this.beanContext = beanContext;
+                    @Nullable Qualifier<T> qualifier) {
         this.beanContainer = beanContainer;
         this.context = context == null ? NoOpDependentContext.INSTANCE : context;
         this.beanType = beanType;
@@ -70,23 +66,22 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
         this.injectionPoint = injectionPoint;
     }
 
-    OdiInstanceImpl(BeanContext beanContext,
-                    OdiBeanContainerImpl beanContainer,
+    OdiInstanceImpl(OdiBeanContainer beanContainer,
                     @Nullable
                     Context context,
                     Argument<T> beanType,
                     Annotation... annotations) {
-        this(beanContext, beanContainer, context, beanType, null, beanContainer.qualifierFromQualifierAnnotations(annotations));
+        this(beanContainer, context, beanType, null, beanContainer.getOdiAnnotations().resolveQualifier(annotations));
     }
 
     @Override
+    @NonNull
     public <U extends T> Instance<U> select(@NonNull Argument<U> argument, @Nullable Qualifier<U> qualifier) {
         if (InjectionPoint.class.equals(argument.getType()) && injectionPoint != null) {
             //noinspection unchecked
             return new ResolvedInstanceImpl<>((U) injectionPoint);
         } else {
             return new OdiInstanceImpl<>(
-                    beanContext,
                     beanContainer,
                     context,
                     argument,
@@ -99,7 +94,6 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Override
     public Instance<T> select(Annotation... qualifiers) {
         return new OdiInstanceImpl<>(
-                beanContext,
                 beanContainer,
                 context,
                 beanType,
@@ -126,7 +120,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
             return false;
         } catch (UnsatisfiedResolutionException e) {
             return true;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -138,7 +132,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
             return false;
         } catch (AmbiguousResolutionException e) {
             return true;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -149,7 +143,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
         if (creationalContext != null) {
             creationalContext.release();
         } else {
-            beanContext.destroyBean(instance);
+            beanContainer.getBeanContext().destroyBean(instance);
         }
     }
 
@@ -160,17 +154,17 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     private OdiBean<T> getBean() {
         try {
-            Qualifier<T> qualifier = this.qualifier;
-            if (qualifier == null) {
-                qualifier = DefaultQualifier.instance();
+            Qualifier<T> beanQualifier = this.qualifier;
+            if (beanQualifier == null) {
+                beanQualifier = DefaultQualifier.instance();
             }
             if (bean == null) {
-                bean = beanContainer.getBean(beanType, qualifier);
+                bean = beanContainer.getBean(beanType, beanQualifier);
             }
             return bean;
         } catch (UnsatisfiedResolutionException | AmbiguousResolutionException e) {
             throw e;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new CreationException(e.getMessage(), e);
         }
     }
@@ -223,14 +217,15 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     @Override
     public T get() {
-        Bean<T> bean = getBean();
-        CreationalContext<T> creationalContext = beanContainer.createCreationalContext(bean);
-        T instance = context.get(bean, creationalContext);
+        Bean<T> resolvedBean = getBean();
+        CreationalContext<T> creationalContext = beanContainer.createCreationalContext(resolvedBean);
+        T instance = context.get(resolvedBean, creationalContext);
         created.put(instance, creationalContext);
         return instance;
     }
 
     @Override
+    @NonNull
     public Iterator<T> iterator() {
         return stream().iterator();
     }
@@ -241,15 +236,16 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     }
 
     private <K> Qualifier<K> withAnnotations(Annotation[] qualifiers) {
-        return withQualifier(beanContainer.resolveQualifier(qualifiers));
+        return withQualifier(beanContainer.getOdiAnnotations().resolveQualifier(qualifiers));
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private <K> Qualifier<K> withQualifier(Qualifier<?> newQualifier) {
         if (qualifier == null) {
             return (Qualifier<K>) newQualifier;
         }
         if (newQualifier != null) {
-            return (Qualifier<K>) Qualifiers.byQualifiers(qualifier, (Qualifier) newQualifier);
+            return Qualifiers.byQualifiers(qualifier, (Qualifier) newQualifier);
         }
         return (Qualifier<K>) qualifier;
     }
