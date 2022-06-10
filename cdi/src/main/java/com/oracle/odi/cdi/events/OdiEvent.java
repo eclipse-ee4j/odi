@@ -34,6 +34,7 @@ import jakarta.enterprise.event.Event;
 import jakarta.enterprise.event.NotificationOptions;
 import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.EventMetadata;
+import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.enterprise.util.TypeLiteral;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
     private final Qualifier<T> qualifier;
     @Nullable
     private final InjectionPoint<?> injectionPoint;
-    private final Supplier<Collection<OdiObserverMethod<T>>> observerMethodsSupplier;
+    private final Supplier<Collection<ObserverMethod<T>>> observerMethodsSupplier;
     private final OdiObserverMethodRegistry observerMethodRegistry;
     private final Supplier<Executor> executorSupplier;
 
@@ -159,7 +160,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
     private <U extends T> CompletableFuture<U> fireAsync(U event, Executor executor) {
         Objects.requireNonNull(event, "Event cannot be null");
         CompletableFuture<U> future = new CompletableFuture<>();
-        Collection<OdiObserverMethod<T>> observerMethods = observerMethodsSupplier.get();
+        Collection<ObserverMethod<T>> observerMethods = observerMethodsSupplier.get();
         executor.execute(() -> {
             try {
                 notifyObserverMethods(event, observerMethods);
@@ -171,9 +172,9 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
         return future;
     }
 
-    private void notifyObserverMethods(@NonNull T event, Collection<OdiObserverMethod<T>> observerMethods) {
+    private void notifyObserverMethods(@NonNull T event, Collection<ObserverMethod<T>> observerMethods) {
         if (!observerMethods.isEmpty()) {
-            for (OdiObserverMethod<T> observerMethod : observerMethods) {
+            for (ObserverMethod<T> observerMethod : observerMethods) {
                 try {
                     if (EVENT_LOGGER.isTraceEnabled()) {
                         EVENT_LOGGER.trace("Invoking observer method [{}] for event: {}", observerMethod, event);

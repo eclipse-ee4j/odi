@@ -28,6 +28,7 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Queue;
+import java.util.function.Consumer;
 
 /**
  * Utility methods for performing reflection on annotation values.
@@ -44,6 +45,17 @@ public final class AnnotationReflection {
      * @return The annotation value
      */
     public static <T extends Annotation> AnnotationValue<T> toAnnotationValue(T annotation) {
+        return toAnnotationValue(annotation, null);
+    }
+
+    /**
+     * Converts an annotation to an annotation value, using reflection if necessary.
+     * @param annotation The annotation
+     * @param customizer An optional customizer
+     * @param <T> The generic type
+     * @return The annotation value
+     */
+    public static <T extends Annotation> AnnotationValue<T> toAnnotationValue(T annotation, @Nullable Consumer<AnnotationValueBuilder<T>> customizer) {
         if (annotation instanceof AnnotationValueProvider) {
             //noinspection unchecked
             return ((AnnotationValueProvider<T>) annotation).annotationValue();
@@ -58,6 +70,9 @@ public final class AnnotationReflection {
                     annotation
             );
 
+            if (customizer != null) {
+                customizer.accept(builder);
+            }
             return builder.build();
         }
     }

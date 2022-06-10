@@ -29,7 +29,7 @@ import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.ParameterizedType;
 import jakarta.enterprise.lang.model.types.Type;
 
-final class ParameterizedTypeImpl extends AnnotationTargetImpl implements ParameterizedType {
+class ParameterizedTypeImpl extends AnnotationTargetImpl implements ParameterizedType {
 
     private final VisitorContext visitorContext;
     private final ClassElement classElement;
@@ -40,11 +40,15 @@ final class ParameterizedTypeImpl extends AnnotationTargetImpl implements Parame
         this.classElement = element;
     }
 
+    public ClassElement getClassElement() {
+        return classElement;
+    }
+
     @Override
     public ClassInfo declaration() {
         return new ClassInfoImpl(
-                visitorContext.getClassElement(getElement().getName())
-                        .orElseThrow(() -> new IllegalStateException("Class not found on classpath: " + getElement().getName())),
+                visitorContext.getClassElement(classElement.getName())
+                        .orElseThrow(() -> new IllegalStateException("Class not found on classpath: " + classElement.getName())),
                 getTypes(),
                 visitorContext);
     }

@@ -16,6 +16,7 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.micronaut.inject.ast.ClassElement;
@@ -28,13 +29,18 @@ import jakarta.enterprise.lang.model.types.Type;
 final class SyntheticComponentsImpl implements SyntheticComponents {
     private final VisitorContext visitorContext;
     private final List<SyntheticBeanBuilderImpl<?>> syntheticBeanBuilders = new ArrayList<>();
+    private final List<SyntheticObserverBuilderImpl<?>> syntheticObserverBuilders = new ArrayList<>();
 
     SyntheticComponentsImpl(VisitorContext visitorContext) {
         this.visitorContext = visitorContext;
     }
 
     public List<SyntheticBeanBuilderImpl<?>> getSyntheticBeanBuilders() {
-        return syntheticBeanBuilders;
+        return Collections.unmodifiableList(syntheticBeanBuilders);
+    }
+
+    public List<SyntheticObserverBuilderImpl<?>> getSyntheticObserverBuilders() {
+        return Collections.unmodifiableList(syntheticObserverBuilders);
     }
 
     @Override
@@ -52,13 +58,37 @@ final class SyntheticComponentsImpl implements SyntheticComponents {
 
     @Override
     public <T> SyntheticObserverBuilder<T> addObserver(Class<T> eventType) {
-        // TODO
-        throw new UnsupportedOperationException();
+        SyntheticObserverBuilderImpl<T> builder = new SyntheticObserverBuilderImpl<>(
+                visitorContext.getClassElement(eventType)
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Synthetic observer event class must be on the classpath of the application: " + eventType
+                                        .getName())),
+                new TypesImpl(visitorContext),
+                visitorContext);
+        syntheticObserverBuilders.add(builder);
+        return builder;
     }
 
     @Override
     public <T> SyntheticObserverBuilder<T> addObserver(Type eventType) {
-        // TODO
-        throw new UnsupportedOperationException();
+        if (eventType instanceof ClassTypeImpl) {
+            ClassElement classElement = ((ClassTypeImpl) eventType).getClassElement();
+            SyntheticObserverBuilderImpl<T> builder = new SyntheticObserverBuilderImpl<>(
+                    classElement,
+                    new TypesImpl(visitorContext),
+                    visitorContext);
+            syntheticObserverBuilders.add(builder);
+            return builder;
+        } else if (eventType instanceof ParameterizedTypeImpl) {
+            ClassElement classElement = ((ParameterizedTypeImpl) eventType).getClassElement();
+            SyntheticObserverBuilderImpl<T> builder = new SyntheticObserverBuilderImpl<>(
+                    classElement,
+                    new TypesImpl(visitorContext),
+                    visitorContext
+            );
+            syntheticObserverBuilders.add(builder);
+            return builder;
+        }
+        throw new IllegalArgumentException("Unsupported event type");
     }
 }

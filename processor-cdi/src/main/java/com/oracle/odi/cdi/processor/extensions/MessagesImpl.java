@@ -15,6 +15,8 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
+import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Messages;
@@ -35,10 +37,16 @@ final class MessagesImpl implements Messages {
 
     @Override
     public void info(String message, AnnotationTarget relatedTo) {
+        Element element = toElement((AnnotationTargetImpl) relatedTo);
         visitorContext.info(
                 message,
-                ((AnnotationTargetImpl) relatedTo).getElement()
+                element
         );
+    }
+
+    private Element toElement(AnnotationTargetImpl relatedTo) {
+        AnnotationMetadata annotationMetadata = relatedTo.getAnnotationMetadata();
+        return annotationMetadata instanceof Element ? (Element) annotationMetadata : null;
     }
 
     @Override
@@ -58,9 +66,10 @@ final class MessagesImpl implements Messages {
 
     @Override
     public void warn(String message, AnnotationTarget relatedTo) {
+        Element element = toElement((AnnotationTargetImpl) relatedTo);
         visitorContext.warn(
                 message,
-                ((AnnotationTargetImpl) relatedTo).getElement()
+                element
         );
     }
 
@@ -81,9 +90,10 @@ final class MessagesImpl implements Messages {
 
     @Override
     public void error(String message, AnnotationTarget relatedTo) {
+        Element element = toElement((AnnotationTargetImpl) relatedTo);
         visitorContext.fail(
                 message,
-                ((AnnotationTargetImpl) relatedTo).getElement()
+                element
         );
     }
 

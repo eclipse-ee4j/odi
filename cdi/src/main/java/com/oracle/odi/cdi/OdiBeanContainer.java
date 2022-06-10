@@ -104,6 +104,13 @@ public interface OdiBeanContainer extends BeanContainer {
     BeanContext getBeanContext();
 
     /**
+     * Utility class for ODI annotations.
+     * @return The {@link OdiAnnotations} instance.
+     */
+    @NonNull
+    OdiAnnotations getOdiAnnotations();
+
+    /**
      * Fulfill and execute method. (event handler, disposer)
      *
      * @param beanDefinition   The bean definition

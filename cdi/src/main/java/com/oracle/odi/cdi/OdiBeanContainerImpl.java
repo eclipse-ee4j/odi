@@ -15,6 +15,16 @@
  */
 package com.oracle.odi.cdi;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import com.oracle.odi.cdi.context.DependentContext;
 import com.oracle.odi.cdi.context.SingletonContext;
 import com.oracle.odi.cdi.events.OdiObserverMethodRegistry;
@@ -30,7 +40,6 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
@@ -38,37 +47,31 @@ import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Instance;
-import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
-import jakarta.inject.Qualifier;
-import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
-import jakarta.interceptor.InterceptorBinding;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     private final ApplicationContext applicationContext;
     private final OdiSeContainer container;
+
+    private final OdiAnnotations odiAnnotations;
     private OdiObserverMethodRegistry observerMethodRegistry;
     private Event<Object> objectEvent;
 
-    OdiBeanContainerImpl(OdiSeContainer container, ApplicationContext applicationContext) {
+    OdiBeanContainerImpl(OdiSeContainer container, OdiAnnotations odiAnnotations, ApplicationContext applicationContext) {
         this.container = container;
+        this.odiAnnotations = odiAnnotations;
         this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public OdiAnnotations getOdiAnnotations() {
+        return odiAnnotations;
     }
 
     @Override
@@ -105,7 +108,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
             }
             OdiBean<B> bean = getBean(beanDefinition);
             CreationalContext<B> creationalContext = createCreationalContext(bean);
-            Context beanContext = isDependent(bean.getScope()) ? dependentContext : getContext(bean.getScope());
+            Context beanContext = odiAnnotations.isDependent(bean.getScope()) ? dependentContext : getContext(bean.getScope());
             B beanInstance = beanContext.get(bean, creationalContext);
             Object result = executableMethod.invoke(beanInstance, values);
             dependentContext.destroy();
@@ -191,7 +194,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public Set<Bean<?>> getBeans(Type beanType, Annotation... qualifiers) {
-        return getBeans(Argument.of(beanType), OdiInstanceImpl.resolveQualifier(qualifiers)).stream()
+        return getBeans(Argument.of(beanType), odiAnnotations.resolveQualifier(qualifiers)).stream()
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -217,8 +220,8 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
             observerMethodRegistry = applicationContext.getBean(OdiObserverMethodRegistry.class);
         }
         Argument<?> argument = Argument.of(event.getClass());
-        final io.micronaut.context.Qualifier qualifierInstances = AnnotationUtils
-                .qualifierFromQualifierAnnotations(qualifiers);
+        final io.micronaut.context.Qualifier qualifierInstances =
+                odiAnnotations.resolveQualifier(qualifiers);
         return observerMethodRegistry
                 .findSetOfObserverMethods(argument, qualifierInstances);
     }
@@ -233,39 +236,29 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                 .collect(Collectors.toList());
     }
 
-    private boolean isDependent(Class<? extends Annotation> annotationType) {
-        return annotationType == Dependent.class;
-    }
-
     @Override
     public boolean isScope(Class<? extends Annotation> annotationType) {
-        return Objects.requireNonNull(annotationType, "Annotation type should not be null")
-                .isAnnotationPresent(Scope.class);
+        return odiAnnotations.isScope(annotationType);
     }
 
     @Override
     public boolean isNormalScope(Class<? extends Annotation> annotationType) {
-        return Objects.requireNonNull(annotationType, "Annotation type should not be null")
-                .isAnnotationPresent(NormalScope.class);
+        return odiAnnotations.isNormalScope(annotationType);
     }
 
     @Override
     public boolean isQualifier(Class<? extends Annotation> annotationType) {
-        return Objects.requireNonNull(annotationType, "Annotation type should not be null")
-                .isAnnotationPresent(Qualifier.class);
-    }
-
-    @Override
-    public boolean isInterceptorBinding(Class<? extends Annotation> annotationType) {
-        final Class<? extends Annotation> t = Objects.requireNonNull(annotationType, "Annotation type should not be null");
-        return t.isAnnotationPresent(InterceptorBinding.class)
-                || t.isAnnotationPresent(io.micronaut.aop.InterceptorBinding.class);
+        return odiAnnotations.isQualifier(annotationType);
     }
 
     @Override
     public boolean isStereotype(Class<? extends Annotation> annotationType) {
-        return Objects.requireNonNull(annotationType, "Annotation type should not be null")
-                .isAnnotationPresent(Stereotype.class);
+        return odiAnnotations.isStereotype(annotationType);
+    }
+
+    @Override
+    public boolean isInterceptorBinding(Class<? extends Annotation> annotationType) {
+        return odiAnnotations.isInterceptorBinding(annotationType);
     }
 
     @Override

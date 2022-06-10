@@ -141,11 +141,11 @@ final class MethodInfoImpl extends DeclarationInfoImpl implements MethodInfo {
             return false;
         }
         MethodInfoImpl other = (MethodInfoImpl) o;
-        return element.equals(other.element);
+        return annotationMetadata.equals(other.annotationMetadata);
     }
 
     @Override
     public int hashCode() {
-        return element.hashCode();
+        return annotationMetadata.hashCode();
     }
 }

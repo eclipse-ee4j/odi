@@ -18,6 +18,7 @@ package com.oracle.odi.cdi;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.exceptions.BeanInstantiationException;
+import io.micronaut.context.exceptions.DependencyInjectionException;
 import io.micronaut.context.exceptions.NoSuchBeanException;
 import io.micronaut.context.exceptions.NonUniqueBeanException;
 import io.micronaut.core.annotation.AnnotationMetadata;
@@ -136,6 +137,15 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
                 }
             }
             return beanRegistration.getBean();
+        } catch (DependencyInjectionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof NonUniqueBeanException) {
+                throw new AmbiguousResolutionException(e.getMessage(), e);
+            } else if (cause instanceof NoSuchBeanException) {
+                throw new UnsatisfiedResolutionException(e.getMessage(), e);
+            } else {
+                throw new CreationException(e.getMessage(), e);
+            }
         } catch (NonUniqueBeanException e) {
             throw new AmbiguousResolutionException(e.getMessage(), e);
         } catch (NoSuchBeanException e) {

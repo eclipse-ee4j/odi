@@ -55,6 +55,10 @@ final class FieldInfoImpl extends DeclarationInfoImpl implements FieldInfo {
         return TypeFactory.createType(t, types, visitorContext);
     }
 
+    public FieldElement getElement() {
+        return fieldElement;
+    }
+
     @Override
     public boolean isStatic() {
         return fieldElement.isStatic();
@@ -87,11 +91,11 @@ final class FieldInfoImpl extends DeclarationInfoImpl implements FieldInfo {
             return false;
         }
         FieldInfoImpl other = (FieldInfoImpl) o;
-        return element.equals(other.element);
+        return annotationMetadata.equals(other.annotationMetadata);
     }
 
     @Override
     public int hashCode() {
-        return element.hashCode();
+        return annotationMetadata.hashCode();
     }
 }

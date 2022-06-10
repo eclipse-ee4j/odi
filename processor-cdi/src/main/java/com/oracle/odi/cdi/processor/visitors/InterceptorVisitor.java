@@ -82,8 +82,7 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                     .typeArguments(interceptorBean)
                     .withParameters(parameters -> parameters[0].typeArguments(interceptorBean))
                     .annotate(InterceptorBean.class)
-                    .annotate(Indexed.class,
-                              (builder) -> builder.value(io.micronaut.aop.Interceptor.class));
+                    .annotate(Indexed.class, builder -> builder.value(io.micronaut.aop.Interceptor.class));
             for (String interceptorBinding : interceptorBindings) {
                 final AnnotationValue<Annotation> av = interceptorBean.getAnnotation(interceptorBinding);
                 if (av != null) {

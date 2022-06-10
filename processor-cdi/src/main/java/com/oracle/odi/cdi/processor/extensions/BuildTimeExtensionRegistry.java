@@ -16,6 +16,8 @@
 package com.oracle.odi.cdi.processor.extensions;
 
 import io.micronaut.context.LifeCycle;
+import io.micronaut.core.annotation.AnnotationUtil;
+import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.core.annotation.Nullable;
@@ -26,6 +28,7 @@ import io.micronaut.core.order.Ordered;
 import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.reflect.exception.InvocationException;
 import io.micronaut.core.util.ArrayUtils;
+import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.beans.BeanElement;
@@ -38,19 +41,25 @@ import jakarta.enterprise.inject.build.compatible.spi.DeclarationConfig;
 import jakarta.enterprise.inject.build.compatible.spi.Discovery;
 import jakarta.enterprise.inject.build.compatible.spi.Enhancement;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
+import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Messages;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
 import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
+import jakarta.enterprise.inject.build.compatible.spi.ObserverInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Registration;
 import jakarta.enterprise.inject.build.compatible.spi.ScannedClasses;
 import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserverBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.inject.build.compatible.spi.Validation;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
+import jakarta.enterprise.lang.model.types.Type;
+import jakarta.interceptor.Interceptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -69,15 +78,19 @@ import java.util.Set;
  */
 @Internal
 public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionRegistry> {
-    private static final Set<Class<?>> SUPPORTED_EXTENSION_PARAMETER_TYPES = Set.of(ClassInfo.class,
-                                                                                   ClassConfig.class,
-                                                                                   FieldInfo.class,
-                                                                                   FieldConfig.class,
-                                                                                   MethodInfo.class,
-                                                                                   MethodConfig.class);
+    private static final Set<Class<?>> SUPPORTED_ENHANCEMENT_PARAMETERS = Set.of(ClassInfo.class,
+                                                                                 ClassConfig.class,
+                                                                                 FieldInfo.class,
+                                                                                 FieldConfig.class,
+                                                                                 MethodInfo.class,
+                                                                                 MethodConfig.class);
+    private static final Set<Class<?>> SUPPORTED_REGISTRATION_PARAMETERS = Set.of(BeanInfo.class,
+                                                                                 InterceptorInfo.class,
+                                                                                 ObserverInfo.class);
     private static BuildTimeExtensionRegistry instance = new BuildTimeExtensionRegistry();
     private List<BuildCompatibleExtensionEntry> buildTimeExtensions;
     private final List<String> loadErrors = new ArrayList<>();
+    private DiscoveryImpl discovery;
 
     /**
      * Loads the default extensions.
@@ -105,14 +118,13 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
     }
 
     private List<BuildCompatibleExtensionEntry> loadExtensions() {
-        final List<BuildCompatibleExtensionEntry> buildTimeExtensions;
-        buildTimeExtensions = new ArrayList<>(20);
+        final List<BuildCompatibleExtensionEntry> buildTimeExtensions = new ArrayList<>(20);
         try {
             final SoftServiceLoader<BuildCompatibleExtension> loader = findExtensions();
             for (ServiceDefinition<BuildCompatibleExtension> compatibleExtension : loader) {
                 if (compatibleExtension.isPresent()) {
                     final BuildCompatibleExtension buildCompatibleExtension = compatibleExtension.load();
-                    buildTimeExtensions.add(new BuildCompatibleExtensionEntry(buildCompatibleExtension));
+                    buildTimeExtensions.add(new BuildCompatibleExtensionEntry(buildCompatibleExtension, loadErrors));
                 }
             }
         } catch (Exception e) {
@@ -137,52 +149,66 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
      * @return The discovery implementation
      */
     public DiscoveryImpl runDiscovery(VisitorContext visitorContext) {
-        final DiscoveryImpl discovery = new DiscoveryImpl(visitorContext);
-        if (!loadErrors.isEmpty()) {
-            for (String loadError : loadErrors) {
-                discovery.getMessages().error(loadError);
+        if (discovery == null) {
+
+
+            this.discovery = new DiscoveryImpl(visitorContext);
+            if (!loadErrors.isEmpty()) {
+                for (String loadError : loadErrors) {
+                    discovery.getMessages().error(loadError);
+                }
             }
-        }
-        if (!discovery.hasErrors()) {
-            for (BuildCompatibleExtensionEntry buildTimeExtension : buildTimeExtensions) {
-                final List<Method> discoveryMethods = buildTimeExtension.discoveryMethods;
-                final BuildCompatibleExtension extension = buildTimeExtension.extension;
+            if (!discovery.hasErrors()) {
+                for (BuildCompatibleExtensionEntry buildTimeExtension : buildTimeExtensions) {
+                    final List<Method> discoveryMethods = buildTimeExtension.discoveryMethods;
+                    final BuildCompatibleExtension extension = buildTimeExtension.extension;
 
-                for (Method discoveryMethod : discoveryMethods) {
-                    final Class<?>[] parameterTypes = discoveryMethod.getParameterTypes();
-                    Object[] parameters = new Object[parameterTypes.length];
-                    if (parameterTypes.length == 0) {
-                        ReflectionUtils.invokeMethod(
-                                extension,
-                                discoveryMethod
-                        );
-                    } else {
-                        for (int i = 0; i < parameterTypes.length; i++) {
-                            Class<?> parameterType = parameterTypes[i];
-                            if (parameterType == Messages.class) {
-                                parameters[i] = discovery.getMessages();
-                            } else if (parameterType == MetaAnnotations.class) {
-
-                                parameters[i] = discovery.getMetaAnnotations();
-                            } else if (parameterType == ScannedClasses.class) {
-                                parameters[i] = discovery.getScannedClasses();
-                            } else {
-                                discovery.getMessages().error(
-                                        "Unsupported parameter of type '"
-                                                + parameterType.getName()
-                                                + "' defined in method '"
-                                                + discoveryMethod.getName()
-                                                + "' of extension: " + buildTimeExtension.getClass()
-                                                .getName()
+                    for (Method discoveryMethod : discoveryMethods) {
+                        try {
+                            final Class<?>[] parameterTypes = discoveryMethod.getParameterTypes();
+                            Object[] parameters = new Object[parameterTypes.length];
+                            if (parameterTypes.length == 0) {
+                                ReflectionUtils.invokeMethod(
+                                        extension,
+                                        discoveryMethod
                                 );
-                                break;
+                            } else {
+                                for (int i = 0; i < parameterTypes.length; i++) {
+                                    Class<?> parameterType = parameterTypes[i];
+                                    if (parameterType == Messages.class) {
+                                        parameters[i] = discovery.getMessages();
+                                    } else if (parameterType == MetaAnnotations.class) {
+
+                                        parameters[i] = discovery.getMetaAnnotations();
+                                    } else if (parameterType == ScannedClasses.class) {
+                                        parameters[i] = discovery.getScannedClasses();
+                                    } else {
+                                        throw new BuildTimeExtensionException("Unsupported parameter of type '" + parameterType.getName() + "'");
+                                    }
+                                }
+                                invokeExtensionMethod(extension, discoveryMethod, parameters);
                             }
+                        } catch (Exception e) {
+                            handleExtensionException(
+                                    extension,
+                                    discoveryMethod,
+                                    null,
+                                    visitorContext,
+                                    e,
+                                    "Error running build time discovery in method '"
+                            );
                         }
-                        invokeExtensionMethod(extension, discoveryMethod, parameters);
                     }
                 }
             }
         }
+        return discovery;
+    }
+
+    /**
+     * @return Obtain the resolved discovery.
+     */
+    public @Nullable DiscoveryImpl getDiscovery() {
         return discovery;
     }
 
@@ -194,6 +220,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
      * @param visitorContext     The visitor context
      */
     public void runEnhancement(ClassElement originatingElement, ClassElement typeToEnhance, VisitorContext visitorContext) {
+        runDiscoveryEnhancements(typeToEnhance);
         for (BuildCompatibleExtensionEntry buildTimeExtension : buildTimeExtensions) {
             final List<Method> enhanceMethods = buildTimeExtension.enhanceMethods;
             final BuildCompatibleExtension extension = buildTimeExtension.extension;
@@ -217,6 +244,25 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
     }
 
     /**
+     * Runs any discovery enhancements like adding/removing qualifiers etc.
+     * @param typeToEnhance The type to enhance
+     */
+    public void runDiscoveryEnhancements(Element typeToEnhance) {
+        final MetaAnnotationsImpl metaAnnotations = discovery.getMetaAnnotations();
+        final Set<MetaAnnotationImpl> qualifiers = metaAnnotations.getQualifiers();
+
+        for (MetaAnnotationImpl annotation : qualifiers) {
+            final String annotationName = annotation.getName();
+            final String[] nonBindingMembers = annotation.getNonBindingMembers();
+            if (typeToEnhance.hasDeclaredAnnotation(annotationName) && ArrayUtils.isNotEmpty(nonBindingMembers)) {
+                typeToEnhance.annotate(AnnotationValue.builder(AnnotationUtil.QUALIFIER)
+                                               .member("nonBinding", nonBindingMembers)
+                                               .build());
+            }
+        }
+    }
+
+    /**
      * Runs the {@link jakarta.enterprise.inject.build.compatible.spi.Registration} phase.
      *
      * @param beanElement    The bean element
@@ -229,6 +275,12 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
             final List<Method> processingMethods = entry.registrationMethods;
             methods:
             for (Method processingMethod : processingMethods) {
+                if (processingMethod.getParameterTypes().length == 0) {
+                    visitorContext.fail("Registration method '"
+                                                + processingMethod.getName()
+                                                + "' of extension: " + extension.getClass().getName() + " specifies no parameters", beanElement);
+                    continue;
+                }
                 final Class<?>[] types = processingMethod.getAnnotation(Registration.class).types();
                 for (Class<?> et : types) {
                     if (et != null && beanTypes.stream().anyMatch(ce -> ce.isAssignable(et))) {
@@ -247,7 +299,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
      * @param visitorContext  The visitor context
      * @return synthesis component
      */
-    public @Nullable
+    public @NonNull
     SyntheticComponentsImpl runSynthesis(BeanElement originatingBean, VisitorContext visitorContext) {
         final SyntheticComponentsImpl syntheticComponents = new SyntheticComponentsImpl(visitorContext);
         for (BuildCompatibleExtensionEntry buildTimeExtension : buildTimeExtensions) {
@@ -266,6 +318,53 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         return syntheticComponents;
     }
 
+    /**
+     * Runs the validation phase.
+     *
+     * @param visitorContext The visitor context
+     */
+    @SuppressWarnings("java:S1119")
+    public void runValidation(VisitorContext visitorContext) {
+        for (BuildCompatibleExtensionEntry entry : buildTimeExtensions) {
+            final BuildCompatibleExtension extension = entry.extension;
+            methods:
+            for (Method validationMethod : entry.validationMethods) {
+                try {
+                    final Class<?>[] parameterTypes = validationMethod.getParameterTypes();
+                    Object[] parameters = new Object[parameterTypes.length];
+                    for (int i = 0; i < parameterTypes.length; i++) {
+                        Class<?> parameterType = parameterTypes[i];
+                        if (Messages.class == parameterType) {
+                            parameters[i] = new MessagesImpl(visitorContext);
+                        } else if (Types.class == parameterType) {
+                            parameters[i] = new TypesImpl(visitorContext);
+                        } else {
+                            unsupportedParameter(
+                                null,
+                                visitorContext,
+                                extension,
+                                validationMethod,
+                                parameterType
+                            );
+                            continue methods;
+                        }
+                    }
+                    invokeExtensionMethod(extension, validationMethod, parameters);
+                } catch (Exception e) {
+                    handleExtensionException(
+                            extension,
+                            validationMethod,
+                            null,
+                            visitorContext,
+                            e,
+                            "Validation error in method '"
+                    );
+
+                }
+            }
+        }
+    }
+
     private void runSynthesis(BuildCompatibleExtension extension,
                               Method synthesisMethod,
                               BeanElement originatingBean,
@@ -277,7 +376,28 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         for (int i = 0; i < parameterTypes.length; i++) {
             Class<?> parameterType = parameterTypes[i];
             if (SyntheticComponents.class == parameterType) {
-                parameters[i] = syntheticComponents;
+                parameters[i] = new SyntheticComponents() {
+                    @Override
+                    public <T> SyntheticBeanBuilder<T> addBean(Class<T> beanClass) {
+                        return syntheticComponents.addBean(beanClass);
+                    }
+
+                    @Override
+                    public <T> SyntheticObserverBuilder<T> addObserver(Class<T> eventType) {
+                        SyntheticObserverBuilder<T> observerBuilder = syntheticComponents.addObserver(eventType);
+                        observerBuilder.declaringClass(extension.getClass());
+                        return observerBuilder;
+                    }
+
+                    @Override
+                    public <T> SyntheticObserverBuilder<T> addObserver(Type eventType) {
+                        SyntheticObserverBuilder<T> observerBuilder = syntheticComponents.addObserver(eventType);
+                        observerBuilder.declaringClass(extension.getClass());
+                        return observerBuilder;
+                    }
+                };
+            } else if (Types.class == parameterType) {
+                parameters[i] = new TypesImpl(visitorContext);
             } else {
                 unsupportedParameter(
                         originatingBean.getProducingElement(),
@@ -300,41 +420,94 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         }
     }
 
+    @SuppressWarnings("java:S1181")
     private void runRegistration(BuildCompatibleExtension extension,
-                                 Method processingMethod,
+                                 Method registrationMethod,
                                  BeanElement beanElement,
                                  VisitorContext visitorContext) {
-        final Class<?>[] parameterTypes = processingMethod.getParameterTypes();
-        Object[] parameters = new Object[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            Class<?> parameterType = parameterTypes[i];
-            if (BeanInfo.class == parameterType) {
-                parameters[i] = new BeanInfoImpl(
+        try {
+            final Class<?>[] parameterTypes = registrationMethod.getParameterTypes();
+            Object[] parameters = new Object[parameterTypes.length];
+            ExtensionParameter extensionParameter = null;
+            for (int i = 0; i < parameterTypes.length; i++) {
+                Class<?> parameterType = parameterTypes[i];
+                if (BeanInfo.class == parameterType || InterceptorInfo.class == parameterType || ObserverInfo.class  == parameterType) {
+                    extensionParameter = newExtensionParameter(parameterType, i, extensionParameter, SUPPORTED_REGISTRATION_PARAMETERS);
+                } else if (Types.class == parameterType) {
+                    parameters[i] = new TypesImpl(visitorContext);
+                } else if (Messages.class == parameterType) {
+                    parameters[i] = new MessagesImpl(visitorContext);
+                } else {
+                    unsupportedParameter(
+                            beanElement.getProducingElement(),
+                            visitorContext,
+                            extension,
+                            registrationMethod,
+                            parameterType
+                    );
+                    return;
+                }
+            }
+
+            if (extensionParameter == null) {
+                throw new BuildTimeExtensionException("At least 1 parameter of type BeanInfo, ObserverInfo or InterceptorInfo is required");
+            } else {
+                final Class<?> type = extensionParameter.type;
+                final BeanInfoImpl beanInfo = new BeanInfoImpl(
                         beanElement,
                         visitorContext
                 );
-            } else {
-                unsupportedParameter(
-                        beanElement.getProducingElement(),
-                        visitorContext,
-                        extension,
-                        processingMethod,
-                        parameterType
-                );
-                return;
-            }
-        }
+                if (BeanInfo.class == type) {
+                    parameters[extensionParameter.index] = beanInfo;
+                    invokeExtensionMethod(extension, registrationMethod, parameters);
+                } else if (InterceptorInfo.class == type && beanElement.hasDeclaredAnnotation(Interceptor.class)) {
+                    parameters[extensionParameter.index] = new InterceptorInfoImpl(
+                            beanElement,
+                            visitorContext
+                    );
+                    invokeExtensionMethod(extension, registrationMethod, parameters);
+                } else if (ObserverInfo.class == type) {
+                    List<ObserverInfo> observerInfos = beanInfo.observers();
+                    for (ObserverInfo observerInfo : observerInfos) {
+                        parameters[extensionParameter.index] = observerInfo;
+                        invokeExtensionMethod(extension, registrationMethod, parameters);
+                    }
+                }
 
-        try {
-            invokeExtensionMethod(extension, processingMethod, parameters);
-        } catch (Exception e) {
-            visitorContext.fail("Error running build time processing in method '" + processingMethod.getName() + "' of "
-                    + "extension [" + extension.getClass()
-                    .getName() + "]: " + e.getMessage(), beanElement.getProducingElement());
+            }
+
+        } catch (Throwable e) {
+            handleExtensionException(
+                    extension,
+                    registrationMethod,
+                    beanElement,
+                    visitorContext,
+                    e,
+                    "Error running build time registration in method '"
+            );
 
         }
     }
 
+    private void handleExtensionException(BuildCompatibleExtension extension,
+                           Method method,
+                           @Nullable Element beanElement,
+                           VisitorContext visitorContext,
+                           Throwable e,
+                           String rootMessage) {
+        Throwable exception = e;
+        if (e instanceof InvocationException) {
+            exception = e.getCause();
+        }
+        if (e instanceof InvocationTargetException) {
+            exception = e.getCause();
+        }
+        visitorContext.fail(rootMessage + method.getName() + "' of extension "
+                                    + "[" + extension.getClass()
+                .getName() + "]: " + exception.getMessage(), beanElement);
+    }
+
+    @SuppressWarnings("java:S1181")
     private void runEnhancement(ClassElement originatingElement,
                                 ClassElement typeToEnhance,
                                 VisitorContext visitorContext,
@@ -343,15 +516,21 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
 
         try {
             final Class<?>[] parameterTypes = enhanceMethod.getParameterTypes();
+            if (parameterTypes.length == 0) {
+                visitorContext.fail("Enhancement method '"
+                                            + enhanceMethod.getName()
+                                            + "' of extension: " + extension.getClass().getName() + " specifies no parameters", originatingElement);
+                return;
+            }
             Object[] parameters = new Object[parameterTypes.length];
             final TypesImpl types = new TypesImpl(visitorContext);
             ExtensionParameter extensionParameter = null;
             for (int i = 0; i < parameterTypes.length; i++) {
                 Class<?> parameterType = parameterTypes[i];
                 if (DeclarationInfo.class.isAssignableFrom(parameterType)) {
-                    extensionParameter = newExtensionParameter(parameterType, i, extensionParameter);
+                    extensionParameter = newExtensionParameter(parameterType, i, extensionParameter, SUPPORTED_ENHANCEMENT_PARAMETERS);
                 } else if (DeclarationConfig.class.isAssignableFrom(parameterType)) {
-                    extensionParameter = newExtensionParameter(parameterType, i, extensionParameter);
+                    extensionParameter = newExtensionParameter(parameterType, i, extensionParameter, SUPPORTED_ENHANCEMENT_PARAMETERS);
                 } else if (parameterType == Messages.class) {
                     parameters[i] = new MessagesImpl(visitorContext);
                 } else if (parameterType == Types.class) {
@@ -385,22 +564,26 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                         invokeExtensionMethod(extension, enhanceMethod, parameters);
                     }
                 }
+            } else {
+                visitorContext.fail("Enhancement method '"
+                                            + enhanceMethod.getName()
+                                            + "' of extension: " + extension.getClass().getName() + " does not specify any declaration config or info types", originatingElement);
+
             }
 
         } catch (Throwable e) {
-            if (e instanceof InvocationException) {
-                e = e.getCause();
-            }
-            if (e instanceof InvocationTargetException) {
-                e = e.getCause();
-            }
-            visitorContext.fail("Error running build time enhancement in method '" + enhanceMethod.getName() + "' of extension "
-                                        + "[" + extension.getClass()
-                    .getName() + "]: " + e.getMessage(), originatingElement);
-
+            handleExtensionException(
+                    extension,
+                    enhanceMethod,
+                    typeToEnhance,
+                    visitorContext,
+                    e,
+                    "Error running build time enhancement in method '"
+            );
         }
     }
 
+    @SuppressWarnings("java:S3011")
     private void invokeExtensionMethod(BuildCompatibleExtension extension,
                                        Method enhanceMethod,
                                        Object[] parameters) {
@@ -414,11 +597,12 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
 
     private ExtensionParameter newExtensionParameter(Class<?> parameterType,
                                                      int index,
-                                                     @Nullable ExtensionParameter extensionParameter) {
+                                                     ExtensionParameter extensionParameter,
+                                                     Set<Class<?>> supportedExtensionParameterTypes) {
         if (extensionParameter != null) {
             throw new BuildTimeExtensionException("Extension parameter of type [" + extensionParameter.getClass() + "] already defined at index " + extensionParameter.index);
         }
-        if (SUPPORTED_EXTENSION_PARAMETER_TYPES.contains(parameterType)) {
+        if (supportedExtensionParameterTypes.contains(parameterType)) {
             return new ExtensionParameter(index, parameterType);
         } else {
             throw new BuildTimeExtensionException("Unsupported parameter type: " + parameterType.getName());
@@ -445,7 +629,9 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
 
     @Override
     public BuildTimeExtensionRegistry start() {
-        this.buildTimeExtensions = loadExtensions();
+        if (CollectionUtils.isEmpty(buildTimeExtensions)) {
+            this.buildTimeExtensions = loadExtensions();
+        }
         return this;
     }
 
@@ -478,7 +664,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         // phase 5
         private final List<Method> validationMethods;
 
-        BuildCompatibleExtensionEntry(BuildCompatibleExtension extension) {
+        BuildCompatibleExtensionEntry(BuildCompatibleExtension extension, List<String> loadErrors) {
             this.extension = extension;
             final Class<? extends BuildCompatibleExtension> type = extension.getClass();
             final Method[] methods = type.getDeclaredMethods();
@@ -497,6 +683,11 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                     if (method.isAnnotationPresent(Discovery.class)) {
                         discoveryMethods.add(method);
                     } else if (method.isAnnotationPresent(Enhancement.class)) {
+                        final Class<?>[] parameterTypes = method.getParameterTypes();
+                        if (parameterTypes.length == 1 && Messages.class.isAssignableFrom(parameterTypes[0])) {
+                            loadErrors.add("Extension method [" + method + "] of type [" + extension.getClass().getName() + "] cannot define only Messages as a parameter.");
+                            continue;
+                        }
                         enhanceMethods.add(method);
                     } else if (method.isAnnotationPresent(Registration.class)) {
                         registrationMethods.add(method);
@@ -515,6 +706,17 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         }
 
         private List<Method> immutableListOf(List<Method> discoveryMethods) {
+            discoveryMethods.sort((o1, o2) -> {
+                final Priority p1 = o1.getAnnotation(Priority.class);
+                final Priority p2 = o2.getAnnotation(Priority.class);
+
+                // see javadoc for BuildCompatibleExtension where default priority is defined
+                final int n1 = p1 != null ? p1.value() : Interceptor.Priority.APPLICATION + 500;
+                final int n2 = p2 != null ? p2.value() : Interceptor.Priority.APPLICATION + 500;
+                return Integer.compare(
+                        n1, n2
+                );
+            });
             return discoveryMethods.isEmpty() ? Collections.emptyList() : Collections.unmodifiableList(discoveryMethods);
         }
 

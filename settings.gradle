@@ -20,6 +20,13 @@ micronautBuild {
     importMicronautCatalog()
 }
 
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        maven { url "https://s01.oss.sonatype.org/content/repositories/snapshots/" }
+    }
+}
+
 include(':odi-core')
 include(':odi-processor-cdi')
 include(':odi-test-junit5')

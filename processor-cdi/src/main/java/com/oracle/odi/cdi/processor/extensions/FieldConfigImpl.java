@@ -43,7 +43,6 @@ final class FieldConfigImpl implements FieldConfig, ElementAnnotationConfig {
         );
     }
 
-    @Override
     public Element getElement() {
         return fieldInfo.getElement();
     }

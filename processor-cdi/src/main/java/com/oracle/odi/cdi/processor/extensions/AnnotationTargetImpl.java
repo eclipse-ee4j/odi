@@ -17,6 +17,7 @@ package com.oracle.odi.cdi.processor.extensions;
 
 import io.micronaut.annotation.processing.visitor.JavaVisitorContext;
 import io.micronaut.core.annotation.AnnotationMetadata;
+import io.micronaut.core.annotation.AnnotationMetadataProvider;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
@@ -34,47 +35,48 @@ import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.function.Predicate;
 
-abstract class AnnotationTargetImpl implements AnnotationTarget {
+abstract class AnnotationTargetImpl implements AnnotationTarget, AnnotationMetadataProvider {
 
     @SuppressWarnings("checkstyle:VisibilityModifier")
-    final Element element;
+    final AnnotationMetadata annotationMetadata;
     final VisitorContext visitorContext;
     @SuppressWarnings("checkstyle:VisibilityModifier")
     final Types types;
     private final AnnotationTarget annotationTargetDelegate;
 
-    protected AnnotationTargetImpl(Element element, Types types, VisitorContext visitorContext) {
-        this(element, element.getAnnotationMetadata(), types, visitorContext);
-    }
-
-    protected AnnotationTargetImpl(Element element, AnnotationMetadata annotationMetadata, Types types, VisitorContext visitorContext) {
-        this.element = element;
+    protected AnnotationTargetImpl(AnnotationMetadata annotationMetadata, Types types, VisitorContext visitorContext) {
+        this.annotationMetadata = annotationMetadata;
         this.visitorContext = visitorContext;
         this.types = types;
         // TODO: select impl based on some option
-        if (visitorContext instanceof JavaVisitorContext) {
-            if (element instanceof PrimitiveElement) {
+        if (annotationMetadata instanceof Element && visitorContext instanceof JavaVisitorContext) {
+            if (annotationMetadata instanceof PrimitiveElement) {
                 this.annotationTargetDelegate = EmptyAnnotationTarget.INSTANCE;
             } else {
-                this.annotationTargetDelegate = new AnnotatedConstructAnnotationTarget(element, types, (JavaVisitorContext) visitorContext);
+                this.annotationTargetDelegate = new AnnotatedConstructAnnotationTarget((Element) annotationMetadata, types, (JavaVisitorContext) visitorContext);
             }
         } else {
-            this.annotationTargetDelegate = new MicronautAnnotationTarget(element, types);
+            this.annotationTargetDelegate = new MicronautAnnotationTarget(annotationMetadata, types);
         }
     }
 
     @Override
+    public AnnotationMetadata getAnnotationMetadata() {
+        return annotationMetadata;
+    }
+
+    @Override
     public boolean isDeclaration() {
-        return element instanceof PackageElement
-                || element instanceof ClassElement
-                || element instanceof FieldElement
-                || element instanceof MethodElement
-                || element instanceof ParameterElement;
+        return annotationMetadata instanceof PackageElement
+                || annotationMetadata instanceof ClassElement
+                || annotationMetadata instanceof FieldElement
+                || annotationMetadata instanceof MethodElement
+                || annotationMetadata instanceof ParameterElement;
     }
 
     @Override
     public boolean isType() {
-        return element instanceof TypedElement;
+        return annotationMetadata instanceof TypedElement;
     }
 
     @Override
@@ -105,10 +107,6 @@ abstract class AnnotationTargetImpl implements AnnotationTarget {
     @Override
     public Collection<AnnotationInfo> annotations() {
         return annotationTargetDelegate.annotations();
-    }
-
-    public Element getElement() {
-        return element;
     }
 
     public Types getTypes() {

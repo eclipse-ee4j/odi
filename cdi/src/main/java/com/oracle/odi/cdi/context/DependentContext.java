@@ -15,7 +15,10 @@
  */
 package com.oracle.odi.cdi.context;
 
+import com.oracle.odi.cdi.OdiCreationalContext;
+import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.BeanResolutionContext;
+import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.spi.Context;
@@ -50,7 +53,14 @@ public final class DependentContext implements Context {
             return null;
         }
         contexts.add(creationalContext);
-        return contextual.create(creationalContext);
+        T bean = contextual.create(creationalContext);
+        if (creationalContext instanceof OdiCreationalContext) {
+            CreatedBean<T> createdBean = ((OdiCreationalContext<T>) creationalContext).getCreatedBean();
+            if (createdBean instanceof BeanRegistration) {
+                resolutionContext.addDependentBean((BeanRegistration<T>) createdBean);
+            }
+        }
+        return bean;
     }
 
     @Override

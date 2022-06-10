@@ -18,10 +18,16 @@ package com.oracle.odi.cdi;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.scope.CreatedBean;
+import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 
-final class OdiCreationalContext<T> implements CreationalContext<T> {
+/**
+ * Implementation of {@link CreationalContext}.
+ * @param <T> The bean type
+ */
+@Internal
+public final class OdiCreationalContext<T> implements CreationalContext<T> {
 
     private final BeanContext beanContext;
     private final Contextual<T> contextual;
@@ -43,8 +49,7 @@ final class OdiCreationalContext<T> implements CreationalContext<T> {
         if (contextual instanceof OdiBean) {
             if (createdBean instanceof BeanRegistration) {
                 BeanRegistration<T> beanRegistration = (BeanRegistration<T>) createdBean;
-                    beanContext.destroyBean(beanRegistration);
-//                }
+                beanContext.destroyBean(beanRegistration);
             } else if (createdBean != null) {
                 createdBean.close();
                 this.createdBean = null;
@@ -55,7 +60,7 @@ final class OdiCreationalContext<T> implements CreationalContext<T> {
         }
     }
 
-    CreatedBean<T> getCreatedBean() {
+    public CreatedBean<T> getCreatedBean() {
         return createdBean;
     }
 

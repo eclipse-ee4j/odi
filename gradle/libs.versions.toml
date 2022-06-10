@@ -1,11 +1,11 @@
 [versions]
-micronaut = "3.5.0"
+micronaut = "3.5.2-SNAPSHOT"
 micronaut-docs = "2.0.0"
 
 groovy = "3.0.11"
 
-cdi-tck = "4.0.0-RC8"
-cdi-api = "4.0.0-RC5"
+cdi-tck = "4.0.0"
+cdi-api = "4.0.0"
 
 # Testing
 

@@ -20,16 +20,21 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Order;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
+import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.ast.beans.BeanElement;
 import io.micronaut.inject.ast.beans.BeanElementBuilder;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.context.NormalScope;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.DisposerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InjectionPointInfo;
+import jakarta.enterprise.inject.build.compatible.spi.ObserverInfo;
 import jakarta.enterprise.inject.build.compatible.spi.ScopeInfo;
 import jakarta.enterprise.inject.build.compatible.spi.StereotypeInfo;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
@@ -41,14 +46,16 @@ import jakarta.enterprise.lang.model.types.Type;
 import jakarta.interceptor.Interceptor;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-final class BeanInfoImpl implements BeanInfo {
-    private final BeanElement beanElement;
+class BeanInfoImpl implements BeanInfo {
+    protected final BeanElement beanElement;
     private final VisitorContext visitorContext;
     private final Types types;
     private final ClassInfoImpl classInfo;
@@ -58,6 +65,10 @@ final class BeanInfoImpl implements BeanInfo {
         this.visitorContext = visitorContext;
         this.types = new TypesImpl(visitorContext);
         this.classInfo = new ClassInfoImpl(beanElement.getDeclaringClass(), new TypesImpl(visitorContext), visitorContext);
+    }
+
+    ClassInfoImpl getClassInfo() {
+        return classInfo;
     }
 
     @Override
@@ -243,5 +254,34 @@ final class BeanInfoImpl implements BeanInfo {
                         throw new IllegalStateException("Unknown declaration type");
                     }
                 })).collect(Collectors.toUnmodifiableList());
+    }
+
+    public List<ObserverInfo> observers() {
+        Element producingElement = beanElement.getProducingElement();
+        if (producingElement instanceof BeanElementBuilder) {
+            producingElement = ((BeanElementBuilder) producingElement).getProducingElement();
+        }
+        if (producingElement instanceof ClassElement) {
+            ClassElement ce = (ClassElement) producingElement;
+            return ce.getEnclosedElements(
+                    ElementQuery.ALL_METHODS.onlyInstance()
+                            .filter(m -> m.hasParameters() &&
+                                                    Arrays.stream(m.getParameters()).anyMatch(p -> p.hasDeclaredAnnotation(Observes.class) || p.hasDeclaredAnnotation(ObservesAsync.class)))
+            ).stream().flatMap(me -> {
+                final ParameterElement pe = Arrays.stream(me.getParameters())
+                        .filter(p -> p.hasDeclaredAnnotation(Observes.class) || p.hasDeclaredAnnotation(ObservesAsync.class))
+                        .findFirst().orElse(null);
+                if (pe != null) {
+
+                    return Stream.of(new MethodObserverInfoImpl(
+                            this,
+                            me,
+                            pe, visitorContext
+                    ));
+                }
+                return Stream.empty();
+            }).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 }

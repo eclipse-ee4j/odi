@@ -15,11 +15,13 @@
  */
 package com.oracle.odi.cdi.processor.extensions;
 
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.PrimitiveElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
+import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import jakarta.enterprise.lang.model.types.ArrayType;
 import jakarta.enterprise.lang.model.types.ClassType;
 import jakarta.enterprise.lang.model.types.ParameterizedType;
@@ -28,11 +30,15 @@ import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.lang.model.types.VoidType;
 import jakarta.enterprise.lang.model.types.WildcardType;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 final class TypesImpl implements Types {
     private final VisitorContext visitorContext;
     private final VoidTypeImpl voidType;
+
+    private final TypesWildcardUnbounded wildcardUnbounded = new TypesWildcardUnbounded();
 
     TypesImpl(VisitorContext visitorContext) {
         this.visitorContext = visitorContext;
@@ -58,14 +64,22 @@ final class TypesImpl implements Types {
     @Override
     public PrimitiveType ofPrimitive(PrimitiveType.PrimitiveKind kind) {
         switch (kind) {
-            case BOOLEAN: return new PrimitiveTypeImpl(PrimitiveElement.BOOLEAN, this, visitorContext);
-            case BYTE: return new PrimitiveTypeImpl(PrimitiveElement.BYTE, this, visitorContext);
-            case CHAR: return new PrimitiveTypeImpl(PrimitiveElement.CHAR, this, visitorContext);
-            case DOUBLE: return new PrimitiveTypeImpl(PrimitiveElement.DOUBLE, this, visitorContext);
-            case FLOAT: return new PrimitiveTypeImpl(PrimitiveElement.FLOAT, this, visitorContext);
-            case INT: return new PrimitiveTypeImpl(PrimitiveElement.INT, this, visitorContext);
-            case LONG: return new PrimitiveTypeImpl(PrimitiveElement.LONG, this, visitorContext);
-            case SHORT: return new PrimitiveTypeImpl(PrimitiveElement.SHORT, this, visitorContext);
+            case BOOLEAN:
+                return new PrimitiveTypeImpl(PrimitiveElement.BOOLEAN, this, visitorContext);
+            case BYTE:
+                return new PrimitiveTypeImpl(PrimitiveElement.BYTE, this, visitorContext);
+            case CHAR:
+                return new PrimitiveTypeImpl(PrimitiveElement.CHAR, this, visitorContext);
+            case DOUBLE:
+                return new PrimitiveTypeImpl(PrimitiveElement.DOUBLE, this, visitorContext);
+            case FLOAT:
+                return new PrimitiveTypeImpl(PrimitiveElement.FLOAT, this, visitorContext);
+            case INT:
+                return new PrimitiveTypeImpl(PrimitiveElement.INT, this, visitorContext);
+            case LONG:
+                return new PrimitiveTypeImpl(PrimitiveElement.LONG, this, visitorContext);
+            case SHORT:
+                return new PrimitiveTypeImpl(PrimitiveElement.SHORT, this, visitorContext);
             default:
                 throw new IllegalStateException("Unsupported primitive type: " + kind);
         }
@@ -89,36 +103,186 @@ final class TypesImpl implements Types {
 
     @Override
     public ArrayType ofArray(Type componentType, int dimensions) {
-        return null;
+        if (componentType instanceof ClassTypeImpl) {
+            ClassTypeImpl cit = (ClassTypeImpl) componentType;
+            ClassElement classElement = cit.getClassElement();
+            for (int i = 0; i < dimensions; i++) {
+                classElement = classElement.toArray();
+            }
+            return new ArrayTypeImpl(
+                    classElement,
+                    this,
+                    visitorContext
+            );
+        } else {
+            ArrayType arrayType = null;
+            for (int i = 0; i < dimensions; i++) {
+                if (arrayType == null) {
+                    arrayType = new TypesArrayType(componentType);
+                } else {
+                    arrayType = new TypesArrayType(arrayType);
+                }
+            }
+            return arrayType;
+        }
     }
 
     @Override
     public ParameterizedType parameterized(Class<?> parameterizedType, Class<?>... typeArguments) {
-        return null;
+        ClassElement classElement = visitorContext.getClassElement(parameterizedType)
+                .orElse(ClassElement.of(parameterizedType));
+        ClassElement[] generics = new ClassElement[typeArguments.length];
+        for (int i = 0; i < typeArguments.length; i++) {
+            Class<?> typeArgument = typeArguments[i];
+            generics[i] = visitorContext.getClassElement(typeArgument).orElse(ClassElement.of(Object.class));
+        }
+        classElement.withBoundGenericTypes(Arrays.asList(generics));
+        return new ParameterizedTypeImpl(
+                classElement,
+                this,
+                visitorContext
+        );
     }
 
     @Override
     public ParameterizedType parameterized(Class<?> parameterizedType, Type... typeArguments) {
-        return null;
+        ClassElement classElement = visitorContext.getClassElement(parameterizedType)
+                .orElse(ClassElement.of(parameterizedType));
+        return new ParameterizedTypeImpl(classElement, this, visitorContext) {
+            @Override
+            public List<Type> typeArguments() {
+                return Arrays.asList(typeArguments);
+            }
+        };
     }
 
     @Override
     public ParameterizedType parameterized(ClassType genericType, Type... typeArguments) {
-        return null;
+        ClassTypeImpl impl = (ClassTypeImpl) genericType;
+        ClassElement classElement = impl.getClassElement();
+        return new ParameterizedTypeImpl(classElement, this, visitorContext) {
+            @Override
+            public List<Type> typeArguments() {
+                return Arrays.asList(typeArguments);
+            }
+        };
     }
 
     @Override
     public WildcardType wildcardWithUpperBound(Type upperBound) {
-        return null;
+        return new WildcardWithUpperBound(
+                Objects.requireNonNull(upperBound, "Lower bound cannot be null")
+        );
     }
 
     @Override
     public WildcardType wildcardWithLowerBound(Type lowerBound) {
-        return null;
+        return new WildcardWithLowerBound(
+                Objects.requireNonNull(lowerBound, "Lower bound cannot be null")
+        );
     }
 
     @Override
     public WildcardType wildcardUnbounded() {
-        return null;
+        return wildcardUnbounded;
+    }
+
+    private final class WildcardWithLowerBound extends TypesWildcardUnbounded implements WildcardType {
+        private final Type lowerBound;
+
+        private WildcardWithLowerBound(Type lowerBound) {
+            this.lowerBound = lowerBound;
+        }
+
+        @Override
+        public Type lowerBound() {
+            return lowerBound;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof WildcardWithLowerBound && ((WildcardWithLowerBound) o).lowerBound.equals(lowerBound);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash("? super", lowerBound);
+        }
+    }
+
+    private final class WildcardWithUpperBound extends TypesWildcardUnbounded implements WildcardType {
+        private final Type upperBound;
+
+        private WildcardWithUpperBound(Type lowerBound) {
+            this.upperBound = lowerBound;
+        }
+
+        @Override
+        public Type upperBound() {
+            return upperBound;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof WildcardWithUpperBound && ((WildcardWithUpperBound) o).upperBound.equals(upperBound);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash("? extends", upperBound);
+        }
+    }
+
+    private class TypesWildcardUnbounded extends AnnotationTargetImpl implements WildcardType {
+        private final int hashCode = "?".hashCode();
+
+        TypesWildcardUnbounded() {
+            super(AnnotationMetadata.EMPTY_METADATA, TypesImpl.this, TypesImpl.this.visitorContext);
+        }
+
+        @Override
+        public DeclarationInfo asDeclaration() {
+            throw new IllegalStateException("Not a declaration");
+        }
+
+        @Override
+        public Type asType() {
+            throw new IllegalStateException("Not a type");
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof TypesWildcardUnbounded;
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
+
+        @Override
+        public Type upperBound() {
+            return null;
+        }
+
+        @Override
+        public Type lowerBound() {
+            return null;
+        }
+
+    }
+
+    private final class TypesArrayType extends AnnotationTargetImpl implements ArrayType {
+        private final Type componentType;
+
+        TypesArrayType(Type componentType) {
+            super(AnnotationMetadata.EMPTY_METADATA, TypesImpl.this, TypesImpl.this.visitorContext);
+            this.componentType = componentType;
+        }
+
+        @Override
+        public Type componentType() {
+            return componentType;
+        }
     }
 }

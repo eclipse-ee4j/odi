@@ -32,6 +32,7 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.ArgumentCoercible;
+import io.micronaut.inject.ArgumentInjectionPoint;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.InjectionPoint;
@@ -42,6 +43,7 @@ import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.ResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.spi.BeanContainer;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -66,12 +68,12 @@ final class OdiSeContainer extends CDI<Object>
     static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = Collections.synchronizedMap(new LinkedHashMap<>(5));
     private static final Logger LOG = LoggerFactory.getLogger(OdiSeContainer.class);
     private final ApplicationContext applicationContext;
-    private final OdiBeanContainer beanContainer;
+    private final OdiBeanContainerImpl beanContainer;
     private final Map<DisposerKey, DisposerDef> disposerMethods = new HashMap<>(20);
 
     protected OdiSeContainer(ApplicationContext context) {
         this.applicationContext = context;
-        this.beanContainer = new OdiBeanContainerImpl(this, context);
+        this.beanContainer = new OdiBeanContainerImpl(this, context.getBean(OdiAnnotations.class), context);
         RUNNING_CONTAINERS.put(context, this);
     }
 
@@ -100,12 +102,24 @@ final class OdiSeContainer extends CDI<Object>
     }
 
     OdiInstance<Object> select(Context context) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, context, Argument.OBJECT_ARGUMENT, (Qualifier<Object>) null);
+        return new OdiInstanceImpl<>(
+                beanContainer,
+                context,
+                Argument.OBJECT_ARGUMENT,
+                null,
+                (Qualifier<Object>) null
+        );
     }
 
     @Override
     public <U> OdiInstance<U> select(Argument<U> argument, Qualifier<U> qualifier) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, null, argument, qualifier);
+        return new OdiInstanceImpl<>(
+                beanContainer,
+                null,
+                argument,
+                null,
+                qualifier
+        );
     }
 
     @Override
@@ -113,18 +127,18 @@ final class OdiSeContainer extends CDI<Object>
         if (!isRunning()) {
             throw new IllegalStateException("SeContainer already shutdown");
         }
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, null, Argument.OBJECT_ARGUMENT, qualifiers);
+        return new OdiInstanceImpl<>(beanContainer, null, Argument.OBJECT_ARGUMENT, qualifiers);
     }
 
     @Override
     public <U> OdiInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl<>(applicationContext, beanContainer, null,  Argument.of(subtype), qualifiers);
+        return new OdiInstanceImpl<>(beanContainer, null,  Argument.of(subtype), qualifiers);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public <U> OdiInstance<U> select(TypeLiteral<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl(applicationContext, beanContainer, null, Argument.of(subtype.getType()), qualifiers);
+        return new OdiInstanceImpl(beanContainer, null, Argument.of(subtype.getType()), qualifiers);
     }
 
     @Override
@@ -204,6 +218,16 @@ final class OdiSeContainer extends CDI<Object>
     @Default
     OdiBeanContainer beanContainer() {
         return beanContainer;
+    }
+
+    /**
+     * Creates the parameters object for synthetic beans.
+     * @param injectionPoint The injection point
+     * @return The parameters
+     */
+    @Bean Parameters parameterCreator(ArgumentInjectionPoint<?, ?> injectionPoint) {
+        final BeanDefinition<?> declaringBean = injectionPoint.getDeclaringBean();
+        return OdiUtils.createParameters(declaringBean);
     }
 
     @Bean

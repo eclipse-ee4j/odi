@@ -30,8 +30,15 @@ import java.util.Set;
 
 class DeclarationInfoImpl extends AnnotationTargetImpl implements DeclarationInfo {
 
+    private final Element element;
+
     protected DeclarationInfoImpl(Element element, Types types, VisitorContext visitorContext) {
         super(element, types, visitorContext);
+        this.element = element;
+    }
+
+    public Element getElement() {
+        return element;
     }
 
     @Override
@@ -102,7 +109,7 @@ class DeclarationInfoImpl extends AnnotationTargetImpl implements DeclarationInf
 
     @Override
     public int hashCode() {
-        return element.hashCode();
+        return annotationMetadata.hashCode();
     }
 
     @Override
@@ -117,7 +124,7 @@ class DeclarationInfoImpl extends AnnotationTargetImpl implements DeclarationInf
             return false;
         }
         DeclarationInfoImpl other = (DeclarationInfoImpl) o;
-        return element.equals(other.element);
+        return annotationMetadata.equals(other.annotationMetadata);
     }
 
     @Override
