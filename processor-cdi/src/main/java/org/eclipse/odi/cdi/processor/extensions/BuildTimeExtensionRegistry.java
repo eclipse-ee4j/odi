@@ -103,6 +103,9 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
      * @return Gets the build time extensions instance.
      */
     public static @NonNull BuildTimeExtensionRegistry getInstance() {
+        if (instance == null) {
+            instance = new BuildTimeExtensionRegistry();
+        }
         return instance;
     }
 

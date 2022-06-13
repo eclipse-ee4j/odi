@@ -33,6 +33,8 @@ import org.eclipse.microprofile.faulttolerance.Timeout;
 
 //@SkipIfPortableExtensionPresent(FaultToleranceExtension.class)
 public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleExtension {
+    public static final String FAULT_TOLERANCE_EXT_ENABLED = "Fault_Tolerance_Enabled";
+
     private static final Set<String> FAULT_TOLERANCE_ANNOTATIONS = new HashSet<>(Arrays.asList(
             Asynchronous.class.getName(),
             Bulkhead.class.getName(),
@@ -46,6 +48,10 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
 
     @Discovery
     void registerInterceptorBindings(ScannedClasses app, MetaAnnotations meta) {
+        if (!Boolean.getBoolean(BuildCompatibleFaultToleranceExtension.FAULT_TOLERANCE_EXT_ENABLED)) {
+            return;
+        }
+
         app.add(FaultToleranceInterceptor.class.getName());
         app.add(ExecutorHolder.class.getName());
         app.add(TestFallbackProvider.class.getName());
@@ -71,6 +77,9 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
 
     @Enhancement(types = FaultToleranceInterceptor.class)
     void changeInterceptorPriority(ClassConfig clazz) {
+        if (!Boolean.getBoolean(BuildCompatibleFaultToleranceExtension.FAULT_TOLERANCE_EXT_ENABLED)) {
+            return;
+        }
         ConfigProvider.getConfig()
                 .getOptionalValue("mp.fault.tolerance.interceptor.priority", Integer.class)
                 .ifPresent(configuredInterceptorPriority -> {
@@ -81,6 +90,9 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
 
     @Registration(types = Object.class)
     void collectFaultToleranceOperations(BeanInfo bean) {
+        if (!Boolean.getBoolean(BuildCompatibleFaultToleranceExtension.FAULT_TOLERANCE_EXT_ENABLED)) {
+            return;
+        }
         if (!bean.isClassBean()) {
             return;
         }
@@ -100,6 +112,9 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
 
     @Synthesis
     void registerSyntheticBeans(SyntheticComponents syn) {
+        if (!Boolean.getBoolean(BuildCompatibleFaultToleranceExtension.FAULT_TOLERANCE_EXT_ENABLED)) {
+            return;
+        }
         String[] classesArray = faultToleranceClasses.toArray(new String[0]);
         syn.addBean(BuildCompatibleFaultToleranceOperationProvider.class)
                 .type(FaultToleranceOperationProvider.class)
@@ -128,6 +143,9 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
 
     @Validation
     void validate(Messages msg) {
+        if (!Boolean.getBoolean(BuildCompatibleFaultToleranceExtension.FAULT_TOLERANCE_EXT_ENABLED)) {
+            return;
+        }
         for (Map.Entry<String, Set<MethodInfo>> entry : existingCircuitBreakerNames.entrySet()) {
             if (entry.getValue().size() > 1) {
                 Set<String> methodNames = entry.getValue()

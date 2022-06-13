@@ -16,11 +16,14 @@ import jakarta.annotation.Priority
 
 class FaultToleranceExtensionSpec extends AbstractTypeElementSpec {
     def setup() {
+        BuildTimeExtensionRegistry.setInstance(null) // reset
         System.setProperty("MP_Fault_Tolerance_Metrics_Enabled", "false")
+        System.setProperty(BuildCompatibleFaultToleranceExtension.FAULT_TOLERANCE_EXT_ENABLED, "true")
     }
 
     def cleanup() {
         System.setProperty("MP_Fault_Tolerance_Metrics_Enabled", "")
+        System.setProperty(BuildCompatibleFaultToleranceExtension.FAULT_TOLERANCE_EXT_ENABLED, "")
     }
 
     void "test fault tolerance extension"() {
@@ -28,6 +31,7 @@ class FaultToleranceExtensionSpec extends AbstractTypeElementSpec {
         def context = buildContext('''
 package testft;
 
+import org.eclipse.odi.cdi.annotation.OdiApplication;
 import org.eclipse.odi.cdi.processor.extensions.*;
 import io.micronaut.context.annotation.*;
 import io.micronaut.inject.ArgumentInjectionPoint;
@@ -38,6 +42,9 @@ import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import io.smallrye.faulttolerance.api.CircuitBreakerName;
 import java.io.IOException;
+
+@OdiApplication
+class Application {}
 
 @Singleton
 class MyService {

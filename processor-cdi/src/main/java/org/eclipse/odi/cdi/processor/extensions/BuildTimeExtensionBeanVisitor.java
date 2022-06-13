@@ -213,15 +213,10 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                             builder.typed(beanType);
 
                             copySyntheticAnnotationMetadata(visitorContext, syntheticBeanMetadata, builder);
-                            final Set<String> exposedTypes = syntheticBeanBuilder
+                            final Set<ClassElement> exposedTypes = syntheticBeanBuilder
                                     .getExposedTypes();
-                            if (exposedTypes.isEmpty()) {
-                                builder.typed(beanType);
-                            } else {
-                                for (String exposedType : exposedTypes) {
-                                    visitorContext.getClassElement(exposedType)
-                                            .ifPresent(builder::typed);
-                                }
+                            if (!exposedTypes.isEmpty()) {
+                                builder.typed(exposedTypes.toArray(ClassElement.ZERO_CLASS_ELEMENTS));
                             }
                         }
                 );

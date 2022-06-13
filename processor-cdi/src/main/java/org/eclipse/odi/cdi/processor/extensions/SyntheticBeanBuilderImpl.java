@@ -43,7 +43,7 @@ import jakarta.enterprise.lang.model.types.Type;
 final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder implements SyntheticBeanBuilder<T> {
     private final ClassElement beanType;
     private final VisitorContext localVisitorContext;
-    private final Set<String> exposedTypes = new HashSet<>();
+    private final Set<ClassElement> exposedTypes = new HashSet<>();
     private final Map<String, Object> params = new LinkedHashMap<>();
     private Class<? extends SyntheticBeanDisposer<T>> disposerClass;
     private Class<? extends SyntheticBeanCreator<T>> creatorClass;
@@ -60,7 +60,7 @@ final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder impleme
         return beanType;
     }
 
-    public Set<String> getExposedTypes() {
+    public Set<ClassElement> getExposedTypes() {
         return exposedTypes;
     }
 
@@ -79,7 +79,7 @@ final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder impleme
     @Override
     public SyntheticBeanBuilder<T> type(Class<?> type) {
         if (type != null) {
-            this.exposedTypes.add(type.getName());
+            this.exposedTypes.add(ClassElement.of(type));
         }
         return this;
     }
@@ -87,7 +87,8 @@ final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder impleme
     @Override
     public SyntheticBeanBuilder<T> type(ClassInfo type) {
         if (type != null) {
-            this.exposedTypes.add(type.name());
+            ClassInfoImpl impl = (ClassInfoImpl) type;
+            this.exposedTypes.add(impl.getElement());
         }
         return this;
     }
