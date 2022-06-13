@@ -1,1 +1,1 @@
-com.oracle.odi.cdi.processor.extensions.BuildServicesImpl
+org.eclipse.odi.cdi.processor.extensions.BuildServicesImpl

@@ -1,2 +1,2 @@
-com.oracle.odi.tck.porting.SpecVersionMapper
-com.oracle.odi.tck.porting.TestNgMapper
+org.eclipse.odi.tck.porting.SpecVersionMapper
+org.eclipse.odi.tck.porting.TestNgMapper

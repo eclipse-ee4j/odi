@@ -1,7 +1,7 @@
-com.oracle.odi.cdi.processor.mappers.AlternativeMapper
-com.oracle.odi.cdi.processor.mappers.NonbindingMapper
-com.oracle.odi.cdi.processor.mappers.SpecializesMapper
-com.oracle.odi.cdi.processor.mappers.InterceptorMapper
-com.oracle.odi.cdi.processor.mappers.JakartaPriorityMapper
-com.oracle.odi.cdi.processor.mappers.AroundConstructMapper
-com.oracle.odi.cdi.processor.mappers.AroundInvokeMapper
+org.eclipse.odi.cdi.processor.mappers.AlternativeMapper
+org.eclipse.odi.cdi.processor.mappers.NonbindingMapper
+org.eclipse.odi.cdi.processor.mappers.SpecializesMapper
+org.eclipse.odi.cdi.processor.mappers.InterceptorMapper
+org.eclipse.odi.cdi.processor.mappers.JakartaPriorityMapper
+org.eclipse.odi.cdi.processor.mappers.AroundConstructMapper
+org.eclipse.odi.cdi.processor.mappers.AroundInvokeMapper
