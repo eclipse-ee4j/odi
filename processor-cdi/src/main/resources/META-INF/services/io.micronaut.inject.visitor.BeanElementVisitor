@@ -1,1 +1,1 @@
-com.oracle.odi.cdi.processor.extensions.BuildTimeExtensionBeanVisitor
+org.eclipse.odi.cdi.processor.extensions.BuildTimeExtensionBeanVisitor

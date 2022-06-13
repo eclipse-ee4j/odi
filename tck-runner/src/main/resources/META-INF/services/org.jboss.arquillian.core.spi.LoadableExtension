@@ -1,1 +1,1 @@
-com.oracle.odi.tck.arquillian.OdiExtension
+org.eclipse.odi.tck.arquillian.OdiExtension

@@ -1,2 +1,2 @@
-com.oracle.odi.cdi.processor.extensions.BuildCompatibleFaultToleranceExtension
-com.oracle.odi.cdi.processor.extensions.LangModelVerifierExtension
+org.eclipse.odi.cdi.processor.extensions.BuildCompatibleFaultToleranceExtension
+org.eclipse.odi.cdi.processor.extensions.LangModelVerifierExtension

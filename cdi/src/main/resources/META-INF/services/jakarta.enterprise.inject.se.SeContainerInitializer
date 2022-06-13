@@ -1,1 +1,1 @@
-com.oracle.odi.cdi.OdiSeContainerInitializer
+org.eclipse.odi.cdi.OdiSeContainerInitializer
