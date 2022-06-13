@@ -28,6 +28,7 @@ class FaultToleranceExtensionSpec extends AbstractTypeElementSpec {
         def context = buildContext('''
 package testft;
 
+import org.eclipse.odi.cdi.processor.extensions.*;
 import io.micronaut.context.annotation.*;
 import io.micronaut.inject.ArgumentInjectionPoint;
 import jakarta.enterprise.inject.Instance;

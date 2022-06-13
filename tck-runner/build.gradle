@@ -81,7 +81,7 @@ tasks.register('singleTest', Test) {
 test {
     scanForTestClasses false
     useTestNG {
-        suites file("passingTests.xml")
+        suites file("failingTests.xml")
         excludeGroups("cdi-full", "javaee-full")
         systemProperties = [
                 'org.jboss.cdi.tck.libraryDirectory': "${buildDir}/tck-lib",
