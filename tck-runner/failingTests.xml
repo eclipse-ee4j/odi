@@ -658,7 +658,7 @@
                     <exclude name="testProducerMethodQualifiers"/>
                 </methods>
             </class>
-            <!-- Cannot compile -->
+            <!-- Methods with parameters annotated with @Disposes cannot be static -->
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest">
                 <methods>
                     <exclude name=".*"/>
@@ -666,10 +666,10 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest">
                 <methods>
+                    <!-- ???: Producer is returning null but proxy is lazy, no exception on create -->
                     <exclude name="testCreateFailsIfProducerReturnsNullAndNotDependent"/>
-                    <exclude name="testCreateRethrowsUncheckedException"/>
+                    <!-- TODO: Producers are allowed to produce null for dependent beans -->
                     <exclude name="testCreateReturnsNullIfProducerDoesAndDependent"/>
-                    <exclude name="testProducerMethodBeanDestroy"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithTypeParameter.ParameterizedReturnTypeWithTypeVariableTest">
