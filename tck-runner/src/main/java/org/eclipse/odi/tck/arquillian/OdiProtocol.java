@@ -91,34 +91,47 @@ public class OdiProtocol implements Protocol<OdiProtocolConfiguration> {
 
                 @Override
                 public void invoke(Object... parameters) throws Throwable {
-                    ClassLoader loader = Thread.currentThread().getContextClassLoader();
                     try {
-                        Thread.currentThread().setContextClassLoader(applicationClassLoader.get());
-
-                        Object actualTestInstance = OdiDeployableContainer.testInstance;
-
-                        Method actualMethod = null;
+                        ClassLoader loader = Thread.currentThread().getContextClassLoader();
                         try {
-                            actualMethod = actualTestInstance.getClass().getMethod(getMethod().getName(),
-                                    ClassLoading.convertToTCCL(getMethod().getParameterTypes()));
-                        } catch (NoSuchMethodException e) {
-                            actualMethod = actualTestInstance.getClass().getDeclaredMethod(getMethod().getName(),
-                                    ClassLoading.convertToTCCL(getMethod().getParameterTypes()));
-                            actualMethod.setAccessible(true);
-                        }
+                            Thread.currentThread().setContextClassLoader(applicationClassLoader.get());
 
-                        try {
-                            actualMethod.invoke(actualTestInstance, parameters);
-                        } catch (InvocationTargetException e) {
-                            Throwable cause = e.getCause();
-                            if (cause != null) {
-                                throw cause;
-                            } else {
-                                throw e;
+                            Object actualTestInstance = OdiDeployableContainer.testInstance;
+
+                            Method actualMethod = null;
+                            try {
+                                actualMethod = actualTestInstance.getClass().getMethod(getMethod().getName(),
+                                        ClassLoading.convertToTCCL(getMethod().getParameterTypes()));
+                            } catch (NoSuchMethodException e) {
+                                actualMethod = actualTestInstance.getClass().getDeclaredMethod(getMethod().getName(),
+                                        ClassLoading.convertToTCCL(getMethod().getParameterTypes()));
+                                actualMethod.setAccessible(true);
                             }
+
+                            try {
+                                actualMethod.invoke(actualTestInstance, parameters);
+                            } catch (InvocationTargetException e) {
+                                Throwable cause = e.getCause();
+                                if (cause != null) {
+                                    throw cause;
+                                } else {
+                                    throw e;
+                                }
+                            }
+                        } finally {
+                            Thread.currentThread().setContextClassLoader(loader);
                         }
-                    } finally {
-                        Thread.currentThread().setContextClassLoader(loader);
+                    } catch (Throwable e) {
+                        try {
+                            // Try to rethrow the same exception but created in the APP classloader
+                            // otherwise the TestNG condition will fail
+                            Class<Throwable> exp = (Class<Throwable>) Thread.currentThread().getContextClassLoader().loadClass(e.getClass().getName());
+                            e = exp.getConstructor().newInstance();
+                            e.setStackTrace(e.getStackTrace());
+                        } catch (Throwable ignore) {
+                            // Ignore
+                        }
+                        throw e;
                     }
                 }
             }));
