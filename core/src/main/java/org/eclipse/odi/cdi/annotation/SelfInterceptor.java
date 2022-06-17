@@ -15,7 +15,6 @@
  */
 package org.eclipse.odi.cdi.annotation;
 
-import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.Internal;
 import jakarta.interceptor.InterceptorBinding;
 
@@ -30,7 +29,6 @@ import java.lang.annotation.Target;
  * @author Denis Stepanov
  * @since 1.0.0
  */
-@Executable(processOnStartup = true)
 @Internal
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
