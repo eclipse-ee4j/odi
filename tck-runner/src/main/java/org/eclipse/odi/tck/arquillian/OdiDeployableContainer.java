@@ -15,12 +15,10 @@
  */
 package org.eclipse.odi.tck.arquillian;
 
+import io.micronaut.context.ApplicationContext;
 import org.eclipse.odi.cdi.OdiApplicationContextBuilder;
 import org.eclipse.odi.tck.porting.BeansImpl;
-import io.micronaut.context.ApplicationContext;
-import jakarta.enterprise.inject.spi.DefinitionException;
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
-import org.jboss.arquillian.container.spi.client.container.DeploymentException;
 import org.jboss.arquillian.container.spi.client.protocol.ProtocolDescription;
 import org.jboss.arquillian.container.spi.client.protocol.metadata.ProtocolMetaData;
 import org.jboss.arquillian.container.spi.context.annotation.DeploymentScoped;
@@ -36,11 +34,7 @@ import org.jboss.shrinkwrap.descriptor.api.Descriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -93,7 +87,7 @@ public class OdiDeployableContainer implements DeployableContainer<OdiContainerC
     }
 
     @Override
-    public ProtocolMetaData deploy(Archive<?> archive) throws DeploymentException {
+    public ProtocolMetaData deploy(Archive<?> archive) {
         if (archive instanceof LibraryContainer) {
             ((LibraryContainer<?>) archive).addAsLibrary(buildSupportLibrary());
         } else {
@@ -104,7 +98,6 @@ public class OdiDeployableContainer implements DeployableContainer<OdiContainerC
             throw new IllegalStateException("Test class not available");
         }
         Class testJavaClass = testClass.get().getJavaClass();
-
 
         try {
             DeploymentDir deploymentDir = new DeploymentDir();
@@ -127,19 +120,12 @@ public class OdiDeployableContainer implements DeployableContainer<OdiContainerC
             testInstance = actualTestClass.newInstance();
             // maybe there's a better way? Quarkus makes the test class a bean and then looks it up from CDI
             OdiInjectionEnricher.enrich(testInstance, applicationContext);
-        } catch (Throwable t) {
-            //clone the exception into the correct class loader
-            Throwable nt;
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            try (ObjectOutputStream a = new ObjectOutputStream(out)) {
-                a.writeObject(t);
-                a.close();
-                nt = (Throwable) new ObjectInputStream(new ByteArrayInputStream(out.toByteArray())).readObject();
-            } catch (Exception e) {
-                throw new DeploymentException("Unable to start the application context", t);
-            }
-            throw new DefinitionException("Unable to start the application context", nt);
-
+        } catch (ArchiveCompilationException e) {
+            throw new jakarta.enterprise.inject.spi.DefinitionException(e.getMessage());
+        } catch (ArchiveCompilerException e) {
+            throw new RuntimeException("Compiler failed with: " + e.getMessage(), e);
+        } catch (Throwable e) {
+            throw new jakarta.enterprise.inject.spi.DeploymentException(e.getMessage());
         } finally {
             Thread.currentThread().setContextClassLoader(old);
         }
