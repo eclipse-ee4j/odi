@@ -218,6 +218,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Scopes inheritance -->
             <class name="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest">
                 <methods>
                     <exclude name=".*"/>
@@ -526,81 +527,32 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-<!--            Cannot apply AOP advice to final class-->
+            <!--            Cannot apply AOP advice to final class-->
             <class name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
-<!--            Beans produced from fields cannot be static-->
+            <!--            Beans produced from fields cannot be static-->
             <class name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiple.MultipleDisposerMethodsForProducerMethodTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.unresolvedMethod.UnresolvedDisposalMethodDefinitionTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.producesUnallowed.ProducesUnallowedDefinitionTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.initializerUnallowed.InitializerUnallowedDefinitionTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.observes.ObserverParameterUnallowedDefinitionTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.interceptor.DisposerMethodOnInterceptorTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
+            <!--            Annotation processor cannot detect ambiguous injection-->
             <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.validation.ambiguous.DisposerMethodParameterInjectionValidationTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!--            Annotation processor cannot detect unsatisfied injection-->
             <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.validation.unsatisfied.DisposerMethodParameterInjectionValidationTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiParams.MultipleDisposeParametersDefinitionTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.inheritance.DisposerMethodInheritanceTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <!-- Cannot compile -->
+            <!-- Beans produced from fields cannot be private or protected -->
             <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <!-- Cannot compile -->
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.parameters.DisposedParameterPositionTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>

@@ -126,8 +126,9 @@ public class OdiProtocol implements Protocol<OdiProtocolConfiguration> {
                             // Try to rethrow the same exception but created in the APP classloader
                             // otherwise the TestNG condition will fail
                             Class<Throwable> exp = (Class<Throwable>) Thread.currentThread().getContextClassLoader().loadClass(e.getClass().getName());
+                            Throwable prev = e;
                             e = exp.getConstructor().newInstance();
-                            e.setStackTrace(e.getStackTrace());
+                            e.setStackTrace(prev.getStackTrace());
                         } catch (Throwable ignore) {
                             // Ignore
                         }
