@@ -15,8 +15,6 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
-import org.eclipse.odi.cdi.processor.AnnotationUtil;
-import org.eclipse.odi.cdi.processor.CdiUtil;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
@@ -28,6 +26,8 @@ import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import jakarta.interceptor.Interceptor;
+import org.eclipse.odi.cdi.processor.AnnotationUtil;
+import org.eclipse.odi.cdi.processor.CdiUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,17 +85,20 @@ public class DisposesMethodVisitor implements TypeElementVisitor<Object, Object>
             } else if (this.currentClass.hasDeclaredAnnotation(Interceptor.class)) {
                 context.fail("Interceptors cannot declare @Disposes methods", element);
             } else {
-                final int disposesMethodCount = disposesParameters.size();
-                final ClassElement disposedType = disposesParameters.get(0).getType();
-                if (disposesMethodCount == 1) {
-                    if (!disposerMethods.isEmpty()) {
+                final int disposesParametersCount = disposesParameters.size();
+                if (disposesParametersCount == 1) {
+                    ParameterElement disposesParameter = disposesParameters.get(0);
+                    final ClassElement disposedType = disposesParameter.getType();
+                    // Skip validating for beans with qualifiers
+                    if (!disposerMethods.isEmpty() && !disposesParameter.hasDeclaredStereotype(io.micronaut.core.annotation.AnnotationUtil.QUALIFIER)) {
                         for (MethodElement disposerMethod : disposerMethods) {
                             final Optional<ParameterElement> disposerParam = Arrays.stream(disposerMethod.getParameters())
-                                    .filter(p -> p.hasDeclaredAnnotation(Disposes.class)).findFirst();
+                                    .filter(p -> p.hasDeclaredAnnotation(Disposes.class))
+                                    .findFirst();
                             if (disposerParam.isPresent()) {
                                 if (disposerParam.get().getType().getName().equals(disposedType.getName())) {
-                                    final Stream<MethodElement> methodStream = Stream.of(element, disposerMethod);
-                                    final String methodDesc = methodStream.map((me) -> me.getDescription(true))
+                                    final String methodDesc = Stream.of(element, disposerMethod)
+                                            .map((me) -> me.getDescription(true))
                                             .collect(Collectors.joining(" and "));
                                     context.fail("Only a single @Disposes method is permitted, found: " + methodDesc, element);
                                     return;
@@ -110,7 +113,6 @@ public class DisposesMethodVisitor implements TypeElementVisitor<Object, Object>
                                     .onlyInstance()
                                     .onlyAccessible()
                                     .onlyConcrete()
-                                    .onlyDeclared()
                                     .annotated((annotationMetadata -> annotationMetadata.hasDeclaredAnnotation(Produces.class)))
                                     .filter((methodElement -> disposedType.isAssignable(methodElement.getGenericReturnType())))
                     );
@@ -127,7 +129,7 @@ public class DisposesMethodVisitor implements TypeElementVisitor<Object, Object>
                     element.annotate(AnnotationUtil.ANN_DISPOSER_METHOD);
                 } else {
                     context.fail("Only a single @Disposes parameter is permitted, "
-                                         + disposesMethodCount
+                                         + disposesParametersCount
                                          + " are defined: "
                                          + disposesParameters.stream().map(Element::getName)
                             .collect(Collectors.joining(" and ")), element);
