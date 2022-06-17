@@ -15,7 +15,6 @@
  */
 package org.eclipse.odi.cdi.intercept;
 
-import org.eclipse.odi.cdi.OdiBeanImpl;
 import io.micronaut.aop.ConstructorInterceptor;
 import io.micronaut.aop.ConstructorInvocationContext;
 import io.micronaut.aop.InterceptorKind;
@@ -32,7 +31,9 @@ import io.micronaut.inject.ExecutableMethod;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
+import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.InterceptorBinding;
+import org.eclipse.odi.cdi.OdiBeanImpl;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -60,6 +61,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
     private ExecutableMethod<B, Object>[] preDestroy;
     private ExecutableMethod<B, Object>[] postConstruct;
     private Set<Annotation> interceptorBindings;
+    private boolean isSelfInterceptor;
 
     /**
      * Default constructor.
@@ -72,6 +74,22 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
         this.beanContext = beanContext;
         this.beanDefinition = beanContext.getBeanDefinition(beanDefinition.asArgument());
         this.priority = this.beanDefinition.intValue(Priority.class).orElse(0);
+    }
+
+    /**
+     * Mark interceptor as self interceptor.
+     *
+     * @param isSelfInterceptor true if is self interceptor
+     */
+    public void setSelfInterceptor(String isSelfInterceptor) {
+        this.isSelfInterceptor = Boolean.parseBoolean(isSelfInterceptor);
+    }
+
+    /**
+     * @return true if self interceptor
+     */
+    public boolean isSelfInterceptor() {
+        return isSelfInterceptor;
     }
 
     /**
@@ -113,6 +131,9 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
 
     @Override
     public Object intercept(InvocationContext<Object, Object> context) {
+        if (context.hasAnnotation(AroundInvoke.class)) {
+            return context.proceed();
+        }
         if (context instanceof ConstructorInvocationContext) {
             return intercept((ConstructorInvocationContext<Object>) context);
         } else if (context instanceof MethodInvocationContext) {
@@ -140,6 +161,9 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
 
     @Override
     public Object intercept(MethodInvocationContext<Object, Object> context) {
+        if (context.hasAnnotation(AroundInvoke.class)) {
+            return context.proceed();
+        }
         final ExecutableMethod<B, Object>[] executableMethods = selectMethod(context.getKind());
 
         if (executableMethods == null) {

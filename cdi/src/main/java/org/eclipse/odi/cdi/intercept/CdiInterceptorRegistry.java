@@ -63,6 +63,12 @@ public class CdiInterceptorRegistry implements InterceptorRegistry {
             if (o1 instanceof JakartaInterceptorAdapter && o2 instanceof JakartaInterceptorAdapter) {
                 JakartaInterceptorAdapter j1 = (JakartaInterceptorAdapter) o1;
                 JakartaInterceptorAdapter j2 = (JakartaInterceptorAdapter) o2;
+                if (j1.isSelfInterceptor() && !j2.isSelfInterceptor()) {
+                    return 1;
+                }
+                if (!j1.isSelfInterceptor() && j2.isSelfInterceptor()) {
+                    return -1;
+                }
                 if (j1.getPriority() == j2.getPriority()) {
                     return j1.getBeanClass().getName().compareTo(j2.getBeanClass().getName());
                 }

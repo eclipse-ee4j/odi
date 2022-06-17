@@ -9,4 +9,5 @@ org.eclipse.odi.cdi.processor.visitors.InterceptorVisitor
 org.eclipse.odi.cdi.processor.visitors.ObservesMethodVisitor
 org.eclipse.odi.cdi.processor.visitors.ScopeVisitor
 org.eclipse.odi.cdi.processor.visitors.InterceptorBindingVisitor
+org.eclipse.odi.cdi.processor.visitors.AroundInvokeVisitor
 org.eclipse.odi.cdi.processor.extensions.BuildTimeExtensionVisitor
