@@ -55,7 +55,7 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Interceptor
             });
         }
 
-        List<MethodElement> innerInterceptorMethods = element.getEnclosedElements(
+        List<MethodElement> selfInterceptorMethods = element.getEnclosedElements(
                 ElementQuery.ALL_METHODS
                         .onlyInstance()
                         .onlyAccessible()
@@ -64,7 +64,7 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Interceptor
                         .filter(methodElement -> methodElement.hasAnnotation(AroundInvoke.class))
         );
 
-        if (!innerInterceptorMethods.isEmpty()) {
+        if (!selfInterceptorMethods.isEmpty()) {
             InterceptorVisitor.addInterceptor(element, context, element, true);
         }
     }
