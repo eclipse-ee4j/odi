@@ -15,7 +15,6 @@
  */
 package org.eclipse.odi.tck.arquillian;
 
-import org.eclipse.odi.cdi.processor.extensions.BuildTimeExtensionRegistry;
 import io.micronaut.annotation.processing.AggregatingTypeElementVisitorProcessor;
 import io.micronaut.annotation.processing.BeanDefinitionInjectProcessor;
 import io.micronaut.annotation.processing.PackageConfigurationInjectProcessor;
@@ -24,7 +23,7 @@ import io.micronaut.annotation.processing.TypeElementVisitorProcessor;
 import io.micronaut.core.io.IOUtils;
 import io.micronaut.core.io.service.SoftServiceLoader;
 import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
-import org.jboss.arquillian.container.spi.client.container.DeploymentException;
+import org.eclipse.odi.cdi.processor.extensions.BuildTimeExtensionRegistry;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.Node;
@@ -36,7 +35,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -70,19 +68,19 @@ final class ArchiveCompiler {
         this.deploymentArchive = deploymentArchive;
     }
 
-    void compile() throws DeploymentException {
+    void compile() throws ArchiveCompilationException, ArchiveCompilerException {
         try {
             if (deploymentArchive instanceof WebArchive) {
                 compileWar();
             } else {
-                throw new DeploymentException("Unknown archive type: " + deploymentArchive);
+                throw new ArchiveCompilerException("Unknown archive type: " + deploymentArchive);
             }
         } catch (IOException e) {
-            throw new DeploymentException("Compilation failed", e);
+            throw new ArchiveCompilerException("Compilation failed", e);
         }
     }
 
-    private void compileWar() throws DeploymentException, IOException {
+    private void compileWar() throws ArchiveCompilationException, ArchiveCompilerException, IOException {
         List<File> sourceFiles = new ArrayList<>();
         for (Map.Entry<ArchivePath, Node> entry : deploymentArchive.getContent().entrySet()) {
             String path = entry.getKey().get();
@@ -107,7 +105,7 @@ final class ArchiveCompiler {
                 Files.createDirectories(sourceFilePath.getParent()); // make sure the directory exists
                 try (InputStream in = ArchiveCompiler.class.getResourceAsStream(sourceFile)) {
                     if (in == null) {
-                        throw new DeploymentException("Source file not found: " + sourceFile);
+                        throw new ArchiveCompilerException("Source file not found: " + sourceFile);
                     }
                     Files.copy(in, sourceFilePath);
                 }
@@ -125,7 +123,7 @@ final class ArchiveCompiler {
         doCompile(sourceFiles, deploymentDir.target.toFile());
     }
 
-    private void doCompile(Collection<File> testSources, File outputDir) throws DeploymentException, IOException {
+    private void doCompile(Collection<File> testSources, File outputDir) throws ArchiveCompilationException, IOException {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         final Map<ArchivePath, Node> extension = deploymentArchive.getContent(object ->
@@ -211,8 +209,8 @@ final class ArchiveCompiler {
         return applicationSource;
     }
 
-    private void outputDiagnostics(DiagnosticCollector<JavaFileObject> diagnostics) throws DeploymentException {
-        throw new DeploymentException("Compilation failed:\n" + diagnostics.getDiagnostics()
+    private void outputDiagnostics(DiagnosticCollector<JavaFileObject> diagnostics) throws ArchiveCompilationException {
+        throw new ArchiveCompilationException("Compilation failed:\n" + diagnostics.getDiagnostics()
                 .stream()
                 .map(it -> {
                     if (it.getSource() == null) {

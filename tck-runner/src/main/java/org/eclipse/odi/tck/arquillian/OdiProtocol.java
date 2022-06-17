@@ -30,6 +30,10 @@ import org.jboss.arquillian.core.api.annotation.Inject;
 import org.jboss.arquillian.test.spi.TestMethodExecutor;
 import org.jboss.arquillian.test.spi.TestResult;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -90,7 +94,7 @@ public class OdiProtocol implements Protocol<OdiProtocolConfiguration> {
                 }
 
                 @Override
-                public void invoke(Object... parameters) throws Throwable {
+                public void invoke(Object... parameters) {
                     try {
                         ClassLoader loader = Thread.currentThread().getContextClassLoader();
                         try {
@@ -98,7 +102,7 @@ public class OdiProtocol implements Protocol<OdiProtocolConfiguration> {
 
                             Object actualTestInstance = OdiDeployableContainer.testInstance;
 
-                            Method actualMethod = null;
+                            Method actualMethod;
                             try {
                                 actualMethod = actualTestInstance.getClass().getMethod(getMethod().getName(),
                                         ClassLoading.convertToTCCL(getMethod().getParameterTypes()));
@@ -122,22 +126,25 @@ public class OdiProtocol implements Protocol<OdiProtocolConfiguration> {
                             Thread.currentThread().setContextClassLoader(loader);
                         }
                     } catch (Throwable e) {
-                        try {
-                            // Try to rethrow the same exception but created in the APP classloader
-                            // otherwise the TestNG condition will fail
-                            Class<Throwable> exp = (Class<Throwable>) Thread.currentThread().getContextClassLoader().loadClass(e.getClass().getName());
-                            Throwable prev = e;
-                            e = exp.getConstructor().newInstance();
-                            e.setStackTrace(prev.getStackTrace());
-                        } catch (Throwable ignore) {
-                            // Ignore
-                        }
-                        throw e;
+                        rethrowWithCorrectClassloader(e);
                     }
                 }
             }));
 
             return testResult.get();
         }
+    }
+
+    public static <T extends Throwable, R> R rethrowWithCorrectClassloader(Throwable t) throws T {
+        //clone the exception into the correct class loader
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (ObjectOutputStream a = new ObjectOutputStream(out)) {
+            a.writeObject(t);
+            a.close();
+            t = (T) new ObjectInputStream(new ByteArrayInputStream(out.toByteArray())).readObject();
+        } catch (Throwable e) {
+            // Ignore
+        }
+        throw (T) t;
     }
 }
