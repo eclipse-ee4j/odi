@@ -44,11 +44,6 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.interceptors.tests.order.aroundInvoke.AroundInvokeOrderTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative01Test">
                 <methods>
                     <exclude name=".*"/>
@@ -106,11 +101,6 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.definition.stereotype.broken.tooManyScopes.TooManyScopeTypesTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.bindings.LifecycleInterceptorDefinitionTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
@@ -183,14 +173,10 @@
                     <exclude name="testRawBeanTypes"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.bindings.AroundInvokeInterceptorTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!-- Private intercept method -->
+                    <exclude name="testPrivateAroundInvokeInterceptor"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.definition.qualifier.repeatable.RepeatableQualifiersTest">
@@ -539,13 +525,13 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <!--            Annotation processor cannot detect ambiguous injection-->
+            <!-- TODO: Runtime error disposal method ambiguous injection -->
             <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.validation.ambiguous.DisposerMethodParameterInjectionValidationTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <!--            Annotation processor cannot detect unsatisfied injection-->
+            <!-- TODO: Runtime error disposal method unsatisfied injection -->
             <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.validation.unsatisfied.DisposerMethodParameterInjectionValidationTest">
                 <methods>
                     <exclude name=".*"/>
@@ -812,11 +798,6 @@
                     <exclude name="testInterceptorBindingIndirectlyInheritedFromManagedBean"/>
                     <exclude name="testMethodInterceptorBindingIndirectlyInheritedFromManagedBean"/>
                     <exclude name="testMethodInterceptorBindingIndirectlyNotInheritedFromManagedBean"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.interceptors.definition.interceptorOrder.InterceptorOrderTest">
-                <methods>
-                    <exclude name="testInterceptorsInvocationOrder"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.interceptors.definition.broken.finalClassInterceptor.DependentBeanFinalMethodInterceptorTest">

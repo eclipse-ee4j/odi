@@ -21,6 +21,7 @@ import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InterceptorBinding;
 
@@ -52,6 +53,19 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Interceptor
                         .member("proxyTarget", true)
                         .member("cacheableLazyTarget", true).build();
             });
+        }
+
+        List<MethodElement> innerInterceptorMethods = element.getEnclosedElements(
+                ElementQuery.ALL_METHODS
+                        .onlyInstance()
+                        .onlyAccessible()
+                        .onlyConcrete()
+                        .onlyDeclared()
+                        .filter(methodElement -> methodElement.hasAnnotation(AroundInvoke.class))
+        );
+
+        if (!innerInterceptorMethods.isEmpty()) {
+            InterceptorVisitor.addInterceptor(element, context, element, true);
         }
     }
 

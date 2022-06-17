@@ -56,20 +56,39 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
 
     /**
      * Adds a new interceptor bean.
+     *
      * @param originatingElement The originating element
-     * @param context The context
-     * @param interceptorBean The interceptor bean
+     * @param context            The context
+     * @param interceptorBean    The interceptor bean
      * @return The bean builder that constructs the interceptor
      */
     public static BeanElementBuilder addInterceptor(ClassElement originatingElement,
-                                              VisitorContext context,
-                                              ClassElement interceptorBean) {
+                                                    VisitorContext context,
+                                                    ClassElement interceptorBean) {
+        return addInterceptor(originatingElement, context, interceptorBean, false);
+    }
+
+    /**
+     * Adds a new interceptor bean.
+     *
+     * @param originatingElement The originating element
+     * @param context            The context
+     * @param interceptorBean    The interceptor bean
+     * @param isSelfInterceptor  Is self interceptor
+     * @return The bean builder that constructs the interceptor
+     */
+    public static BeanElementBuilder addInterceptor(ClassElement originatingElement,
+                                                    VisitorContext context,
+                                                    ClassElement interceptorBean,
+                                                    boolean isSelfInterceptor) {
         Set<String> interceptorBindings =
                 new HashSet<>(interceptorBean.getAnnotationNamesByStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS));
-        interceptorBean.removeAnnotation(AnnotationUtil.ANN_AROUND);
-        interceptorBean.removeStereotype(AnnotationUtil.ANN_AROUND);
-        interceptorBean.removeStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
-        interceptorBean.removeAnnotation(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
+        if (!isSelfInterceptor) {
+            interceptorBean.removeAnnotation(AnnotationUtil.ANN_AROUND);
+            interceptorBean.removeStereotype(AnnotationUtil.ANN_AROUND);
+            interceptorBean.removeStereotype(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
+            interceptorBean.removeAnnotation(AnnotationUtil.ANN_INTERCEPTOR_BINDINGS);
+        }
         // Investigate why `.hasAnnotation(Scope.class)` doesn't work
         if (!originatingElement.hasAnnotation(Dependent.class)) {
             interceptorBean.annotate(Singleton.class);
@@ -96,7 +115,8 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                     interceptorBuilder,
                     AroundInvoke.class,
                     "setAroundInvoke",
-                    false
+                    false,
+                    isSelfInterceptor
             );
             discoverInterceptMethods(
                     originatingElement,
@@ -105,7 +125,8 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                     interceptorBuilder,
                     AroundConstruct.class,
                     "setAroundConstruct",
-                    false
+                    false,
+                    isSelfInterceptor
             );
             discoverInterceptMethods(
                     originatingElement,
@@ -114,7 +135,8 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                     interceptorBuilder,
                     PostConstruct.class,
                     "setPostConstruct",
-                    true
+                    true,
+                    isSelfInterceptor
             );
             discoverInterceptMethods(
                     originatingElement,
@@ -123,7 +145,8 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                     interceptorBuilder,
                     PreDestroy.class,
                     "setPreDestroy",
-                    true
+                    true,
+                    isSelfInterceptor
             );
             discoverInterceptMethods(
                     originatingElement,
@@ -132,7 +155,8 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                     interceptorBuilder,
                     javax.annotation.PostConstruct.class,
                     "setPostConstruct",
-                    true
+                    true,
+                    isSelfInterceptor
             );
             discoverInterceptMethods(
                     originatingElement,
@@ -141,7 +165,8 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                     interceptorBuilder,
                     javax.annotation.PreDestroy.class,
                     "setPreDestroy",
-                    true
+                    true,
+                    isSelfInterceptor
             );
             return interceptorBuilder;
         }
@@ -149,12 +174,12 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
     }
 
     private static void discoverInterceptMethods(ClassElement originatingElement,
-                                  VisitorContext context,
-                                  ClassElement interceptorBean,
-                                  BeanElementBuilder interceptorBuilder,
-                                  Class<? extends Annotation> aroundAnnotation,
-                                  String setMethodName,
-                                  boolean isRemoveAnn) {
+                                                 VisitorContext context,
+                                                 ClassElement interceptorBean,
+                                                 BeanElementBuilder interceptorBuilder,
+                                                 Class<? extends Annotation> aroundAnnotation,
+                                                 String setMethodName,
+                                                 boolean isRemoveAnn, boolean isSelfInterceptor) {
         final ElementQuery<MethodElement> baseQuery = ElementQuery.ALL_METHODS
                 .onlyAccessible(originatingElement);
 
@@ -183,7 +208,9 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                                 .orElse(null);
                         if (parentMethod != null) {
                             parentMethod.annotate(Executable.class, (builder) -> builder.value(aroundAnnotation));
-                            parentMethod.removeAnnotation(aroundAnnotation);
+                            if (isRemoveAnn) {
+                                parentMethod.removeAnnotation(aroundAnnotation);
+                            }
                         }
                     }
                     aroundMethods.add(methodElement.getName());
@@ -197,16 +224,24 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
         if (!aroundMethods.isEmpty()) {
             addSetMethod(aroundMethods, interceptorBuilder, setMethodName);
         }
+
+        if (isSelfInterceptor) {
+            addSetMethod("true", interceptorBuilder, "setSelfInterceptor");
+        }
     }
 
     private static void addSetMethod(List<String> methods, BeanElementBuilder currentBuilder, String setMethodName) {
+        addSetMethod(String.join(",", methods), currentBuilder, setMethodName);
+    }
+
+    private static void addSetMethod(String value, BeanElementBuilder currentBuilder, String setMethodName) {
         currentBuilder.withMethods(
                 ElementQuery.ALL_METHODS.onlyInstance().onlyDeclared().onlyAccessible()
                         .named((name) -> name.equals(setMethodName)),
                 (
                         (method) -> {
                             method.inject();
-                            method.getParameters()[0].injectValue(String.join(",", methods));
+                            method.getParameters()[0].injectValue(value);
                         })
         );
     }
