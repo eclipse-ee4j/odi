@@ -15,9 +15,6 @@
  */
 package org.eclipse.odi.cdi.events;
 
-import org.eclipse.odi.cdi.AnnotationUtils;
-import org.eclipse.odi.cdi.OdiBeanContainer;
-import org.eclipse.odi.cdi.OdiUtils;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.event.ApplicationEventPublisher;
 import io.micronaut.core.annotation.AnnotationMetadata;
@@ -36,6 +33,9 @@ import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.enterprise.util.TypeLiteral;
+import org.eclipse.odi.cdi.AnnotationUtils;
+import org.eclipse.odi.cdi.OdiBeanContainer;
+import org.eclipse.odi.cdi.OdiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +46,11 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * The implementation of {@link Event}.
@@ -67,7 +69,8 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
     private final Qualifier<T> qualifier;
     @Nullable
     private final InjectionPoint<?> injectionPoint;
-    private final Supplier<Collection<ObserverMethod<T>>> observerMethodsSupplier;
+    private final Supplier<Collection<ObserverMethod<T>>> observerMethodsSyncSupplier;
+    private final Supplier<Collection<ObserverMethod<T>>> observerMethodsAsyncSupplier;
     private final OdiObserverMethodRegistry observerMethodRegistry;
     private final Supplier<Executor> executorSupplier;
 
@@ -88,8 +91,10 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
         this.eventType = eventType;
         this.qualifier = qualifier;
         this.injectionPoint = injectionPoint;
-        this.observerMethodsSupplier = SupplierUtil.memoizedNonEmpty(() ->
-                observerMethodRegistry.findListOfObserverMethods(eventType, qualifier));
+        this.observerMethodsSyncSupplier = SupplierUtil.memoizedNonEmpty(() ->
+                observerMethodRegistry.findListOfObserverMethods(eventType, qualifier).stream().filter(m -> !m.isAsync()).collect(Collectors.toList()));
+        this.observerMethodsAsyncSupplier = SupplierUtil.memoizedNonEmpty(() ->
+                observerMethodRegistry.findListOfObserverMethods(eventType, qualifier).stream().filter(ObserverMethod::isAsync).collect(Collectors.toList()));
         this.executorSupplier = executorSupplier;
         this.observerMethodRegistry = observerMethodRegistry;
     }
@@ -100,7 +105,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             if (EVENT_LOGGER.isDebugEnabled()) {
                 EVENT_LOGGER.debug("Firing event: {}", event);
             }
-            notifyObserverMethods(event, observerMethodsSupplier.get());
+            notifyObserverMethods(event, observerMethodsSyncSupplier.get());
         }
     }
 
@@ -141,9 +146,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             if (this.qualifier != null && this.qualifier.equals(AnyQualifier.INSTANCE)) {
                 qualifier = resolvedQualifiers;
             } else {
-                qualifier = Qualifiers.byQualifiers(
-                        resolvedQualifiers, (Qualifier<U>) this.qualifier
-                );
+                qualifier = Qualifiers.byQualifiers(resolvedQualifiers, (Qualifier<U>) this.qualifier);
             }
         }
         return new OdiEvent<>(
@@ -159,45 +162,71 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
 
     private <U extends T> CompletableFuture<U> fireAsync(U event, Executor executor) {
         Objects.requireNonNull(event, "Event cannot be null");
-        CompletableFuture<U> future = new CompletableFuture<>();
-        Collection<ObserverMethod<T>> observerMethods = observerMethodsSupplier.get();
-        executor.execute(() -> {
-            try {
-                notifyObserverMethods(event, observerMethods);
-                future.complete(event);
-            } catch (Exception e) {
-                future.completeExceptionally(e);
-            }
-        });
-        return future;
+        return notifyObserverMethodsAsync(event, observerMethodsAsyncSupplier.get(), executor);
     }
 
     private void notifyObserverMethods(@NonNull T event, Collection<ObserverMethod<T>> observerMethods) {
         if (!observerMethods.isEmpty()) {
             for (ObserverMethod<T> observerMethod : observerMethods) {
-                try {
-                    if (EVENT_LOGGER.isTraceEnabled()) {
-                        EVENT_LOGGER.trace("Invoking observer method [{}] for event: {}", observerMethod, event);
-                    }
-                    observerMethod.notify(createContext(event));
-                } catch (ClassCastException ex) {
-                    String msg = ex.getMessage();
-                    if (msg == null || msg.startsWith(event.getClass().getName())) {
-                        if (EVENT_LOGGER.isDebugEnabled()) {
-                            EVENT_LOGGER.debug("Incompatible observerMethod for event: " + observerMethod, ex);
-                        }
-                    } else {
-                        throw ex;
-                    }
-                }
+                notifyObserverMethod(event, observerMethod);
             }
         }
     }
 
-    private EventContext<T> createContext(T event) {
-        return new EventContext<T>() {
+    private <U extends T> CompletableFuture<U> notifyObserverMethodsAsync(@NonNull U event, Collection<ObserverMethod<T>> observerMethods, Executor executor) {
+        if (!observerMethods.isEmpty()) {
+            CompletableFuture<Throwable> cf = CompletableFuture.completedFuture(null);
+            for (ObserverMethod<T> observerMethod : observerMethods) {
+                CompletableFuture<Throwable> nextNotify = CompletableFuture.supplyAsync(() -> {
+                    try {
+                        notifyObserverMethod(event, observerMethod);
+                    } catch (Throwable e) {
+                        return e;
+                    }
+                    return null;
+                }, executor);
+                cf = cf.thenCombine(nextNotify, (t1, t2) -> {
+                    if (t2 != null) {
+                        if (t1 == null) {
+                            t1 = new CompletionException(new IllegalStateException("Failed to invoke async event handler"));
+                        }
+                        t1.addSuppressed(t2);
+                    }
+                    return t1;
+                });
+            }
+            return cf.thenApply(throwable -> {
+                if (throwable != null) {
+                    throw (CompletionException) throwable;
+                }
+                return event;
+            });
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
+    private <U extends T> void notifyObserverMethod(U event, ObserverMethod<T> observerMethod) {
+        try {
+            if (EVENT_LOGGER.isTraceEnabled()) {
+                EVENT_LOGGER.trace("Invoking observer method [{}] for event: {}", observerMethod, event);
+            }
+            observerMethod.notify(createContext(event));
+        } catch (ClassCastException ex) {
+            String msg = ex.getMessage();
+            if (msg == null || msg.startsWith(event.getClass().getName())) {
+                if (EVENT_LOGGER.isDebugEnabled()) {
+                    EVENT_LOGGER.debug("Incompatible observerMethod for event: " + observerMethod, ex);
+                }
+            } else {
+                throw ex;
+            }
+        }
+    }
+
+    private <K> EventContext<K> createContext(K event) {
+        return new EventContext<K>() {
             @Override
-            public T getEvent() {
+            public K getEvent() {
                 return event;
             }
 

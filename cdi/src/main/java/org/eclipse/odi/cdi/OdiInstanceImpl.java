@@ -15,6 +15,7 @@
  */
 package org.eclipse.odi.cdi;
 
+import io.micronaut.inject.qualifiers.AnyQualifier;
 import org.eclipse.odi.cdi.context.NoOpDependentContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.NonNull;
@@ -241,7 +242,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private <K> Qualifier<K> withQualifier(Qualifier<?> newQualifier) {
-        if (qualifier == null) {
+        if (qualifier == null || qualifier == AnyQualifier.INSTANCE && newQualifier != null) {
             return (Qualifier<K>) newQualifier;
         }
         if (newQualifier != null) {
