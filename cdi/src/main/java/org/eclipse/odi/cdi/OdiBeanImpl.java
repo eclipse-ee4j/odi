@@ -96,10 +96,12 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public Class<?> getBeanClass() {
-        if (definition instanceof AdvisedBeanType) {
-            return ((AdvisedBeanType<?>) definition).getInterceptedType();
-        }
-        return definition.getDeclaringType().orElse(definition.getBeanType());
+        return definition.getDeclaringType().orElseGet(() -> {
+            if (definition instanceof AdvisedBeanType) {
+                return ((AdvisedBeanType<?>) definition).getInterceptedType();
+            }
+            return definition.getBeanType();
+        });
     }
 
     @Override

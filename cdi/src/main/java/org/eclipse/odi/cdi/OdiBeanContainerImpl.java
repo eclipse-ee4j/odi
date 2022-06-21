@@ -15,19 +15,6 @@
  */
 package org.eclipse.odi.cdi;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import org.eclipse.odi.cdi.context.DependentContext;
-import org.eclipse.odi.cdi.context.SingletonContext;
-import org.eclipse.odi.cdi.events.OdiObserverMethodRegistry;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
@@ -53,6 +40,19 @@ import jakarta.enterprise.inject.spi.InterceptionType;
 import jakarta.enterprise.inject.spi.Interceptor;
 import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.inject.Singleton;
+import org.eclipse.odi.cdi.context.DependentContext;
+import org.eclipse.odi.cdi.context.SingletonContext;
+import org.eclipse.odi.cdi.events.OdiObserverMethodRegistry;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 final class OdiBeanContainerImpl implements OdiBeanContainer {
 
@@ -152,7 +152,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
         List<BeanDefinition<T>> alternatives = beanDefinitions
                 .stream()
-                .filter(bd -> bd.hasAnnotation(Alternative.class))
+                .filter(bd -> bd.hasStereotype(Alternative.class))
                 .collect(Collectors.toList());
         if (!alternatives.isEmpty()) {
             return alternatives.stream()

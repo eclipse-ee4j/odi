@@ -15,8 +15,6 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
-import org.eclipse.odi.cdi.processor.AnnotationUtil;
-import org.eclipse.odi.cdi.processor.CdiUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
@@ -26,12 +24,15 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
 import jakarta.enterprise.inject.Produces;
 import jakarta.interceptor.Interceptor;
+import org.eclipse.odi.cdi.processor.AnnotationUtil;
+import org.eclipse.odi.cdi.processor.CdiUtil;
 
 import java.util.Arrays;
 import java.util.List;
@@ -52,15 +53,12 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
 
     @Override
     public void visitMethod(MethodElement element, VisitorContext context) {
-        if (currentClass == null) {
-            return;
-        }
         for (ParameterElement parameter : element.getParameters()) {
             if (CdiUtil.validateInjectedType(context, parameter.getGenericType(), parameter)) {
                 return;
             }
         }
-        handleObservesMethod(currentClass, element, context);
+        handleObservesMethod(element.getOwningType(), element, context);
     }
 
     /**
@@ -86,6 +84,10 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
                                              MethodElement element,
                                              VisitorContext context,
                                              List<ParameterElement> observesParameters) {
+        if (element.isPrivate()) {
+            // TODO: support private observes methods
+            return;
+        }
         Optional<ParameterElement> observesAnnotated = observesParameters.stream()
                 .filter(p -> p.hasDeclaredAnnotation(Observes.class))
                 .findFirst();
@@ -94,12 +96,12 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
                 .findFirst();
         if (observesAnnotated.isPresent() && observesAsyncAnnotated.isPresent()) {
             context.fail("Method parameter cannot define both @Observes and @ObservesAsync.", observesAnnotated.get());
-        } else if (element.isPrivate()) {
-            context.fail("Methods with parameters annotated with @Observes cannot be private.", element);
+//        } else if (element.isPrivate()) {
+//            context.fail("Methods with parameters annotated with @Observes cannot be private.", element);
 //        } else if (element.isStatic()) {
 //            context.fail("Methods with parameters annotated with @Observes cannot be static.", element);
-        } else if (element.isAbstract()) {
-            context.fail("Methods with parameters annotated with @Observes cannot be abstract.", element);
+//        } else if (element.isAbstract()) {
+//            context.fail("Methods with parameters annotated with @Observes cannot be abstract.", element);
         } else if (element.hasDeclaredAnnotation(Produces.class)) {
             context.fail("Methods with parameters annotated with @Observes cannot be annotated with @Produces", element);
         } else if (element.hasDeclaredAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
@@ -115,25 +117,24 @@ public class ObservesMethodVisitor implements TypeElementVisitor<Object, Object>
                     AnnotationValue<Observes> observesAnnotation = p.getAnnotation(Observes.class);
                     annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
                     observesAnnotation.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
+                        if (reception == Reception.IF_EXISTS && classElement.hasStereotype(Dependent.class)) {
+                            context.fail("@Dependent beans cannot have Reception.IF_EXISTS event observer.", element);
+                            return;
+                        }
+
                         annotationValueBuilder.member("notifyObserver", reception);
                     });
-                    observesAnnotation.enumValue("during", TransactionPhase.class).ifPresent(during -> {
-                        annotationValueBuilder.member("during", during);
-                    });
-                    p.intValue(Priority.class).ifPresent(priority -> {
-                        annotationValueBuilder.member("priority", priority);
-                    });
+                    observesAnnotation.enumValue("during", TransactionPhase.class)
+                            .ifPresent(during -> annotationValueBuilder.member("during", during));
+                    p.intValue(Priority.class).ifPresent(priority -> annotationValueBuilder.member("priority", priority));
                 });
                 observesAsyncAnnotated.ifPresent(p -> {
                     AnnotationValue<ObservesAsync> observesAnnotation = p.getAnnotation(ObservesAsync.class);
                     annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(element.getParameters()).indexOf(p));
-                    observesAnnotation.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
-                        annotationValueBuilder.member("notifyObserver", reception);
-                    });
                     annotationValueBuilder.member("async", true);
-                    p.intValue(Priority.class).ifPresent(priority -> {
-                        annotationValueBuilder.member("priority", priority);
-                    });
+                    observesAnnotation.enumValue("notifyObserver", Reception.class)
+                            .ifPresent(reception -> annotationValueBuilder.member("notifyObserver", reception));
+                    p.intValue(Priority.class).ifPresent(priority -> annotationValueBuilder.member("priority", priority));
                 });
             });
         }

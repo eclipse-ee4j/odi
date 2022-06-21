@@ -65,6 +65,7 @@
                     <exclude name="testInstanceUsedForDisposalMethodNotShared"/>
                 </methods>
             </class>
+            <!-- Interceptor should match all binding annotations -->
             <class name="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest">
                 <methods>
                     <exclude name="testBusinessMethodInterceptorBindings"/>
@@ -135,7 +136,7 @@
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest">
                 <methods>
-                    <!-- Strange usecase with Instance and interceptors -->
+                    <!-- TCK expects destroy interceptors initialized at the same time as bean retrieved -->
                     <exclude name="testInterceptorInstanceCreatedWhenTargetInstanceCreated"/>
                 </methods>
             </class>
@@ -230,16 +231,6 @@
                     <exclude name="testObserverMethodWithoutBindingTypesObservesEventsWithoutBindingTypes"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.event.observer.async.handlingExceptions.MultipleExceptionsInObserversNotificationTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.observer.async.basic.MixedObserversTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.ObserverNotificationTest">
                 <methods>
                     <exclude name="testObserverMethodNotInvokedIfNoActiveContext"/>
@@ -261,6 +252,7 @@
                     <exclude name="testObserverMethodCanObserveArrayWildcard"/>
                 </methods>
             </class>
+            <!-- inner class overrides owning type of the element -->
             <class name="org.jboss.cdi.tck.tests.event.observer.runtimeException.ObserverExceptionRethrownTest">
                 <methods>
                     <exclude name=".*"/>
@@ -341,6 +333,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Support skipping listeners if scoped bean is missing -->
             <class name="org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest">
                 <methods>
                     <exclude name="testAsyncConditionalObserver"/>
@@ -359,6 +352,7 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
+            <!-- Synthesized annotations and `ParameterizedType` don't match equals -->
             <class name="org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest">
                 <methods>
                     <exclude name=".*"/>
@@ -394,51 +388,19 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.event.broken.observer.dependentIsConditionalObserver.DependentIsConditionalObserverTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.broken.observer.tooManyParameters.ObserverMethodWithObservesAndObservesAsyncParametersTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.broken.observer.tooManyParameters.ObserverMethodWithTwoEventParametersTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.broken.observer.inject.DeploymentFailureTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
+            <!-- Validate this statement:
+             This class is not a bean since it does not have a default constructor nor does it have a constructor annotated with {@link
+ * @Inject}. As such, an observer method is not detected on this class.
+             -->
             <class name="org.jboss.cdi.tck.tests.event.broken.observer.beanNotManaged.ObserverMethodOnIncorrectBeanTest">
                 <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.broken.observer.isProducer.ObserverMethodAnnotatedProducesTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.broken.observer.isDisposer.ObserverMethodAnnotatedDisposesTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.broken.observer.bothObservesAnnotations.ObserverMethodParameterAnnotatedAsSyncAndAsyncTest">
-                <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testObserverMethodNotOnManagedOrSessionBeanFails"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest">
                 <methods>
                     <exclude name="testEventObjectTypeUsed"/>
-                    <exclude
-                            name="testSelectedEventTypeCombinedWithEventObjectRuntimeTypeForResolvingEventTypeArguments"/>
+                    <exclude name="testSelectedEventTypeCombinedWithEventObjectRuntimeTypeForResolvingEventTypeArguments"/>
                     <exclude name="testSelectedEventTypeUsedForResolvingEventTypeArguments"/>
                     <exclude name="testSelectedEventTypeUsedForResolvingEventTypeArguments2"/>
                     <exclude name="testUnresolvedTypeVariableDetected1"/>
@@ -467,10 +429,11 @@
                     <exclude name="testImplicitEventIsPassivationCapable"/>
                 </methods>
             </class>
-            <!-- Methods with parameters annotated with @Observes cannot be private -->
             <class name="org.jboss.cdi.tck.tests.event.EventTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testEventObjectContainsTypeVariablesWhenResolvingFails"/>
+                    <exclude name="testPrivateObserverMethodInvoked"/>
+                    <exclude name="testStaticObserverMethodInvoked"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.full.lookup.injection.visibility.InjectionVisibilityTest">

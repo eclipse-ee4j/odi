@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * Transforms {@link jakarta.enterprise.context.NormalScope} to
- * {@link io.micronaut.runtime.context.scope.ScopedProxy and {@link javax.inject.Scope}}.
+ * {@link io.micronaut.runtime.context.scope.ScopedProxy and {@link jakarta.inject.Scope}}.
  */
 public class NormalScopeTransformer implements TypedAnnotationTransformer<NormalScope> {
     @Override
