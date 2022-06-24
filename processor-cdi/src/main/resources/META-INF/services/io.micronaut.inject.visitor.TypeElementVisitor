@@ -7,6 +7,7 @@ org.eclipse.odi.cdi.processor.visitors.SpecializesVisitor
 org.eclipse.odi.cdi.processor.visitors.DisposesMethodVisitor
 org.eclipse.odi.cdi.processor.visitors.InterceptorVisitor
 org.eclipse.odi.cdi.processor.visitors.ObservesMethodVisitor
+org.eclipse.odi.cdi.processor.visitors.ObservesAsyncMethodVisitor
 org.eclipse.odi.cdi.processor.visitors.ScopeVisitor
 org.eclipse.odi.cdi.processor.visitors.InterceptorBindingVisitor
 org.eclipse.odi.cdi.processor.visitors.AroundInvokeVisitor

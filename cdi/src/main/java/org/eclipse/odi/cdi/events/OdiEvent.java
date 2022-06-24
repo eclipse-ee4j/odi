@@ -259,16 +259,14 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             return null;
         }
         if (cdiInjectionPoint == null) {
-            cdiInjectionPoint = OdiUtils.createCDIInjectionPoint(beanContainer, injectionPoint, eventType);
+            cdiInjectionPoint = OdiUtils.createCDIInjectionPoint(beanContainer, injectionPoint, Argument.of(Event.class, eventType));
         }
         return cdiInjectionPoint;
     }
 
     @Override
     public Type getType() {
-        if (eventType.getTypeParameters().length == 0) {
-            return eventType.getType();
-        }
-        return eventType.asParameterizedType();
+        return eventType.asType();
     }
+
 }

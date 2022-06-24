@@ -207,6 +207,9 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public <X> Bean<? extends X> resolve(Set<Bean<? extends X>> beans) {
+        if (beans == null || beans.isEmpty()) {
+            return null;
+        }
         if (beans.size() != 1) {
             throw new UnsupportedOperationException();
         }

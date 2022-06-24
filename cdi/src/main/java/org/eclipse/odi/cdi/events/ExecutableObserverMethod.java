@@ -15,6 +15,21 @@
  */
 package org.eclipse.odi.cdi.events;
 
+import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.type.Argument;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ExecutableMethod;
+import io.micronaut.inject.qualifiers.Qualifiers;
+import jakarta.enterprise.event.ObserverException;
+import jakarta.enterprise.event.Reception;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.EventContext;
+import jakarta.enterprise.inject.spi.EventMetadata;
+import jakarta.enterprise.inject.spi.InjectionPoint;
+import jakarta.inject.Qualifier;
+import org.eclipse.odi.cdi.OdiBeanContainer;
+import org.eclipse.odi.cdi.annotation.ObservesMethod;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -22,20 +37,6 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.eclipse.odi.cdi.OdiBeanContainer;
-import org.eclipse.odi.cdi.annotation.ObservesMethod;
-import io.micronaut.core.annotation.Internal;
-import io.micronaut.core.type.Argument;
-import io.micronaut.inject.BeanDefinition;
-import io.micronaut.inject.ExecutableMethod;
-import io.micronaut.inject.qualifiers.Qualifiers;
-import jakarta.enterprise.event.Reception;
-import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.EventContext;
-import jakarta.enterprise.inject.spi.EventMetadata;
-import jakarta.enterprise.inject.spi.InjectionPoint;
-import jakarta.inject.Qualifier;
 
 /**
  * Implementation of {@link OdiObserverMethod} that is using {@link ExecutableMethod} to trigger the method.
@@ -111,32 +112,38 @@ final class ExecutableObserverMethod<B, E> extends AbstractOdiObserverMethod<E> 
         if (getReception() == Reception.IF_EXISTS && !beanContainer.getBeanContext().containsBean(beanDefinition.asArgument())) {
             return;
         }
-        beanContainer.fulfillAndExecuteMethod(beanDefinition, executableMethod, argument -> {
-            if (Objects.equals(argument, eventArgument)) {
-                return event;
-            } else if (argument.getType() == EventMetadata.class) {
-                if (eventContext == null) {
-                    return new EventMetadata() {
-                        @Override
-                        public Set<Annotation> getQualifiers() {
-                            return Collections.emptySet();
-                        }
+        try {
+            beanContainer.fulfillAndExecuteMethod(beanDefinition, executableMethod, argument -> {
+                if (Objects.equals(argument, eventArgument)) {
+                    return event;
+                } else if (argument.getType() == EventMetadata.class) {
+                    if (eventContext == null) {
+                        return new EventMetadata() {
+                            @Override
+                            public Set<Annotation> getQualifiers() {
+                                return Collections.emptySet();
+                            }
 
-                        @Override
-                        public InjectionPoint getInjectionPoint() {
-                            return null;
-                        }
+                            @Override
+                            public InjectionPoint getInjectionPoint() {
+                                return null;
+                            }
 
-                        @Override
-                        public Type getType() {
-                            return event.getClass();
-                        }
-                    };
+                            @Override
+                            public Type getType() {
+                                return getObservedType();
+                            }
+                        };
+                    }
+                    return eventContext.getMetadata();
                 }
-                return eventContext.getMetadata();
-            }
-            return null;
-        });
+                return null;
+            });
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ObserverException(e);
+        }
     }
 
     @Override
