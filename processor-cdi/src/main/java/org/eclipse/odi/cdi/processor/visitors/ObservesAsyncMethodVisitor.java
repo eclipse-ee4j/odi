@@ -22,22 +22,20 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.event.Reception;
-import jakarta.enterprise.event.TransactionPhase;
 import org.eclipse.odi.cdi.processor.AnnotationUtil;
 
 import java.util.Arrays;
 
 /**
- * The visitor of methods that are declared with {@link Observes}.
+ * The visitor of methods that are declared with {@link ObservesAsync}.
  */
-public class ObservesMethodVisitor extends ParameterAnnotationInjectableMethodVisitor<Observes> implements TypeElementVisitor<Object, Object> {
+public class ObservesAsyncMethodVisitor extends ParameterAnnotationInjectableMethodVisitor<ObservesAsync> implements TypeElementVisitor<Object, Object> {
 
     @Override
-    protected Class<Observes> getParameterAnnotation() {
-        return Observes.class;
+    protected Class<ObservesAsync> getParameterAnnotation() {
+        return ObservesAsync.class;
     }
 
     @Override
@@ -50,18 +48,12 @@ public class ObservesMethodVisitor extends ParameterAnnotationInjectableMethodVi
             currentClass.annotate(ApplicationScoped.class);
         }
         methodElement.annotate(AnnotationUtil.ANN_OBSERVES_METHOD, annotationValueBuilder -> {
-            AnnotationValue<Observes> observesAnnotation = parameterElement.getAnnotation(Observes.class);
             annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(methodElement.getParameters()).indexOf(parameterElement));
-            observesAnnotation.enumValue("notifyObserver", Reception.class).ifPresent(reception -> {
-                if (reception == Reception.IF_EXISTS && currentClass.hasStereotype(Dependent.class)) {
-                    context.fail("@Dependent beans cannot have Reception.IF_EXISTS event observer.", methodElement);
-                    return;
-                }
-
-                annotationValueBuilder.member("notifyObserver", reception);
-            });
-            observesAnnotation.enumValue("during", TransactionPhase.class)
-                    .ifPresent(during -> annotationValueBuilder.member("during", during));
+            AnnotationValue<ObservesAsync> observesAnnotation = parameterElement.getAnnotation(ObservesAsync.class);
+            annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(methodElement.getParameters()).indexOf(parameterElement));
+            annotationValueBuilder.member("async", true);
+            observesAnnotation.enumValue("notifyObserver", Reception.class)
+                    .ifPresent(reception -> annotationValueBuilder.member("notifyObserver", reception));
             parameterElement.intValue(Priority.class).ifPresent(priority -> annotationValueBuilder.member("priority", priority));
         });
     }

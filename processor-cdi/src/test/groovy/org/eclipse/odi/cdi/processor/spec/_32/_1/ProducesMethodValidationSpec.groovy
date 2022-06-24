@@ -41,7 +41,7 @@ class Shop {
 """)
         then:
         def e = thrown(RuntimeException)
-        e.message.contains("Produces methods cannot contain parameters annotated with @$annotation")
+        e.message.contains("Methods annotated with @Produces cannot define parameters annotated with @$annotation")
 
         where:
         annotation << ['Disposes', 'Observes', 'ObservesAsync']
@@ -67,7 +67,7 @@ class Shop {
 """)
         then:
         def e = thrown(RuntimeException)
-        e.message.contains("Produces methods cannot be annotated with @Inject")
+        e.message.contains("Methods annotated with @Inject cannot be annotated with @Produces")
     }
 
     void "test fail compilation for produces annotation on method in interceptor #annotation"() {
@@ -90,6 +90,6 @@ class Shop {
 """)
         then:
         def e = thrown(RuntimeException)
-        e.message.contains("Interceptors cannot define methods annotated with @Produces")
+        e.message.contains("Interceptors cannot have methods annotated with @Produces")
     }
 }

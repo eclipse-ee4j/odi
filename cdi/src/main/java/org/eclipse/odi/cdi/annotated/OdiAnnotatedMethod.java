@@ -35,13 +35,13 @@ import java.util.Set;
  * @param <T> The declaring class type
  */
 @Internal
-public class OdiAnnotatedMethod<T> extends OdiAnnotated implements AnnotatedMethod<T> {
+class OdiAnnotatedMethod<T> extends OdiAnnotated implements AnnotatedMethod<T> {
 
     private final String methodName;
     private final Class[] parameterTypes;
     private final Argument<?>[] arguments;
 
-    public OdiAnnotatedMethod(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
+    OdiAnnotatedMethod(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
                               String methodName, Class<?>[] parameterTypes, Argument<?>[] arguments) {
         super(type, exposedTypes, annotationMetadata);
         this.methodName = methodName;

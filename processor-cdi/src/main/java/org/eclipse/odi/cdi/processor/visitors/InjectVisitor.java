@@ -15,7 +15,6 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
-import org.eclipse.odi.cdi.processor.CdiUtil;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.inject.ast.ClassElement;
@@ -25,11 +24,9 @@ import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.event.ObservesAsync;
-import jakarta.enterprise.inject.Disposes;
+import jakarta.inject.Inject;
+import org.eclipse.odi.cdi.processor.CdiUtil;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -99,37 +96,20 @@ public class InjectVisitor implements TypeElementVisitor<Object, Object> {
     }
 
     private void validateInjectMethod(MethodElement element, VisitorContext context) {
-        final ParameterElement[] parameters = element.getParameters();
-        for (ParameterElement parameter : parameters) {
+        if (CdiUtil.validateMethodExtraAnnotations(context, Inject.class, element)) {
+            return;
+        }
+        for (ParameterElement parameter : element.getParameters()) {
+            if (CdiUtil.validateMethodNoSpecialParameters(context, "Inject", element, parameter)) {
+                return;
+            }
             if (CdiUtil.validateInjectedType(context, parameter.getGenericType(), parameter)) {
                 return;
             }
-            if (failIfAnnotationPresent(parameter, context, Disposes.class, element instanceof ConstructorElement)) {
-                break;
+            if (CdiUtil.visitInjectPoint(context, parameter)) {
+                return;
             }
-            if (failIfAnnotationPresent(parameter, context, Observes.class, element instanceof ConstructorElement)) {
-                break;
-            }
-            if (failIfAnnotationPresent(parameter, context, ObservesAsync.class, element instanceof ConstructorElement)) {
-                break;
-            }
-            CdiUtil.visitInjectPoint(context, parameter);
         }
-    }
-
-    private boolean failIfAnnotationPresent(ParameterElement element,
-                                            VisitorContext context,
-                                            Class<? extends Annotation> t,
-                                            boolean isConstructor) {
-        if (element.hasDeclaredAnnotation(t)) {
-            context.fail((
-                                 isConstructor
-                                         ? "Constructors"
-                                         : "Methods") + " annotated with @Inject cannot define parameters annotated with @" + t
-                    .getSimpleName(), element);
-            return true;
-        }
-        return false;
     }
 
     @Override

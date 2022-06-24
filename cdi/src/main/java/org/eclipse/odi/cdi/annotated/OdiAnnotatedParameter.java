@@ -29,13 +29,13 @@ import java.util.Set;
  * @param <T> The declaring class type
  */
 @Internal
-public class OdiAnnotatedParameter<T> extends OdiAnnotated implements AnnotatedParameter<T> {
+class OdiAnnotatedParameter<T> extends OdiAnnotated implements AnnotatedParameter<T> {
 
     private final int position;
     private final AnnotatedCallable<T> outer;
 
-    public OdiAnnotatedParameter(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
-                                 int position, AnnotatedCallable<T> outer) {
+    OdiAnnotatedParameter(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
+                          int position, AnnotatedCallable<T> outer) {
         super(type, exposedTypes, annotationMetadata);
         this.position = position;
         this.outer = outer;

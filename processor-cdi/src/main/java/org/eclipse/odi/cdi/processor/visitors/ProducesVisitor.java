@@ -15,24 +15,17 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
-import org.eclipse.odi.cdi.processor.AnnotationUtil;
-import org.eclipse.odi.cdi.processor.CdiUtil;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.inject.ast.ClassElement;
+import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
-import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.event.ObservesAsync;
-import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
-import jakarta.interceptor.Interceptor;
-
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
+import org.eclipse.odi.cdi.processor.CdiUtil;
 
 /**
  * Validates elements annotated with {@link jakarta.enterprise.inject.Produces}.
@@ -52,71 +45,42 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
 
     @Override
     public void visitMethod(MethodElement element, VisitorContext context) {
-        if (!AnnotationUtil.hasBeanDefiningAnnotation(currentClass)) {
-            context.fail(
-                    "Class with a producer method must specify a bean definition annotation. See "
-                            + CdiUtil.SPEC_LOCATION
-                            + "#bean_defining_annotations",
-                    element
-            );
+        if (CdiUtil.validateBeanDefinition(context, Produces.class, currentClass)) {
             return;
         }
-        if (element.hasAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
-            context.fail(
-                    "Produces methods cannot be annotated with @Inject. See "
-                            + CdiUtil.SPEC_LOCATION
-                            + "#declaring_producer_method",
-                    element
-            );
+        if (CdiUtil.validateNoInterceptor(context, Produces.class, element)) {
             return;
         }
-        if (currentClass.hasAnnotation(Interceptor.class)) {
-            context.fail(
-                    "Interceptors cannot define methods annotated with @Produces. See "
-                            + CdiUtil.SPEC_LOCATION
-                            + "#declaring_producer_method",
-                    element
-            );
+        if (CdiUtil.validateMethodExtraAnnotations(context, Produces.class, element)) {
             return;
         }
-        if (!this.currentClass.hasAnnotation(Factory.class)) {
-            this.currentClass.annotate(Factory.class);
-        }
-
         for (ParameterElement parameter : element.getParameters()) {
-            for (Class<? extends Annotation> annotation : Arrays.asList(Observes.class, ObservesAsync.class, Disposes.class)) {
-                if (parameter.hasAnnotation(annotation)) {
-                    context.fail(
-                            "Produces methods cannot contain parameters annotated with @" + annotation
-                                    .getSimpleName() + ". See " + CdiUtil.SPEC_LOCATION + "#declaring_producer_method", element
-                    );
-                    return;
-                }
+            if (CdiUtil.validateMethodNoSpecialParameters(context, Produces.class.getSimpleName(), element, parameter)) {
+                return;
             }
             if (CdiUtil.visitInjectPoint(context, parameter)) {
                 return;
             }
         }
-        CdiUtil.visitBeanDefinition(context, element);
-        TypeElementVisitor.super.visitMethod(element, context);
-        element.annotate(Bean.class);
+        makeBean(element, context);
     }
 
     @Override
     public void visitField(FieldElement element, VisitorContext context) {
-        if (!AnnotationUtil.hasBeanDefiningAnnotation(currentClass)) {
-            context.fail(
-                    "Class with a producer field must specify a bean definition annotation. See "
-                            + CdiUtil.SPEC_LOCATION
-                            + "#bean_defining_annotations",
-                    element
-            );
+        if (element.isPrivate() || element.isProtected() || element.isStatic()) {
+            // TODO: implement protected/private/static producers
             return;
         }
-        if (element.hasAnnotation(io.micronaut.core.annotation.AnnotationUtil.INJECT)) {
-            context.fail("Produces field cannot be annotated with @Inject. See " + CdiUtil.SPEC_LOCATION + "#producer_field", element);
+        if (CdiUtil.validateBeanDefinition(context, Produces.class, currentClass)) {
             return;
         }
+        if (CdiUtil.validateField(context, Produces.class, element)) {
+            return;
+        }
+        makeBean(element, context);
+    }
+
+    private void makeBean(Element element, VisitorContext context) {
         if (!this.currentClass.hasAnnotation(Factory.class)) {
             this.currentClass.annotate(Factory.class);
         }

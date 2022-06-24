@@ -35,12 +35,12 @@ import java.util.Set;
  * @param <T> The declaring class type
  */
 @Internal
-public class OdiAnnotatedConstructor<T> extends OdiAnnotated implements AnnotatedConstructor<T> {
+class OdiAnnotatedConstructor<T> extends OdiAnnotated implements AnnotatedConstructor<T> {
 
     private final Class[] parameterTypes;
     private final Argument<?>[] arguments;
 
-    public OdiAnnotatedConstructor(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
+    OdiAnnotatedConstructor(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
                                    Class<?>[] parameterTypes, Argument<?>[] arguments) {
         super(type, exposedTypes, annotationMetadata);
         this.parameterTypes = parameterTypes;

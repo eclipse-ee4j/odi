@@ -41,6 +41,7 @@ import jakarta.interceptor.Interceptor;
 import org.eclipse.odi.cdi.processor.CdiUtil;
 import org.eclipse.odi.cdi.processor.visitors.InjectVisitor;
 import org.eclipse.odi.cdi.processor.visitors.InterceptorVisitor;
+import org.eclipse.odi.cdi.processor.visitors.ObservesAsyncMethodVisitor;
 import org.eclipse.odi.cdi.processor.visitors.ObservesMethodVisitor;
 
 import java.lang.annotation.Annotation;
@@ -241,7 +242,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                         observesMethod.annotate(Executable.class, builder ->
                                 builder.member("processOnStartup", true)
                         );
-                        ObservesMethodVisitor.handleObservesMethod(
+                        handleObservesMethod(
                                 scannedClass,
                                 observesMethod,
                                 visitorContext
@@ -251,6 +252,15 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 .produceBeans(producesMethods, producesConfigurer)
                 .produceBeans(producesFields, producesConfigurer)
                 .inject();
+    }
+
+    private static void handleObservesMethod(ClassElement classElement, MethodElement methodElement, VisitorContext visitorContext) {
+        ObservesMethodVisitor observesVisitor = new ObservesMethodVisitor();
+        observesVisitor.visitClass(classElement, visitorContext);
+        observesVisitor.visitMethod(methodElement, visitorContext);
+        ObservesAsyncMethodVisitor observesAsyncVisitor = new ObservesAsyncMethodVisitor();
+        observesAsyncVisitor.visitClass(classElement, visitorContext);
+        observesAsyncVisitor.visitMethod(methodElement, visitorContext);
     }
 
     @Override

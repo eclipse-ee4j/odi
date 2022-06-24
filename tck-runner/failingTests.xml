@@ -33,12 +33,6 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierInheritedTest">
-                <methods>
-                    <!-- 'bean.getBeanClass()' expects factory class -->
-                    <exclude name="testResolution"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative02Test">
                 <methods>
                     <exclude name=".*"/>
@@ -111,10 +105,10 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <!-- Empty @Named is not included in qualifiers set -->
             <class name="org.jboss.cdi.tck.tests.definition.stereotype.named.DefaultNamedTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!-- Empty @Named is not included in qualifiers set -->
+                    <exclude name="testStereotypeDeclaringNamed"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest">
@@ -180,9 +174,10 @@
                     <exclude name="testPrivateAroundInvokeInterceptor"/>
                 </methods>
             </class>
+            <!-- Transform repeatable qualifiers -->
             <class name="org.jboss.cdi.tck.tests.definition.qualifier.repeatable.RepeatableQualifiersTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="resolutionWithRepeatableQualifiers"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.contract.exceptions.aroundInvoke.ExceptionTest">
@@ -242,20 +237,9 @@
                     <exclude name="testNotifyOnObserverMethod"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.event.observer.inheritance.ObserverInheritanceTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.wildcardAndTypeVariable.ObserverMethodWithParametertizedTypeTest">
                 <methods>
                     <exclude name="testObserverMethodCanObserveArrayWildcard"/>
-                </methods>
-            </class>
-            <!-- inner class overrides owning type of the element -->
-            <class name="org.jboss.cdi.tck.tests.event.observer.runtimeException.ObserverExceptionRethrownTest">
-                <methods>
-                    <exclude name=".*"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.broken.validation.ambiguous.ObserverMethodParameterInjectionValidationTest">
@@ -270,12 +254,7 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.priority.contextLifecycleEvent.ApplicationContextLifecycleEventObserverOrderingTest">
                 <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.observer.checkedException.CheckedExceptionWrappedTest">
-                <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testContextLifecycleEventOrdering"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.resolve.binding.DuplicateBindingTypesWhenResolvingTest">
@@ -284,11 +263,6 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.resolve.binding.ResolvingChecksBindingTypeMembersTest">
-                <methods>
-                    <exclude name=".*"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.ChecksEventTypeWhenResolvingTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
@@ -341,18 +315,12 @@
                     <exclude name="testConditionalObserverMethodNotInvokedIfNoActiveContext"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest">
-                <methods>
-                    <!-- Spec shouldn't do equals Type -->
-                    <exclude name="testGetType"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.event.metadata.broken.initializer.InvalidEventMetadataInjectionPointTest">
                 <methods>
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <!-- Synthesized annotations and `ParameterizedType` don't match equals -->
+            <!-- TODO: correct event qualifiers -->
             <class name="org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest">
                 <methods>
                     <exclude name=".*"/>
@@ -401,12 +369,9 @@
                 <methods>
                     <exclude name="testEventObjectTypeUsed"/>
                     <exclude name="testSelectedEventTypeCombinedWithEventObjectRuntimeTypeForResolvingEventTypeArguments"/>
-                    <exclude name="testSelectedEventTypeUsedForResolvingEventTypeArguments"/>
-                    <exclude name="testSelectedEventTypeUsedForResolvingEventTypeArguments2"/>
                     <exclude name="testUnresolvedTypeVariableDetected1"/>
                     <exclude name="testUnresolvedTypeVariableDetected2"/>
                     <exclude name="testUnresolvedTypeVariableDetected3"/>
-                    <exclude name="testWildcardIsResolvable"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest">
@@ -421,12 +386,6 @@
                     <exclude name="testEventSelectThrowsExceptionIfAnnotationIsNotBindingType"/>
                     <exclude name="testEventSelectThrowsExceptionIfEventTypeHasTypeVariable"/>
                     <exclude name="testEventSelectWithSubtypeThrowsExceptionIfAnnotationIsNotBindingType"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest">
-                <methods>
-                    <exclude name="testImplicitEventHasImplementation"/>
-                    <exclude name="testImplicitEventIsPassivationCapable"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.EventTest">
@@ -453,7 +412,8 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testInitializerAnnotatedConstructor"/>
+                    <exclude name="testInitializerAnnotatedConstructorUsedOverEmptyConstuctor"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.tooManyInitializerAnnotatedConstructors.TooManyInitializerAnnotatedConstructorsTest">
@@ -472,6 +432,7 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.dependentWithPublicField.DependentWithPublicFieldTest">
+                <!-- Don't allow public field for scoped beans -->
                 <methods>
                     <exclude name=".*"/>
                 </methods>
@@ -482,10 +443,11 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <!--            Beans produced from fields cannot be static-->
             <class name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <!--            Beans produced from fields cannot be static-->
+                    <exclude name="testQualifierTypeAnnotatedConstructor"/>
+                    <exclude name="testContextualDestroyCatchesException"/>
                 </methods>
             </class>
             <!-- TODO: Runtime error disposal method ambiguous injection -->
@@ -500,16 +462,29 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <!-- Beans produced from fields cannot be private or protected -->
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest">
+
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.unresolvedMethod.UnresolvedDisposalMethodDefinitionTest">
+                <!-- Support static producers/disposals -->
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testUnresolvedDisposalMethod"/>
                 </methods>
             </class>
-            <!-- Cannot compile -->
-            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest">
+            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest">
+                <!-- Support protected/private/static field producers -->
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testBindingTypesAppliedToDisposalMethodParameters"/>
+                    <exclude name="testDisposalMethodCalledForProducerField"/>
+                    <exclude name="testDisposalMethodForMultipleProducerMethods"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest">
+                <!-- Support protected/private/static field producers -->
+                <methods>
+                    <exclude name="testProducerFieldForNullValueNotDependent"/>
+                    <exclude name="testProducerFieldNotAnotherBean"/>
+                    <exclude name="testProducerFieldReturnsNullIsDependent"/>
+                    <exclude name="testProducerFieldReturnsNullIsNotDependent"/>
+                    <exclude name="testProducerStaticFieldBean"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.interceptor.ProducerFieldOnInterceptorTest">
@@ -547,10 +522,19 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <!-- Cannot compile -->
             <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testApiTypeForArrayTypeReturn"/>
+                    <exclude name="testApiTypeForClassReturn"/>
+                    <exclude name="testApiTypeForInterfaceReturn"/>
+                    <exclude name="testApiTypeForPrimitiveReturn"/>
+                    <exclude name="testBeanDeclaresMultipleProducerFields"/>
+                    <exclude name="testDefaultNamedByStereotype"/>
+                    <exclude name="testNamedField"/>
+                    <exclude name="testNonStaticProducerFieldNotIndirectlyInherited"/>
+                    <exclude name="testNonStaticProducerFieldNotInherited"/>
+                    <exclude name="testProducerFieldWithTypeVariable"/>
+                    <exclude name="testStereotype"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest">
@@ -559,10 +543,21 @@
                     <exclude name="testProducerMethodQualifiers"/>
                 </methods>
             </class>
-            <!-- Methods with parameters annotated with @Disposes cannot be static -->
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testApiTypeForArrayTypeReturn"/>
+                    <exclude name="testApiTypeForClassReturn"/>
+                    <exclude name="testApiTypeForInterfaceReturn"/>
+                    <exclude name="testApiTypeForPrimitiveReturn"/>
+                    <exclude name="testBindingType"/>
+                    <exclude name="testDefaultBindingType"/>
+                    <exclude name="testDependentProducerReturnsNullValue"/>
+                    <exclude name="testNonDependentProducerReturnsNullValue"/>
+                    <exclude name="testNonStaticDisposerMethodWithStaticProducer"/>
+                    <exclude name="testNonStaticProducerMethodNotInherited"/>
+                    <exclude name="testStaticDisposerMethod"/>
+                    <exclude name="testStaticDisposerMethodWithNonStaticProducer"/>
+                    <exclude name="testStaticMethod"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest">
@@ -887,7 +882,10 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testInjectionPointGetAnnotated"/>
+                    <exclude name="testInjectionPointGetBean"/>
+                    <exclude name="testInjectionPointGetMember"/>
+                    <exclude name="testInjectionPointIsTransient"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.broken.disposer.DisposerInjectionPointMetadataTest">
@@ -913,7 +911,8 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectableReferenceTest">
                 <methods>
-                    <exclude name=".*"/>
+                    <exclude name="testGetInjectableReferenceOnBeanManager"/>
+                    <exclude name="testGetInjectableReferenceReturnsDelegateForDelegateInjectionPoint"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.raw.RawBeanTypeParameterizedRequiredTypeTest">
@@ -1052,12 +1051,6 @@
                     <exclude name="testRequestScopedComponent"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest">
-                <methods>
-                    <!-- Compilation error -->
-                    <exclude name=".*"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest">
                 <methods>
                     <!-- Shouldn't be in CDI lite-->
@@ -1145,10 +1138,7 @@
             <!--            Bean container-->
             <class name="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest">
                 <methods>
-                    <exclude name="testGetBeans"/>
                     <exclude name="testGetBeansDoesNotResolveAlternatives"/>
-                    <exclude name="testNonBindingType"/>
-                    <exclude name="testNoBindingImpliesCurrent"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest">
@@ -1156,8 +1146,6 @@
                     <exclude name="testAmbiguousDependencyNotResolved"/>
                     <exclude name="testAmbiguousDependencyResolved"/>
                     <exclude name="testDetermineScope"/>
-                    <exclude name="testResolveWithEmptySet"/>
-                    <exclude name="testResolveWithNull"/>
                 </methods>
             </class>
         </classes>

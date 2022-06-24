@@ -29,7 +29,7 @@ import java.util.Set;
  * The implementation of {@link Annotated}.
  */
 @Internal
-public class OdiAnnotated implements Annotated {
+class OdiAnnotated implements Annotated {
     protected final Type type;
     protected final Set<Type> exposedTypes;
     protected final AnnotationMetadata annotationMetadata;

@@ -15,13 +15,12 @@
  */
 package org.eclipse.odi.cdi.events;
 
-import java.lang.reflect.Type;
-
-import org.eclipse.odi.cdi.annotation.ObservesMethod;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.core.type.Argument;
 import jakarta.enterprise.event.Reception;
 import jakarta.enterprise.event.TransactionPhase;
+import org.eclipse.odi.cdi.annotation.ObservesMethod;
+
+import java.lang.reflect.Type;
 
 abstract class AbstractOdiObserverMethod<E> implements OdiObserverMethod<E> {
     protected final AnnotationValue<ObservesMethod> observesMethodAnnotationValue;
@@ -65,11 +64,7 @@ abstract class AbstractOdiObserverMethod<E> implements OdiObserverMethod<E> {
     }
 
     @Override
-    public final Type getObservedType() {
-        Argument<E> eventArgument = getObservedArgument();
-        if (eventArgument.getTypeParameters().length == 0) {
-            return eventArgument.getType();
-        }
-        return eventArgument.asParameterizedType();
+    public Type getObservedType() {
+        return getObservedArgument().asType();
     }
 }
