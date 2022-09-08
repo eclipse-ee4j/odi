@@ -168,12 +168,6 @@
                     <exclude name="testRawBeanTypes"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest">
-                <methods>
-                    <!-- Private intercept method -->
-                    <exclude name="testPrivateAroundInvokeInterceptor"/>
-                </methods>
-            </class>
             <!-- Transform repeatable qualifiers -->
             <class name="org.jboss.cdi.tck.tests.definition.qualifier.repeatable.RepeatableQualifiersTest">
                 <methods>
@@ -229,12 +223,6 @@
             <class name="org.jboss.cdi.tck.tests.event.observer.ObserverNotificationTest">
                 <methods>
                     <exclude name="testObserverMethodNotInvokedIfNoActiveContext"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest">
-                <methods>
-                    <!-- static observer method -->
-                    <exclude name="testNotifyOnObserverMethod"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.observer.wildcardAndTypeVariable.ObserverMethodWithParametertizedTypeTest">
@@ -447,7 +435,6 @@
                 <methods>
                     <!--            Beans produced from fields cannot be static-->
                     <exclude name="testQualifierTypeAnnotatedConstructor"/>
-                    <exclude name="testContextualDestroyCatchesException"/>
                 </methods>
             </class>
             <!-- TODO: Runtime error disposal method ambiguous injection -->
@@ -557,7 +544,8 @@
                     <exclude name="testNonStaticProducerMethodNotInherited"/>
                     <exclude name="testStaticDisposerMethod"/>
                     <exclude name="testStaticDisposerMethodWithNonStaticProducer"/>
-                    <exclude name="testStaticMethod"/>
+                    <!-- We need to ignore a factory method with invalid constructor -->
+                    <exclude name="testProducerOnNonBean"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest">

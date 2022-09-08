@@ -67,8 +67,8 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
 
     @Override
     public void visitField(FieldElement element, VisitorContext context) {
-        if (element.isPrivate() || element.isProtected() || element.isStatic()) {
-            // TODO: implement protected/private/static producers
+        if (element.isPrivate() || element.isProtected()) {
+            // TODO: implement protected/private producers
             return;
         }
         if (CdiUtil.validateBeanDefinition(context, Produces.class, currentClass)) {

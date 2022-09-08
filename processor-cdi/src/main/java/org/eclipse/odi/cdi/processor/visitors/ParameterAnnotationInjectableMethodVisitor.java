@@ -15,7 +15,9 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.NonNull;
+import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.MethodElement;
@@ -75,7 +77,12 @@ abstract class ParameterAnnotationInjectableMethodVisitor<T extends Annotation> 
             context.fail("Methods with parameters annotated with " + getParameterAnnotation() + " cannot be abstract.", element);
             return;
         }
-
+        if (element.isStatic()) {
+            element.annotate(Executable.class);
+        }
+        if (element.isPrivate()) {
+            element.annotate(ReflectiveAccess.class);
+        }
         handleMatch(element, parameter, context);
     }
 

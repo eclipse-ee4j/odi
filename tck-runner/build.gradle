@@ -66,9 +66,9 @@ tasks.register('singleTest', Test) {
         suiteXmlBuilder().suite(name: 'Sample Suite') {
             test(name : 'Sample Test') {
                 classes('') {
-                    'class'(name: 'org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.observes.ObserverParameterUnallowedDefinitionTest') {
+                    'class'(name: 'org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest') {
 //                        methods() {
-//                            include(name: 'testIteratorMethod')
+//                            include(name: 'testPrivateAroundInvokeInterceptor')
 //                        }
                     }
                 }

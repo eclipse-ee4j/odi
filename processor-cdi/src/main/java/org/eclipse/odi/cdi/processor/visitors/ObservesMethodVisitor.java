@@ -15,6 +15,7 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
@@ -42,10 +43,6 @@ public class ObservesMethodVisitor extends ParameterAnnotationInjectableMethodVi
 
     @Override
     public void handleMatch(MethodElement methodElement, ParameterElement parameterElement, VisitorContext context) {
-        if (methodElement.isStatic() || methodElement.isPrivate()) {
-            // TODO: support static and private observes methods
-            return;
-        }
         if (!AnnotationUtil.hasBeanDefiningAnnotation(currentClass)) {
             currentClass.annotate(ApplicationScoped.class);
         }
@@ -64,6 +61,7 @@ public class ObservesMethodVisitor extends ParameterAnnotationInjectableMethodVi
                     .ifPresent(during -> annotationValueBuilder.member("during", during));
             parameterElement.intValue(Priority.class).ifPresent(priority -> annotationValueBuilder.member("priority", priority));
         });
+        methodElement.annotate(Executable.class, builder -> builder.member("processOnStartup", true));
     }
 
 }

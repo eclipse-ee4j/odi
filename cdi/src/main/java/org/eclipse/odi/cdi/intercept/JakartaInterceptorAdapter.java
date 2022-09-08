@@ -250,7 +250,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
 
     @SuppressWarnings("rawtypes")
     private ExecutableMethod[] toMethodArray(List<String> methods) {
-        return methods.stream().flatMap(name -> {
+        ExecutableMethod[] executableMethods = methods.stream().flatMap(name -> {
             Optional<ExecutableMethod<B, Object>> method = beanDefinition.findMethod(name, jakarta.interceptor.InvocationContext.class);
             if (method.isPresent()) {
                 return method.stream();
@@ -261,6 +261,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
             }
             return Stream.empty();
         }).toArray(ExecutableMethod[]::new);
+        return executableMethods;
     }
 
     @Override

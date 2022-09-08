@@ -40,10 +40,6 @@ public class ObservesAsyncMethodVisitor extends ParameterAnnotationInjectableMet
 
     @Override
     public void handleMatch(MethodElement methodElement, ParameterElement parameterElement, VisitorContext context) {
-        if (methodElement.isStatic() || methodElement.isPrivate()) {
-            // TODO: support static and private observes methods
-            return;
-        }
         if (!AnnotationUtil.hasBeanDefiningAnnotation(currentClass)) {
             currentClass.annotate(ApplicationScoped.class);
         }
