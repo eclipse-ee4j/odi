@@ -15,10 +15,6 @@
  */
 package org.eclipse.odi.cdi;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import io.micronaut.context.annotation.Property;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
@@ -26,6 +22,10 @@ import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.InjectionPoint;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Internal utils class to create {@link jakarta.enterprise.inject.spi.InjectionPoint}.
@@ -48,7 +48,7 @@ public final class OdiUtils {
             InjectionPoint<?> injectionPoint,
             Argument<?> argument) {
         OdiBean<?> bean = beanContainer.getBean(injectionPoint.getDeclaringBean());
-        return new OdiInjectionPoint(bean, injectionPoint, argument);
+        return new OdiInjectionPoint(beanContainer.getBeanContext().getClassLoader(), bean, injectionPoint, argument);
     }
 
     public static Parameters createParameters(BeanDefinition<?> declaringBean) {

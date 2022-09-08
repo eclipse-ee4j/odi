@@ -16,10 +16,12 @@
 package org.eclipse.odi.cdi.processor.visitors;
 
 import io.micronaut.context.annotation.Bean;
+import io.micronaut.context.annotation.Executable;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.Element;
 import io.micronaut.inject.ast.FieldElement;
+import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
@@ -67,10 +69,6 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
 
     @Override
     public void visitField(FieldElement element, VisitorContext context) {
-        if (element.isPrivate() || element.isProtected() || element.isStatic()) {
-            // TODO: implement protected/private/static producers
-            return;
-        }
         if (CdiUtil.validateBeanDefinition(context, Produces.class, currentClass)) {
             return;
         }
@@ -80,7 +78,17 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
         makeBean(element, context);
     }
 
-    private void makeBean(Element element, VisitorContext context) {
+    private void makeBean(MemberElement element, VisitorContext context) {
+        if (!element.getDeclaringType().equals(currentClass)) {
+            // Producers aren't inherited
+            return;
+        }
+        if (element.isStatic()) {
+            element.annotate(Executable.class);
+        }
+        if (element.isPrivate()) {
+            element.annotate(ReflectiveAccess.class);
+        }
         if (!this.currentClass.hasAnnotation(Factory.class)) {
             this.currentClass.annotate(Factory.class);
         }

@@ -35,14 +35,17 @@ import java.util.Set;
 
 @Internal
 final class OdiInjectionPoint implements InjectionPoint {
+    private final ClassLoader classLoader;
     private final OdiBean<?> bean;
     private final Argument<?> argument;
     private final AnnotationMetadata annotationMetadata;
     private final io.micronaut.inject.InjectionPoint<?> injectionPoint;
 
-    OdiInjectionPoint(OdiBean<?> bean,
+    OdiInjectionPoint(ClassLoader classLoader,
+                      OdiBean<?> bean,
                       io.micronaut.inject.InjectionPoint<?> injectionPoint,
                       Argument<?> argument) {
+        this.classLoader = classLoader;
         this.bean = Objects.requireNonNull(bean);
         Objects.requireNonNull(injectionPoint);
         this.argument = Objects.requireNonNull(argument);
@@ -60,7 +63,7 @@ final class OdiInjectionPoint implements InjectionPoint {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        return AnnotationUtils.synthesizeQualifierAnnotations(annotationMetadata);
+        return AnnotationUtils.synthesizeQualifierAnnotations(annotationMetadata, classLoader);
     }
 
     @Override
@@ -82,7 +85,7 @@ final class OdiInjectionPoint implements InjectionPoint {
 
     @Override
     public Annotated getAnnotated() {
-        return OdiAnnotatedUtils.asAnnotated(injectionPoint, getType());
+        return OdiAnnotatedUtils.asAnnotated(classLoader, injectionPoint, getType());
     }
 
     @Override

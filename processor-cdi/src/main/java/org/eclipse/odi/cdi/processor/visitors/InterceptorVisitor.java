@@ -20,6 +20,7 @@ import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Indexed;
+import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
@@ -180,19 +181,19 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
                                                  Class<? extends Annotation> aroundAnnotation,
                                                  String setMethodName,
                                                  boolean isRemoveAnn, boolean isSelfInterceptor) {
-        final ElementQuery<MethodElement> baseQuery = ElementQuery.ALL_METHODS
-                .onlyAccessible(originatingElement);
-
         Map<String, String> mappedTypes = new HashMap<>();
         List<String> aroundMethods = new ArrayList<>(5);
         interceptorBean.getEnclosedElements(
-                baseQuery.annotated(ann -> ann.hasDeclaredAnnotation(aroundAnnotation) || aroundAnnotation.equals(ann.classValue(Executable.class).orElse(null)))
+                ElementQuery.ALL_METHODS.annotated(ann -> ann.hasDeclaredAnnotation(aroundAnnotation) || aroundAnnotation.equals(ann.classValue(Executable.class).orElse(null)))
         ).forEach(methodElement -> {
             final String declaringType = methodElement.getDeclaringType().getName();
             final String previous = mappedTypes.put(declaringType, methodElement.getName());
             if (previous != null) {
                 context.fail("Only a single " + aroundAnnotation.getSimpleName() + " method is allowed", originatingElement);
             } else {
+                if (methodElement.isPrivate()) {
+                    methodElement.annotate(ReflectiveAccess.class);
+                }
                 if (methodElement.isStatic()) {
                     context.fail(aroundAnnotation.getSimpleName() + " method cannot be static", methodElement);
                 } else if (methodElement.isAbstract()) {
@@ -235,15 +236,10 @@ public class InterceptorVisitor implements TypeElementVisitor<Interceptor, Objec
     }
 
     private static void addSetMethod(String value, BeanElementBuilder currentBuilder, String setMethodName) {
-        currentBuilder.withMethods(
-                ElementQuery.ALL_METHODS.onlyInstance().onlyDeclared().onlyAccessible()
-                        .named((name) -> name.equals(setMethodName)),
-                (
-                        (method) -> {
-                            method.inject();
-                            method.getParameters()[0].injectValue(value);
-                        })
-        );
+        currentBuilder.withMethods(ElementQuery.ALL_METHODS.named((name) -> name.equals(setMethodName)), method -> {
+            method.inject();
+            method.getParameters()[0].injectValue(value);
+        });
     }
 
     @Override

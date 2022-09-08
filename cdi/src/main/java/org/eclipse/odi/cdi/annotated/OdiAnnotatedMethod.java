@@ -41,9 +41,9 @@ class OdiAnnotatedMethod<T> extends OdiAnnotated implements AnnotatedMethod<T> {
     private final Class[] parameterTypes;
     private final Argument<?>[] arguments;
 
-    OdiAnnotatedMethod(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
+    OdiAnnotatedMethod(ClassLoader classLoader, Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
                               String methodName, Class<?>[] parameterTypes, Argument<?>[] arguments) {
-        super(type, exposedTypes, annotationMetadata);
+        super(classLoader, type, exposedTypes, annotationMetadata);
         this.methodName = methodName;
         this.parameterTypes = parameterTypes;
         this.arguments = arguments;
@@ -69,7 +69,7 @@ class OdiAnnotatedMethod<T> extends OdiAnnotated implements AnnotatedMethod<T> {
         List<AnnotatedParameter<T>> parameters = new ArrayList<>(arguments.length);
         for (int i = 0; i < arguments.length; i++) {
             Argument<?> argument = arguments[i];
-            parameters.add(new OdiAnnotatedParameter<>(argument.getType(), Set.of(argument.getType()), argument.getAnnotationMetadata(), i, this));
+            parameters.add(new OdiAnnotatedParameter<>(classLoader, argument.getType(), Set.of(argument.getType()), argument.getAnnotationMetadata(), i, this));
         }
         return parameters;
     }

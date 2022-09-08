@@ -15,13 +15,11 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
-import org.eclipse.odi.cdi.processor.CdiUtil;
-import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.inject.ast.ClassElement;
-import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import org.eclipse.odi.cdi.processor.CdiUtil;
 
 /**
  * Customizations for declared beans.
@@ -32,13 +30,6 @@ public class ScopeVisitor implements TypeElementVisitor<Object, Object> {
     public void visitClass(ClassElement element, VisitorContext context) {
         if (element.hasStereotype(AnnotationUtil.SCOPE)) {
             CdiUtil.visitBeanDefinition(context, element);
-        }
-    }
-
-    @Override
-    public void visitMethod(MethodElement element, VisitorContext context) {
-        if (element.hasDeclaredAnnotation(Executable.class) && element.isPrivate()) {
-            element.removeAnnotation(Executable.class);
         }
     }
 

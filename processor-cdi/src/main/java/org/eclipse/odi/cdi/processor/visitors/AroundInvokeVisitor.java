@@ -15,6 +15,8 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
+import io.micronaut.context.annotation.Executable;
+import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
@@ -30,6 +32,11 @@ import org.eclipse.odi.cdi.annotation.SelfInterceptor;
 public class AroundInvokeVisitor implements TypeElementVisitor<Object, AroundInvoke> {
 
     private ClassElement classElement;
+
+    @Override
+    public int getOrder() {
+        return 10;
+    }
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
@@ -48,8 +55,8 @@ public class AroundInvokeVisitor implements TypeElementVisitor<Object, AroundInv
         }
 
         if (element.isPrivate()) {
-            // Ignore private methods
-            return;
+            element.annotate(ReflectiveAccess.class);
+            element.annotate(Executable.class);
         }
 
         classElement.annotate(SelfInterceptor.class, annotationValueBuilder -> {

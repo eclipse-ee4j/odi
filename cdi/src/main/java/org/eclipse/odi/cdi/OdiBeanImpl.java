@@ -115,13 +115,13 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
         );
         return injectionPoints.flatMap((ip) -> {
             if (ip instanceof FieldInjectionPoint) {
-                return Stream.of(new OdiInjectionPoint(this, ip, ((FieldInjectionPoint<?, ?>) ip).asArgument()));
+                return Stream.of(new OdiInjectionPoint(beanContext.getClassLoader(), this, ip, ((FieldInjectionPoint<?, ?>) ip).asArgument()));
             } else if (ip instanceof MethodInjectionPoint) {
                 MethodInjectionPoint<?, ?> mip = (MethodInjectionPoint) ip;
-                return Stream.of(mip.getArguments()).map((arg) -> new OdiInjectionPoint(this, mip, arg));
+                return Stream.of(mip.getArguments()).map((arg) -> new OdiInjectionPoint(beanContext.getClassLoader(), this, mip, arg));
             } else if (ip instanceof ConstructorInjectionPoint) {
                 ConstructorInjectionPoint<?> cip = (ConstructorInjectionPoint) ip;
-                return Stream.of(cip.getArguments()).map((arg) -> new OdiInjectionPoint(this, cip, arg));
+                return Stream.of(cip.getArguments()).map((arg) -> new OdiInjectionPoint(beanContext.getClassLoader(), this, cip, arg));
             }
             return Stream.empty();
         }).collect(Collectors.toSet());
@@ -186,7 +186,7 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public Set<Annotation> getQualifiers() {
-        Set<Annotation> annotations = AnnotationUtils.synthesizeQualifierAnnotations(definition.getAnnotationMetadata());
+        Set<Annotation> annotations = AnnotationUtils.synthesizeQualifierAnnotations(definition.getAnnotationMetadata(), beanContext.getClassLoader());
         Set<Annotation> all = new HashSet<>(annotations);
         all.add(Any.Literal.INSTANCE);
         if (all.size() == 1 || all.stream().allMatch(e -> e instanceof Named || e instanceof Any)) {
