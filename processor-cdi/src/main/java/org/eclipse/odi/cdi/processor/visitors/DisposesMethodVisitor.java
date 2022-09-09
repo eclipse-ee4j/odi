@@ -56,19 +56,11 @@ public class DisposesMethodVisitor extends ParameterAnnotationInjectableMethodVi
             }
         }
 
-        if (methodElement.isStatic() || methodElement.isPrivate()) {
-            // TODO: support static and private methods
-            return;
-        }
-
         this.disposerMethods.add(methodElement);
         methodElement.annotate(AnnotationUtil.ANN_DISPOSER_METHOD);
     }
 
     private boolean validateMatchingProduces(MethodElement element, VisitorContext context, ClassElement disposedType) {
-        if (element.isStatic()) {
-            return false;
-        }
         if (!disposerMethods.isEmpty()) {
             for (MethodElement disposerMethod : disposerMethods) {
                 final Optional<ParameterElement> disposerParam = Arrays.stream(disposerMethod.getParameters())
@@ -89,8 +81,6 @@ public class DisposesMethodVisitor extends ParameterAnnotationInjectableMethodVi
         // now validate if a bean producing method is present
         final Optional<MethodElement> producerMethod = currentClass.getEnclosedElement(
                 ElementQuery.ALL_METHODS
-                        .onlyInstance()
-                        .onlyAccessible()
                         .onlyConcrete()
                         .annotated((annotationMetadata -> annotationMetadata.hasDeclaredAnnotation(Produces.class)))
                         .filter((methodElement -> disposedType.isAssignable(methodElement.getGenericReturnType())))

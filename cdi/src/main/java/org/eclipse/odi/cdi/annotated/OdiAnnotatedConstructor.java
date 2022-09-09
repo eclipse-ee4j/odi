@@ -40,9 +40,9 @@ class OdiAnnotatedConstructor<T> extends OdiAnnotated implements AnnotatedConstr
     private final Class[] parameterTypes;
     private final Argument<?>[] arguments;
 
-    OdiAnnotatedConstructor(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
-                                   Class<?>[] parameterTypes, Argument<?>[] arguments) {
-        super(type, exposedTypes, annotationMetadata);
+    OdiAnnotatedConstructor(ClassLoader classLoader, Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
+                            Class<?>[] parameterTypes, Argument<?>[] arguments) {
+        super(classLoader, type, exposedTypes, annotationMetadata);
         this.parameterTypes = parameterTypes;
         this.arguments = arguments;
     }
@@ -67,7 +67,7 @@ class OdiAnnotatedConstructor<T> extends OdiAnnotated implements AnnotatedConstr
         List<AnnotatedParameter<T>> parameters = new ArrayList<>(arguments.length);
         for (int i = 0; i < arguments.length; i++) {
             Argument<?> argument = arguments[i];
-            parameters.add(new OdiAnnotatedParameter<>(argument.getType(), Set.of(argument.getType()), argument.getAnnotationMetadata(), i, this));
+            parameters.add(new OdiAnnotatedParameter<>(classLoader, argument.getType(), Set.of(argument.getType()), argument.getAnnotationMetadata(), i, this));
         }
         return parameters;
     }

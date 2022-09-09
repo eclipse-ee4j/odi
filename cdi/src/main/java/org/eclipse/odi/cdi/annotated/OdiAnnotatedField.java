@@ -35,8 +35,8 @@ class OdiAnnotatedField<T> extends OdiAnnotated implements AnnotatedField<T> {
 
     private final String fieldName;
 
-    OdiAnnotatedField(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata, String fieldName) {
-        super(type, exposedTypes, annotationMetadata);
+    OdiAnnotatedField(ClassLoader classLoader, Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata, String fieldName) {
+        super(classLoader, type, exposedTypes, annotationMetadata);
         this.fieldName = fieldName;
     }
 

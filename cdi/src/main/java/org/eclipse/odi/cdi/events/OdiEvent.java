@@ -248,7 +248,7 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             return Collections.emptySet();
         }
         if (qualifierAnnotations == null) {
-            qualifierAnnotations = AnnotationUtils.synthesizeQualifierAnnotations(annotationMetadata);
+            qualifierAnnotations = AnnotationUtils.synthesizeQualifierAnnotations(annotationMetadata, beanContainer.getBeanContext().getClassLoader());
         }
         return qualifierAnnotations;
     }

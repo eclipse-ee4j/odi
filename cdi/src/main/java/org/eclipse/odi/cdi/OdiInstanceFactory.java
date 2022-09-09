@@ -15,9 +15,6 @@
  */
 package org.eclipse.odi.cdi;
 
-import java.lang.annotation.Annotation;
-
-import org.eclipse.odi.cdi.context.DependentContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
@@ -32,6 +29,9 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.spi.BeanContainer;
+import org.eclipse.odi.cdi.context.DependentContext;
+
+import java.lang.annotation.Annotation;
 
 /**
  * Creates instances of {@link jakarta.enterprise.inject.Instance}.
@@ -66,6 +66,7 @@ public class OdiInstanceFactory {
             qualifier = Qualifiers.forArgument(argument);
             InjectionPoint<?> injectionPoint = resolveInjectionPoint(resolutionContext, argumentInjectionPoint);
             cdiInjectionPoint = new OdiInjectionPoint(
+                    resolutionContext.getContext().getClassLoader(),
                     new OdiBeanImpl<>(beanContainer.getBeanContext(), injectionPoint.getDeclaringBean()),
                     injectionPoint,
                     injectionPoint instanceof ArgumentInjectionPoint ? ((ArgumentInjectionPoint<?, ?>) injectionPoint).asArgument() : injectArgument

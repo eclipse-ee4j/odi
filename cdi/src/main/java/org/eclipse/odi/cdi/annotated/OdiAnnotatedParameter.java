@@ -34,9 +34,9 @@ class OdiAnnotatedParameter<T> extends OdiAnnotated implements AnnotatedParamete
     private final int position;
     private final AnnotatedCallable<T> outer;
 
-    OdiAnnotatedParameter(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
+    OdiAnnotatedParameter(ClassLoader classLoader, Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata,
                           int position, AnnotatedCallable<T> outer) {
-        super(type, exposedTypes, annotationMetadata);
+        super(classLoader, type, exposedTypes, annotationMetadata);
         this.position = position;
         this.outer = outer;
     }

@@ -53,12 +53,6 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest">
-                <methods>
-                    <!-- https://github.com/eclipse-ee4j/cdi-tck/issues/372 -->
-                    <exclude name="testInstanceUsedForDisposalMethodNotShared"/>
-                </methods>
-            </class>
             <!-- Interceptor should match all binding annotations -->
             <class name="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest">
                 <methods>
@@ -109,12 +103,6 @@
                 <methods>
                     <!-- Empty @Named is not included in qualifiers set -->
                     <exclude name="testStereotypeDeclaringNamed"/>
-                </methods>
-            </class>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest">
-                <methods>
-                    <!-- What to do with private method? -->
-                    <exclude name="testPrivateLifecycleInterceptorMethod"/>
                 </methods>
             </class>
             <!-- Inherited stereotypes [@AnimalStereotype] include more than one defined scope -->
@@ -450,12 +438,6 @@
                 </methods>
             </class>
 
-            <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.unresolvedMethod.UnresolvedDisposalMethodDefinitionTest">
-                <!-- Support static producers/disposals -->
-                <methods>
-                    <exclude name="testUnresolvedDisposalMethod"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest">
                 <!-- Support protected/private/static field producers -->
                 <methods>
@@ -468,10 +450,8 @@
                 <!-- Support protected/private/static field producers -->
                 <methods>
                     <exclude name="testProducerFieldForNullValueNotDependent"/>
-                    <exclude name="testProducerFieldNotAnotherBean"/>
                     <exclude name="testProducerFieldReturnsNullIsDependent"/>
                     <exclude name="testProducerFieldReturnsNullIsNotDependent"/>
-                    <exclude name="testProducerStaticFieldBean"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.broken.interceptor.ProducerFieldOnInterceptorTest">
@@ -511,17 +491,15 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest">
                 <methods>
+                    <!-- Implement BeanAttributes API -->
                     <exclude name="testApiTypeForArrayTypeReturn"/>
                     <exclude name="testApiTypeForClassReturn"/>
                     <exclude name="testApiTypeForInterfaceReturn"/>
                     <exclude name="testApiTypeForPrimitiveReturn"/>
-                    <exclude name="testBeanDeclaresMultipleProducerFields"/>
+                    <!-- @Named on annotation is producing @Named("xx") as declared -->
                     <exclude name="testDefaultNamedByStereotype"/>
+                    <!-- Don't return all beans on getBeans Objects.class -->
                     <exclude name="testNamedField"/>
-                    <exclude name="testNonStaticProducerFieldNotIndirectlyInherited"/>
-                    <exclude name="testNonStaticProducerFieldNotInherited"/>
-                    <exclude name="testProducerFieldWithTypeVariable"/>
-                    <exclude name="testStereotype"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest">
@@ -532,18 +510,16 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest">
                 <methods>
+                    <!-- Implement BeanAttributes API -->
                     <exclude name="testApiTypeForArrayTypeReturn"/>
                     <exclude name="testApiTypeForClassReturn"/>
                     <exclude name="testApiTypeForInterfaceReturn"/>
                     <exclude name="testApiTypeForPrimitiveReturn"/>
-                    <exclude name="testBindingType"/>
+                    <!-- Superclass @Dependent should be ignored and bean not be created -->
                     <exclude name="testDefaultBindingType"/>
+                    <!-- Support returning null from the producer -->
                     <exclude name="testDependentProducerReturnsNullValue"/>
                     <exclude name="testNonDependentProducerReturnsNullValue"/>
-                    <exclude name="testNonStaticDisposerMethodWithStaticProducer"/>
-                    <exclude name="testNonStaticProducerMethodNotInherited"/>
-                    <exclude name="testStaticDisposerMethod"/>
-                    <exclude name="testStaticDisposerMethodWithNonStaticProducer"/>
                     <!-- We need to ignore a factory method with invalid constructor -->
                     <exclude name="testProducerOnNonBean"/>
                 </methods>
