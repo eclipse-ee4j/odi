@@ -52,7 +52,7 @@ public final class AnnotationUtils {
      * @param annotationMetadata The annotation metadata, never {@code null}
      * @return The synthesized annotations
      */
-    public static Set<Annotation> synthesizeQualifierAnnotations(AnnotationMetadata annotationMetadata) {
+    public static Set<Annotation> synthesizeQualifierAnnotations(AnnotationMetadata annotationMetadata, ClassLoader classLoader) {
         return annotationMetadata
                 .getAnnotationNamesByStereotype(MetaAnnotationSupport.META_ANNOTATION_QUALIFIER)
                 .stream()
@@ -66,13 +66,10 @@ public final class AnnotationUtils {
                     if (name.equals(MetaAnnotationSupport.META_ANNOTATION_NAMED)) {
                         return NamedLiteral.of(annotationMetadata.stringValue(AnnotationUtil.NAMED).get());
                     } else {
-                        final Class<? extends Annotation> annotationClass = annotationMetadata.getAnnotationType(name)
+                        final Class<? extends Annotation> annotationClass = annotationMetadata.getAnnotationType(name, classLoader)
                                 .orElse(null);
                         if (annotationClass != null) {
-
-                            return annotationMetadata.synthesize(
-                                    annotationClass
-                            );
+                            return annotationMetadata.synthesize(annotationClass);
                         }
                         return null;
                     }

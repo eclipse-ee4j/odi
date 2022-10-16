@@ -54,7 +54,7 @@ public class OdiInjectPointFactory {
         }
         OdiBean<T> bean = beanContainer.getBean(injectionPoint.getDeclaringBean());
 
-        return new OdiInjectionPoint(bean, injectionPoint, injectionPoint.asArgument());
+        return new OdiInjectionPoint(resolutionContext.getContext().getClassLoader(), bean, injectionPoint, injectionPoint.asArgument());
     }
 
     public static <T> InjectionPoint<T> provideInjectionPoint(BeanResolutionContext resolutionContext) {

@@ -16,6 +16,8 @@
 package org.eclipse.odi.cdi.processor.visitors;
 
 import io.micronaut.aop.Around;
+import io.micronaut.context.annotation.Executable;
+import io.micronaut.core.annotation.ReflectiveAccess;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
@@ -31,6 +33,11 @@ import java.util.List;
  * Processes {@link InterceptorBinding} elements to correctly handle it using Micronaut.
  */
 public class InterceptorBindingVisitor implements TypeElementVisitor<InterceptorBinding, Object> {
+
+    @Override
+    public int getOrder() {
+        return 1;
+    }
 
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
@@ -58,11 +65,17 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Interceptor
         List<MethodElement> selfInterceptorMethods = element.getEnclosedElements(
                 ElementQuery.ALL_METHODS
                         .onlyInstance()
-                        .onlyAccessible()
                         .onlyConcrete()
                         .onlyDeclared()
                         .filter(methodElement -> methodElement.hasAnnotation(AroundInvoke.class))
         );
+
+        selfInterceptorMethods.forEach(methodElement -> {
+            if (methodElement.isPrivate()) {
+                methodElement.annotate(Executable.class);
+                methodElement.annotate(ReflectiveAccess.class);
+            }
+        });
 
         if (!selfInterceptorMethods.isEmpty()) {
             InterceptorVisitor.addInterceptor(element, context, element, true);

@@ -45,6 +45,7 @@ import org.eclipse.odi.cdi.context.SingletonContext;
 import org.eclipse.odi.cdi.events.OdiObserverMethodRegistry;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Comparator;
@@ -172,6 +173,9 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
     @Override
     public Object getReference(Bean<?> bean, Type beanType, CreationalContext<?> ctx) {
         if (bean instanceof OdiBean) {
+            if (beanType instanceof ParameterizedType) {
+                beanType = ((ParameterizedType) beanType).getRawType();
+            }
             if (!(beanType instanceof Class)) {
                 throw new IllegalStateException("Not implemented");
             }

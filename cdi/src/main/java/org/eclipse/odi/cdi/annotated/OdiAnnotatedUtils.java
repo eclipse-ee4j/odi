@@ -16,6 +16,7 @@
 package org.eclipse.odi.cdi.annotated;
 
 import io.micronaut.context.AbstractBeanResolutionContext;
+import io.micronaut.core.annotation.Internal;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.type.TypeInformation;
 import io.micronaut.inject.ArgumentInjectionPoint;
@@ -32,18 +33,19 @@ import java.util.Set;
 /**
  * Utils to construct {@link jakarta.enterprise.inject.spi.Annotated}.
  */
+@Internal
 public final class OdiAnnotatedUtils {
 
-    public static Annotated asAnnotated(InjectionPoint<?> injectionPoint, Type type) {
+    public static Annotated asAnnotated(ClassLoader classLoader, InjectionPoint<?> injectionPoint, Type type) {
         if (injectionPoint instanceof AbstractBeanResolutionContext.FieldSegment) {
             AbstractBeanResolutionContext.FieldSegment fieldSegment = (AbstractBeanResolutionContext.FieldSegment) injectionPoint;
-            return new OdiAnnotatedField<>(injectionPoint.getDeclaringBean().getBeanType(),
+            return new OdiAnnotatedField<>(classLoader, injectionPoint.getDeclaringBean().getBeanType(),
                     Set.of(type),
                     injectionPoint.getAnnotationMetadata(), fieldSegment.getName());
         }
         if (injectionPoint instanceof FieldInjectionPoint) {
             FieldInjectionPoint fieldInjectionPoint = (FieldInjectionPoint) injectionPoint;
-            return new OdiAnnotatedField<>(injectionPoint.getDeclaringBean().getBeanType(),
+            return new OdiAnnotatedField<>(classLoader, injectionPoint.getDeclaringBean().getBeanType(),
                     Set.of(type),
                     injectionPoint.getAnnotationMetadata(), fieldInjectionPoint.getName());
         }
@@ -58,16 +60,16 @@ public final class OdiAnnotatedUtils {
                 }
             }
 
-            return new OdiAnnotatedParameter<>(injectionPoint.getDeclaringBean().getBeanType(),
+            return new OdiAnnotatedParameter<>(classLoader, injectionPoint.getDeclaringBean().getBeanType(),
                     Set.of(type),
                     injectionPoint.getAnnotationMetadata(),
                     indexOf,
-                    asAnnotatedMethod(injectionPoint, type, methodArgumentSegment)
+                    asAnnotatedMethod(classLoader, injectionPoint, type, methodArgumentSegment)
             );
         }
         if (injectionPoint instanceof AbstractBeanResolutionContext.MethodSegment) {
             AbstractBeanResolutionContext.MethodSegment methodSegment = (AbstractBeanResolutionContext.MethodSegment) injectionPoint;
-            return asAnnotatedMethod(injectionPoint, type, methodSegment);
+            return asAnnotatedMethod(classLoader, injectionPoint, type, methodSegment);
         }
         if (injectionPoint instanceof ArgumentInjectionPoint) {
             CallableInjectionPoint<?> outerInjectionPoint = ((ArgumentInjectionPoint<?, ?>) injectionPoint).getOuterInjectionPoint();
@@ -83,14 +85,16 @@ public final class OdiAnnotatedUtils {
                     }
                 }
 
-                OdiAnnotatedConstructor<Object> annotatedConstructor = new OdiAnnotatedConstructor<>(injectionPoint.getDeclaringBean().getBeanType(),
+                OdiAnnotatedConstructor<Object> annotatedConstructor = new OdiAnnotatedConstructor<>(classLoader,
+                        injectionPoint.getDeclaringBean().getBeanType(),
                         Set.of(type),
                         injectionPoint.getAnnotationMetadata(),
                         Arrays.stream(constructorInjectionPoint.getArguments()).map(TypeInformation::getType).toArray(Class[]::new),
                         arguments
                 );
 
-                return new OdiAnnotatedParameter<>(injectionPoint.getDeclaringBean().getBeanType(),
+                return new OdiAnnotatedParameter<>(classLoader,
+                        injectionPoint.getDeclaringBean().getBeanType(),
                         Set.of(type),
                         injectionPoint.getAnnotationMetadata(),
                         indexOf,
@@ -98,13 +102,14 @@ public final class OdiAnnotatedUtils {
                 );
             }
         }
-        return new OdiAnnotated(type, Set.of(type), injectionPoint.getAnnotationMetadata());
+        return new OdiAnnotated(classLoader, type, Set.of(type), injectionPoint.getAnnotationMetadata());
     }
 
-    private static OdiAnnotatedMethod<Object> asAnnotatedMethod(InjectionPoint<?> injectionPoint,
+    private static OdiAnnotatedMethod<Object> asAnnotatedMethod(ClassLoader classLoader,
+                                                                InjectionPoint<?> injectionPoint,
                                                                 Type type,
                                                                 AbstractBeanResolutionContext.MethodSegment methodSegment) {
-        return new OdiAnnotatedMethod<>(injectionPoint.getDeclaringBean().getBeanType(),
+        return new OdiAnnotatedMethod<>(classLoader, injectionPoint.getDeclaringBean().getBeanType(),
                 Set.of(type),
                 injectionPoint.getAnnotationMetadata(),
                 methodSegment.getName(),

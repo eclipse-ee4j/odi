@@ -17,6 +17,9 @@ package org.eclipse.odi.cdi.processor.extensions;
 
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.EnumConstantElement;
+import io.micronaut.inject.ast.FieldElement;
+import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.PackageElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
@@ -175,7 +178,12 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
     public Collection<FieldInfo> fields() {
         return classElement.getEnclosedElements(ElementQuery.ALL_FIELDS.includeEnumConstants().includeHiddenElements())
                 .stream()
-                .map(fieldElement -> new FieldInfoImpl(getDeclaringType(fieldElement.getDeclaringType()), fieldElement, types, visitorContext))
+                .map((MemberElement memberElement) -> {
+                    if (memberElement instanceof EnumConstantElement) {
+                        return new EnumConstantInfoImpl(getDeclaringType(memberElement.getDeclaringType()), (EnumConstantElement) memberElement, types, visitorContext);
+                    }
+                    return new FieldInfoImpl(getDeclaringType(memberElement.getDeclaringType()), (FieldElement) memberElement, types, visitorContext);
+                })
                 .collect(Collectors.toUnmodifiableList());
     }
 

@@ -15,6 +15,7 @@
  */
 package org.eclipse.odi.cdi;
 
+import io.micronaut.inject.qualifiers.AnyQualifier;
 import org.eclipse.odi.cdi.annotation.DisposerMethod;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextProvider;
@@ -60,16 +61,18 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @SuppressWarnings("CdiManagedBeanInconsistencyInspection")
 @Factory
 final class OdiSeContainer extends CDI<Object>
-        implements SeContainer, OdiInstance<Object>,  ApplicationContextProvider, ExecutableMethodProcessor<DisposerMethod> {
+        implements SeContainer, OdiInstance<Object>, ApplicationContextProvider, ExecutableMethodProcessor<DisposerMethod> {
     static final Map<ApplicationContext, OdiSeContainer> RUNNING_CONTAINERS = Collections.synchronizedMap(new LinkedHashMap<>(5));
     private static final Logger LOG = LoggerFactory.getLogger(OdiSeContainer.class);
     private final ApplicationContext applicationContext;
     private final OdiBeanContainerImpl beanContainer;
     private final Map<DisposerKey, DisposerDef> disposerMethods = new HashMap<>(20);
+    private final Map<DisposerKey, DisposerDef> anyDisposerMethods = new HashMap<>(20);
 
     protected OdiSeContainer(ApplicationContext context) {
         this.applicationContext = context;
@@ -132,7 +135,7 @@ final class OdiSeContainer extends CDI<Object>
 
     @Override
     public <U> OdiInstance<U> select(Class<U> subtype, Annotation... qualifiers) {
-        return new OdiInstanceImpl<>(beanContainer, null,  Argument.of(subtype), qualifiers);
+        return new OdiInstanceImpl<>(beanContainer, null, Argument.of(subtype), qualifiers);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -222,10 +225,12 @@ final class OdiSeContainer extends CDI<Object>
 
     /**
      * Creates the parameters object for synthetic beans.
+     *
      * @param injectionPoint The injection point
      * @return The parameters
      */
-    @Bean Parameters parameterCreator(ArgumentInjectionPoint<?, ?> injectionPoint) {
+    @Bean
+    Parameters parameterCreator(ArgumentInjectionPoint<?, ?> injectionPoint) {
         final BeanDefinition<?> declaringBean = injectionPoint.getDeclaringBean();
         return OdiUtils.createParameters(declaringBean);
     }
@@ -245,7 +250,7 @@ final class OdiSeContainer extends CDI<Object>
                 return beanContainer.getBean(
                         argument.getFirstTypeVariable()
                                 .orElseThrow(() -> new UnsatisfiedResolutionException("Cannot resolve bean for injection point:"
-                                                                                              + " " + injectionPoint)),
+                                        + " " + injectionPoint)),
                         Qualifiers.forArgument(argument)
                 );
             } catch (NonUniqueBeanException e) {
@@ -270,10 +275,11 @@ final class OdiSeContainer extends CDI<Object>
                 if (qualifier == null) {
                     qualifier = Qualifiers.byAnnotation(AnnotationMetadata.EMPTY_METADATA, Default.class);
                 }
-                this.disposerMethods.put(
-                        new DisposerKey(argument, qualifier),
-                        new DisposerDef(beanDefinition, method)
-                );
+                if (qualifier.contains(AnyQualifier.INSTANCE)) {
+                    anyDisposerMethods.put(new DisposerKey(argument, null), new DisposerDef(beanDefinition, method));
+                } else {
+                    disposerMethods.put(new DisposerKey(argument, qualifier), new DisposerDef(beanDefinition, method));
+                }
                 break;
             }
         }
@@ -281,6 +287,7 @@ final class OdiSeContainer extends CDI<Object>
 
     /**
      * Handler for running disposer methods.
+     *
      * @return The BeanPreDestroyEventListener that runs disposer methods
      */
     @Singleton
@@ -290,8 +297,17 @@ final class OdiSeContainer extends CDI<Object>
             final Object bean = event.getBean();
             final BeanDefinition<?> beanDefinition = event.getBeanDefinition();
             try {
-                final DisposerDef<Object> disposerDef = disposerMethods.get(new DisposerKey(beanDefinition.asArgument(), beanDefinition.getDeclaredQualifier()));
+                Argument<?> type = beanDefinition.asArgument();
+                DisposerDef<Object> disposerDef = disposerMethods.get(new DisposerKey(type, beanDefinition.getDeclaredQualifier()));
+                if (disposerDef == null) {
+                    disposerDef = anyDisposerMethods.get(new DisposerKey(type, null));
+                }
                 if (disposerDef != null) {
+                    Optional<Class<?>> producedDeclaringType = beanDefinition.getDeclaringType();
+                    Optional<Class<?>> disposeDeclaringType = disposerDef.definition.getDeclaringType();
+                    if (disposeDeclaringType.isPresent() && producedDeclaringType.isPresent() && !producedDeclaringType.get().equals(disposeDeclaringType.get())) {
+                        return bean;
+                    }
                     beanContainer.fulfillAndExecuteMethod(disposerDef.definition, disposerDef.executableMethod, argument -> {
                         if (argument.getAnnotationMetadata().hasAnnotation(Disposes.class)) {
                             return bean;
@@ -302,7 +318,7 @@ final class OdiSeContainer extends CDI<Object>
             } catch (Throwable e) {
                 if (LOG.isErrorEnabled()) {
                     LOG.error("Error invoking Disposer method for bean [" + beanDefinition.getBeanType() + "]: " + e.getMessage(),
-                              e);
+                            e);
                 }
             }
             return bean;

@@ -29,6 +29,7 @@ import io.micronaut.inject.qualifiers.AnyQualifier;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.event.Event;
 import jakarta.enterprise.event.NotificationOptions;
+import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.inject.spi.EventMetadata;
 import jakarta.enterprise.inject.spi.ObserverMethod;
@@ -43,6 +44,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -248,8 +250,10 @@ final class OdiEvent<T> implements Event<T>, OdiEventMetadata {
             return Collections.emptySet();
         }
         if (qualifierAnnotations == null) {
-            qualifierAnnotations = AnnotationUtils.synthesizeQualifierAnnotations(annotationMetadata);
+            qualifierAnnotations = AnnotationUtils.synthesizeQualifierAnnotations(annotationMetadata, beanContainer.getBeanContext().getClassLoader());
         }
+        qualifierAnnotations = new HashSet<>(qualifierAnnotations);
+        qualifierAnnotations.add(Any.Literal.INSTANCE);
         return qualifierAnnotations;
     }
 

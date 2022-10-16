@@ -30,11 +30,13 @@ import java.util.Set;
  */
 @Internal
 class OdiAnnotated implements Annotated {
+    protected final ClassLoader classLoader;
     protected final Type type;
     protected final Set<Type> exposedTypes;
     protected final AnnotationMetadata annotationMetadata;
 
-    public OdiAnnotated(Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata) {
+    public OdiAnnotated(ClassLoader classLoader, Type type, Set<Type> exposedTypes, AnnotationMetadata annotationMetadata) {
+        this.classLoader = classLoader;
         this.type = type;
         this.exposedTypes = exposedTypes;
         this.annotationMetadata = annotationMetadata;
