@@ -150,7 +150,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
     public Object intercept(ConstructorInvocationContext<Object> context) {
         if (aroundConstruct != null) {
             ConstructorInvocationContextAdapter<B> constructorInvocationContextAdapter =
-                    new ConstructorInvocationContextAdapter<>(context, aroundConstruct);
+                    new ConstructorInvocationContextAdapter<>(this, context, aroundConstruct);
             return constructorInvocationContextAdapter.invoke(
                     resolveInterceptorBean()
             );
@@ -172,6 +172,7 @@ public final class JakartaInterceptorAdapter<B> extends OdiBeanImpl<B> implement
         ExecutableMethod<B, Object> executableMethod = executableMethods[0];
         B target = resolveInterceptorBean();
         InvocationContextAdapter<B> ctx = new InvocationContextAdapter<>(
+                this,
                 context,
                 executableMethods,
                 context.getKind()

@@ -15,7 +15,9 @@
  */
 package org.eclipse.odi.cdi.events;
 
+import io.micronaut.inject.qualifiers.AnyQualifier;
 import org.eclipse.odi.cdi.AnnotationUtils;
+import org.eclipse.odi.cdi.DefaultQualifier;
 import org.eclipse.odi.cdi.OdiBeanContainer;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
@@ -77,6 +79,9 @@ final class OdiEventFactory {
                 eventType = (Argument<T>) typeParameters[0];
             }
             eventQualifier = Qualifiers.forArgument(argument);
+            if (AnyQualifier.INSTANCE.equals(eventQualifier)) {
+                eventQualifier = DefaultQualifier.instance();
+            }
             annotationMetadata = argumentInjectionPoint.getAnnotationMetadata();
         }
         if (eventType.getType().equals(Object.class)) {
