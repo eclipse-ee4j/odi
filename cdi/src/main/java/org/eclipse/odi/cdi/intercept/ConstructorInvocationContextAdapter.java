@@ -15,11 +15,8 @@
  */
 package org.eclipse.odi.cdi.intercept;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-
 import io.micronaut.aop.ConstructorInvocationContext;
+import io.micronaut.aop.Interceptor;
 import io.micronaut.aop.InterceptorKind;
 import io.micronaut.aop.InvocationContext;
 import io.micronaut.core.beans.BeanConstructor;
@@ -29,21 +26,26 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ConstructorInjectionPoint;
 import io.micronaut.inject.ExecutableMethod;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+
 /**
  * CDI constructor interceptor.
- *
+ * <p>
  * According to the spec {@link #proceed()} should return `null` for the first call and after that {@link #getTarget()}
  * will return the actual instance.
+ *
  * @param <B> the bean type
  */
 final class ConstructorInvocationContextAdapter<B> extends InvocationContextAdapter<B> {
 
     private Object constructorTarget;
 
-    ConstructorInvocationContextAdapter(
-            InvocationContext<?, ?> invocationContext,
-            ExecutableMethod<B, Object>[] methods) {
-        super(invocationContext, methods, InterceptorKind.AROUND_CONSTRUCT);
+    ConstructorInvocationContextAdapter(Interceptor<?, ?> micronautInterceptor,
+                                        InvocationContext<?, ?> invocationContext,
+                                        ExecutableMethod<B, Object>[] methods) {
+        super(micronautInterceptor, invocationContext, methods, InterceptorKind.AROUND_CONSTRUCT);
     }
 
     @Override
