@@ -165,11 +165,6 @@
                     <exclude name="resolutionWithRepeatableQualifiers"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.interceptors.tests.contract.exceptions.aroundInvoke.ExceptionTest">
-                <methods>
-                    <exclude name="testExceptions2"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.producer.method.ProducerMethodTooManyScopesTest">
                 <methods>
                     <exclude name=".*"/>
@@ -264,12 +259,6 @@
                     <exclude name="testTypeVariableEventTypeFails"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest">
-                <methods>
-                    <exclude name="testEventTypeIsArray"/>
-                    <exclude name="testEventTypeIsConcreteTypeWithNoTypeVariables"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.interceptors.tests.bindings.broken.InvalidTransitiveInterceptorBindingAnnotationsTest">
                 <methods>
                     <exclude name=".*"/>
@@ -295,7 +284,7 @@
             </class>
             <class name="org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest">
                 <methods>
-                    <!-- Correctly match the event -->
+                    <!-- Might be a TCK error, event is of type List but the validation expects ArrayList -->
                     <exclude name="testParameterizedResolvedType"/>
                 </methods>
             </class>
@@ -348,23 +337,21 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest">
+                <!-- Retention CLASS is only supported in Micronaut 4 -->
                 <methods>
-                    <exclude name="testFireEventWithNonBindingAnnotationsFails"/>
                     <exclude name="testNonRuntimeBindingTypeIsNotAnEventBindingType"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.select.SelectEventTest">
                 <methods>
-                    <exclude name="testEventSelectReturnsEventOfSameType"/>
-                    <exclude name="testEventSelectThrowsExceptionIfAnnotationIsNotBindingType"/>
                     <exclude name="testEventSelectThrowsExceptionIfEventTypeHasTypeVariable"/>
-                    <exclude name="testEventSelectWithSubtypeThrowsExceptionIfAnnotationIsNotBindingType"/>
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.event.EventTest">
                 <methods>
+                    <!-- How to detect ArrayList<T> ? -->
                     <exclude name="testEventObjectContainsTypeVariablesWhenResolvingFails"/>
-                    <exclude name="testPrivateObserverMethodInvoked"/>
+                    <!-- Support propagating request scope to ContextsImpl -->
                     <exclude name="testStaticObserverMethodInvoked"/>
                 </methods>
             </class>
@@ -383,13 +370,8 @@
                     <exclude name=".*"/>
                 </methods>
             </class>
-            <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest">
-                <methods>
-                    <exclude name="testInitializerAnnotatedConstructor"/>
-                    <exclude name="testInitializerAnnotatedConstructorUsedOverEmptyConstuctor"/>
-                </methods>
-            </class>
             <class name="org.jboss.cdi.tck.tests.implementation.simple.definition.tooManyInitializerAnnotatedConstructors.TooManyInitializerAnnotatedConstructorsTest">
+                <!-- Fail on multiple constructor annotated with Inject -->
                 <methods>
                     <exclude name=".*"/>
                 </methods>
@@ -442,7 +424,7 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest">
-                <!-- Support protected/private/static field producers -->
+                <!-- Support returning null from producers -->
                 <methods>
                     <exclude name="testProducerFieldForNullValueNotDependent"/>
                     <exclude name="testProducerFieldReturnsNullIsDependent"/>
@@ -840,6 +822,7 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest">
+                <!-- Correct in Core: field injection point is of type constructor-->
                 <methods>
                     <exclude name="testInjectionPointGetAnnotated"/>
                     <exclude name="testInjectionPointGetBean"/>
@@ -969,6 +952,7 @@
                 </methods>
             </class>
             <class name="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest">
+                <!-- Properly detect circular dependency for lazy proxy types -->
                 <methods>
                     <exclude name=".*"/>
                 </methods>

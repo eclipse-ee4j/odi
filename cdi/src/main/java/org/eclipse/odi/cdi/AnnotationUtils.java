@@ -50,6 +50,7 @@ public final class AnnotationUtils {
     /**
      * Creates new {@link java.lang.annotation.Annotation} instances from all qualifiers.
      * @param annotationMetadata The annotation metadata, never {@code null}
+     * @param classLoader The classloader
      * @return The synthesized annotations
      */
     public static Set<Annotation> synthesizeQualifierAnnotations(AnnotationMetadata annotationMetadata, ClassLoader classLoader) {
@@ -137,18 +138,14 @@ public final class AnnotationUtils {
         if (annotations.length > 0) {
             if (annotations.length == 1) {
                 Annotation annotation = annotations[0];
-                if (isQualifier(annotation)) {
-                    checkValidAnnotation(annotation, annotations);
-                    return (Qualifier<U>) byAnnotation(annotationMetadata, annotation.annotationType());
-                }
+                checkValidAnnotation(annotation, annotations);
+                return (Qualifier<U>) byAnnotation(annotationMetadata, annotation.annotationType());
             } else {
                 Qualifier[] qualifiers = new Qualifier[annotations.length];
                 for (int i = 0; i < annotations.length; i++) {
                     Annotation annotation = annotations[i];
-                    if (isQualifier(annotation)) {
-                        checkValidAnnotation(annotation, annotations);
-                        qualifiers[i] = byAnnotation(annotationMetadata, annotation.annotationType());
-                    }
+                    checkValidAnnotation(annotation, annotations);
+                    qualifiers[i] = byAnnotation(annotationMetadata, annotation.annotationType());
                 }
                 return Qualifiers.byQualifiers(qualifiers);
             }

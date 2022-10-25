@@ -16,6 +16,7 @@
 package org.eclipse.odi.cdi.intercept;
 
 import io.micronaut.aop.InterceptedProxy;
+import io.micronaut.aop.Interceptor;
 import io.micronaut.aop.InterceptorKind;
 import io.micronaut.aop.InvocationContext;
 import io.micronaut.aop.MethodInvocationContext;
@@ -36,16 +37,21 @@ import java.util.Set;
  * @param <B> The bean type
  */
 class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationContext {
+
+    private static final String FAILED_INTERCEPTOR_ATTRIBUTE = "ODI_FAILED_INTERCEPTOR";
+
     @SuppressWarnings("checkstyle:VisibilityModifier")
+    final Interceptor<?, ?> micronautInterceptor;
     final InvocationContext<?, ?> invocationContext;
     private final ExecutableMethod<B, Object>[] methods;
     private final InterceptorKind kind;
     private int index;
     private B interceptor;
 
-    InvocationContextAdapter(InvocationContext<?, ?> invocationContext,
+    InvocationContextAdapter(Interceptor<?, ?> micronautInterceptor, InvocationContext<?, ?> invocationContext,
                              ExecutableMethod<B, Object>[] methods,
                              InterceptorKind kind) {
+        this.micronautInterceptor = micronautInterceptor;
         this.invocationContext = invocationContext;
         this.methods = methods;
         this.index = methods.length;
@@ -121,7 +127,6 @@ class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationConte
     @Override
     public Object proceed() {
         if (kind == InterceptorKind.AROUND) {
-
             if (index <= 0) {
                 return invocationContextProceed();
             } else {
@@ -147,7 +152,22 @@ class InvocationContextAdapter<B> implements jakarta.interceptor.InvocationConte
     }
 
     protected Object invocationContextProceed() {
-        return invocationContext.proceed();
+        boolean success = false;
+        try {
+            Object result;
+            Interceptor<?, ?> failed = invocationContext.removeAttribute(FAILED_INTERCEPTOR_ATTRIBUTE, micronautInterceptor.getClass()).orElse(null);
+            if (failed != null) {
+                result = invocationContext.proceed(failed);
+            } else {
+                result = invocationContext.proceed();
+            }
+            success = true;
+            return result;
+        } finally {
+            if (!success) {
+                invocationContext.setAttribute(FAILED_INTERCEPTOR_ATTRIBUTE, micronautInterceptor);
+            }
+        }
     }
 
     private static final class ContextDataMap extends AbstractMap<String, Object> {

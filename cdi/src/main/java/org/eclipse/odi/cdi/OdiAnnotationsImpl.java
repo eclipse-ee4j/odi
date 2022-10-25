@@ -15,15 +15,6 @@
  */
 package org.eclipse.odi.cdi;
 
-import java.lang.annotation.Annotation;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.eclipse.odi.cdi.annotation.reflect.AnnotationReflection;
 import io.micronaut.context.BeanProvider;
 import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.Any;
@@ -34,6 +25,15 @@ import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Singleton;
+import org.eclipse.odi.cdi.annotation.reflect.AnnotationReflection;
+
+import java.lang.annotation.Annotation;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings("CdiManagedBeanInconsistencyInspection")
 @Singleton
