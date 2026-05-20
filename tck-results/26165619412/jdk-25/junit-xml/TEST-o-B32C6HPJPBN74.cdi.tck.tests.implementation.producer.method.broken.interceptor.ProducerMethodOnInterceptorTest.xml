@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.interceptor.ProducerMethodOnInterceptorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:47.821Z" hostname="runnervmrw5os" time="0.214">
+  <properties/>
+  <testcase name="testProducerMethodNotAllowedOnInterceptor" classname="org.jboss.cdi.tck.tests.implementation.producer.method.broken.interceptor.ProducerMethodOnInterceptorTest" time="0.001"/>
+    </testsuite>

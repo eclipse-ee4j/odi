@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.fires.FireEventTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:26.674Z" hostname="runnervmrw5os" time="0.442">
+  <properties/>
+  <testcase name="testBeanManagerFireEvent" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.005"/>
+  <testcase name="testDuplicateBindingsToFireEventFails" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.003"/>
+  <testcase name="testEventFireThrowsExceptionIfEventObjectTypeContainsUnresovableTypeVariable" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.005"/>
+  <testcase name="testEventProvidesMethodForFiringEventsWithCombinationOfTypeAndBindings" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.003"/>
+  <testcase name="testEventSelectedFiresAndObserversNotified" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.003"/>
+  <testcase name="testInjectedAnyEventCanFireEvent" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.003"/>
+  <testcase name="testInjectedEventAcceptsEventObject" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.002"/>
+  <testcase name="testInjectedEventCanHaveBindings" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.003"/>
+  <testcase name="testInjectedEventCanSpecifyBindingsDynamically" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.003"/>
+  <testcase name="testTypeVariableEventTypeFails" classname="org.jboss.cdi.tck.tests.event.fires.FireEventTest" time="0.005"/>
+    </testsuite>

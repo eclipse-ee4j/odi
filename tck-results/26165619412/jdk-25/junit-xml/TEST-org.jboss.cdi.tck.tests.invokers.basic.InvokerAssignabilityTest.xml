@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.invokers.basic.InvokerAssignabilityTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:32:01.007Z" hostname="runnervmrw5os" time="0.461">
+  <properties/>
+  <testcase name="testNonNull[0](null, null)" classname="org.jboss.cdi.tck.tests.invokers.basic.InvokerAssignabilityTest" time="0.026"/>
+  <testcase name="testNull[0](null, null)" classname="org.jboss.cdi.tck.tests.invokers.basic.InvokerAssignabilityTest" time="0.004"/>
+    </testsuite>

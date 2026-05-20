@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.BuiltinInterceptorInjectionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:37.684Z" hostname="runnervmrw5os" time="0.192">
+  <properties/>
+  <testcase name="testDeploymentFails" classname="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.injection.BuiltinInterceptorInjectionTest" time="0.0"/>
+    </testsuite>

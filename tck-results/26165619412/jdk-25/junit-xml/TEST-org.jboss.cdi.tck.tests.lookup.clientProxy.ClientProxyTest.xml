@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.clientProxy.ClientProxyTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:32:13.528Z" hostname="runnervmrw5os" time="0.282">
+  <properties/>
+  <testcase name="testClientProxyInvocation" classname="org.jboss.cdi.tck.tests.lookup.clientProxy.ClientProxyTest" time="0.001"/>
+  <testcase name="testClientProxyUsedForNormalScope" classname="org.jboss.cdi.tck.tests.lookup.clientProxy.ClientProxyTest" time="0.001"/>
+    </testsuite>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:10.139Z" hostname="runnervmrw5os" time="0.422">
+  <properties/>
+  <testcase name="testLifecycleCallbackInterceptorCanCatchException" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest" time="0.006"/>
+  <testcase name="testPostConstructCanThrowRuntimeException" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest" time="0.003"/>
+  <testcase name="testPreDestroyNotInvokedWhenInstanceDiscarded" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.exceptions.LifecycleCallbackInterceptorExceptionTest" time="0.004"/>
+    </testsuite>

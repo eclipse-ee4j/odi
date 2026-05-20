@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.observer.async.executor.FireAsyncWithCustomExecutorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:30.375Z" hostname="runnervmrw5os" time="0.316">
+  <properties/>
+  <testcase name="testCustomExecutor" classname="org.jboss.cdi.tck.tests.event.observer.async.executor.FireAsyncWithCustomExecutorTest" time="0.004"/>
+    </testsuite>

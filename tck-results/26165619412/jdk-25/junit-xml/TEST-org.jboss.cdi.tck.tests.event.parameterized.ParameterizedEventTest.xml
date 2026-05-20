@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:35.152Z" hostname="runnervmrw5os" time="0.393">
+  <properties/>
+  <testcase name="testEventObjectTypeUsed" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.003"/>
+  <testcase name="testSelectedEventTypeCombinedWithEventObjectRuntimeTypeForResolvingEventTypeArguments" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.002"/>
+  <testcase name="testSelectedEventTypeCombinedWithEventObjectRuntimeTypeForResolvingEventTypeArguments2" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.001"/>
+  <testcase name="testSelectedEventTypeUsedForResolvingEventTypeArguments" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.001"/>
+  <testcase name="testSelectedEventTypeUsedForResolvingEventTypeArguments2" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.001"/>
+  <testcase name="testUnresolvedTypeVariableDetected1" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.001"/>
+  <testcase name="testUnresolvedTypeVariableDetected2" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.002"/>
+  <testcase name="testUnresolvedTypeVariableDetected3" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.001"/>
+  <testcase name="testWildcardIsResolvable" classname="org.jboss.cdi.tck.tests.event.parameterized.ParameterizedEventTest" time="0.005"/>
+    </testsuite>

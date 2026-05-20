@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.select.SelectEventTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:37.330Z" hostname="runnervmrw5os" time="0.347">
+  <properties/>
+  <testcase name="testEventSelectReturnsEventOfSameType" classname="org.jboss.cdi.tck.tests.event.select.SelectEventTest" time="0.005"/>
+  <testcase name="testEventSelectThrowsExceptionForDuplicateBindingType" classname="org.jboss.cdi.tck.tests.event.select.SelectEventTest" time="0.003"/>
+  <testcase name="testEventSelectThrowsExceptionIfAnnotationIsNotBindingType" classname="org.jboss.cdi.tck.tests.event.select.SelectEventTest" time="0.004"/>
+  <testcase name="testEventSelectThrowsExceptionIfEventTypeHasTypeVariable" classname="org.jboss.cdi.tck.tests.event.select.SelectEventTest" time="0.004"/>
+  <testcase name="testEventSelectWithSubtypeThrowsExceptionForDuplicateBindingType" classname="org.jboss.cdi.tck.tests.event.select.SelectEventTest" time="0.003"/>
+  <testcase name="testEventSelectWithSubtypeThrowsExceptionIfAnnotationIsNotBindingType" classname="org.jboss.cdi.tck.tests.event.select.SelectEventTest" time="0.002"/>
+    </testsuite>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.build.compatible.extensions.customNormalScope.CustomNormalScopeTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:30:55.749Z" hostname="runnervmrw5os" time="0.423">
+  <properties/>
+  <testcase name="commandContextController" classname="org.jboss.cdi.tck.tests.build.compatible.extensions.customNormalScope.CustomNormalScopeTest" time="0.006"/>
+  <testcase name="commandExecutor" classname="org.jboss.cdi.tck.tests.build.compatible.extensions.customNormalScope.CustomNormalScopeTest" time="0.004"/>
+    </testsuite>

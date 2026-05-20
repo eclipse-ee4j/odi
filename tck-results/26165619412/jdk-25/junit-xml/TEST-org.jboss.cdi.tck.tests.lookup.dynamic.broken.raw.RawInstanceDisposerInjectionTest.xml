@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceDisposerInjectionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:32:17.506Z" hostname="runnervmrw5os" time="0.169">
+  <properties/>
+  <testcase name="testDefinitionError" classname="org.jboss.cdi.tck.tests.lookup.dynamic.broken.raw.RawInstanceDisposerInjectionTest" time="0.0"/>
+    </testsuite>

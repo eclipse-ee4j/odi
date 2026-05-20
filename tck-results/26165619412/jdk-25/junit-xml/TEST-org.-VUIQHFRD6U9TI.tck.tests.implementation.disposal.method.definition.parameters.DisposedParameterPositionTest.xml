@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.parameters.DisposedParameterPositionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:43.467Z" hostname="runnervmrw5os" time="0.324">
+  <properties/>
+  <testcase name="testDisposedParameterPosition" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.parameters.DisposedParameterPositionTest" time="0.003"/>
+    </testsuite>

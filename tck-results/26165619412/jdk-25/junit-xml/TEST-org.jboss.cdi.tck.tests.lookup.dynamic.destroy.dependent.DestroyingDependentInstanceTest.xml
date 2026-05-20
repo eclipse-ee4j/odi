@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.dependent.DestroyingDependentInstanceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:32:18.834Z" hostname="runnervmrw5os" time="0.345">
+  <properties/>
+  <testcase name="testDestroyingDependentInstances[0](null)" classname="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.dependent.DestroyingDependentInstanceTest" time="0.003"/>
+  <testcase name="testDestroyingInterceptedDependentBean[0](null)" classname="org.jboss.cdi.tck.tests.lookup.dynamic.destroy.dependent.DestroyingDependentInstanceTest" time="0.005"/>
+    </testsuite>

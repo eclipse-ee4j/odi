@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:40.601Z" hostname="runnervmrw5os" time="0.418">
+  <properties/>
+  <testcase name="testBindingTypesAppliedToDisposalMethodParameters" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest" time="0.002"/>
+  <testcase name="testDisposalMethodCalledForProducerField" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest" time="0.002"/>
+  <testcase name="testDisposalMethodForMultipleProducerMethods" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest" time="0.002"/>
+  <testcase name="testDisposalMethodOnNonBean" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest" time="0.001"/>
+  <testcase name="testDisposalMethodParametersGetInjected" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.DisposalMethodDefinitionTest" time="0.002"/>
+    </testsuite>

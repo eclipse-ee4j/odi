@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:21.678Z" hostname="runnervmrw5os" time="0.408">
+  <properties/>
+  <testcase name="testBeanOverridesPriorityFromStereotype" classname="org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest" time="0.002"/>
+  <testcase name="testBeanPriorityFromStereotypeOverridesOtherAlternative" classname="org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest" time="0.002"/>
+  <testcase name="testStereotypeWithAlternativeAndPriority" classname="org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest" time="0.002"/>
+  <testcase name="testStereotypeWithPriority" classname="org.jboss.cdi.tck.tests.definition.stereotype.priority.StereotypeWithPriorityTest" time="0.002"/>
+    </testsuite>

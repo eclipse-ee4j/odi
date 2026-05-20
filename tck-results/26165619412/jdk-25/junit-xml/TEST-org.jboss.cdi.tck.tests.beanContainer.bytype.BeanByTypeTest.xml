@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:30:50.229Z" hostname="runnervmrw5os" time="0.564">
+  <properties/>
+  <testcase name="testGetBeans" classname="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest" time="0.003"/>
+  <testcase name="testGetBeansDoesNotResolveAlternatives" classname="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest" time="0.003"/>
+  <testcase name="testNoBindingImpliesCurrent" classname="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest" time="0.004"/>
+  <testcase name="testNonBindingType" classname="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest" time="0.007"/>
+  <testcase name="testSameBindingTwice" classname="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest" time="0.006"/>
+  <testcase name="testTypeVariable" classname="org.jboss.cdi.tck.tests.beanContainer.bytype.BeanByTypeTest" time="0.006"/>
+    </testsuite>

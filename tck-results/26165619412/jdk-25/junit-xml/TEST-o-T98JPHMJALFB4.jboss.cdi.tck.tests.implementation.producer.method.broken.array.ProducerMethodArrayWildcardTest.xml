@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.array.ProducerMethodArrayWildcardTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:47.605Z" hostname="runnervmrw5os" time="0.212">
+  <properties/>
+  <testcase name="testBeanTypes" classname="org.jboss.cdi.tck.tests.implementation.producer.method.broken.array.ProducerMethodArrayWildcardTest" time="0.0"/>
+    </testsuite>

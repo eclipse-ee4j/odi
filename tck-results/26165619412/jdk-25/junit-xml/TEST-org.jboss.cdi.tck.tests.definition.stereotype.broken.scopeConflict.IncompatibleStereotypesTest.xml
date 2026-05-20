@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.stereotype.broken.scopeConflict.IncompatibleStereotypesTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:19.775Z" hostname="runnervmrw5os" time="0.175">
+  <properties/>
+  <testcase name="testMultipleIncompatibleScopeStereotypes" classname="org.jboss.cdi.tck.tests.definition.stereotype.broken.scopeConflict.IncompatibleStereotypesTest" time="0.001"/>
+    </testsuite>

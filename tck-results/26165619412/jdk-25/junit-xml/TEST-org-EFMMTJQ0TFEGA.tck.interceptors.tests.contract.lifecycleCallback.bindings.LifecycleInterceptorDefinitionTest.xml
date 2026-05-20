@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.bindings.LifecycleInterceptorDefinitionTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:08.992Z" hostname="runnervmrw5os" time="0.454">
+  <properties/>
+  <testcase name="testLifecycleInterception" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.bindings.LifecycleInterceptorDefinitionTest" time="0.008"/>
+  <testcase name="testMultipleLifecycleInterceptors" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.bindings.LifecycleInterceptorDefinitionTest" time="0.007"/>
+    </testsuite>

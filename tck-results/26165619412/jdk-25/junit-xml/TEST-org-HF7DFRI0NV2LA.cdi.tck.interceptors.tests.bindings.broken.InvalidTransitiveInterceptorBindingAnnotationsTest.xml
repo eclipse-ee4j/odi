@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.bindings.broken.InvalidTransitiveInterceptorBindingAnnotationsTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:30:41.548Z" hostname="runnervmrw5os" time="0.456">
+  <properties/>
+  <testcase name="testInterceptorBindingsWithConflictingAnnotationMembersNotOk" classname="org.jboss.cdi.tck.interceptors.tests.bindings.broken.InvalidTransitiveInterceptorBindingAnnotationsTest" time="0.002"/>
+    </testsuite>

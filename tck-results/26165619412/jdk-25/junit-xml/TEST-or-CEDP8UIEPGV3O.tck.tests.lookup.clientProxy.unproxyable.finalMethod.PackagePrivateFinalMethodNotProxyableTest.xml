@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PackagePrivateFinalMethodNotProxyableTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:32:14.525Z" hostname="runnervmrw5os" time="0.18">
+  <properties/>
+  <testcase name="testClassWithPublicFinalMethodCannotBeProxied" classname="org.jboss.cdi.tck.tests.lookup.clientProxy.unproxyable.finalMethod.PackagePrivateFinalMethodNotProxyableTest" time="0.0"/>
+    </testsuite>

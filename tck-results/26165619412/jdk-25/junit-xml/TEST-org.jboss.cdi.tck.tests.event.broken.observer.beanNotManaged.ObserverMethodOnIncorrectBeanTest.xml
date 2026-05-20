@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.broken.observer.beanNotManaged.ObserverMethodOnIncorrectBeanTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:23.540Z" hostname="runnervmrw5os" time="0.319">
+  <properties/>
+  <testcase name="testObserverMethodNotOnManagedOrSessionBeanFails" classname="org.jboss.cdi.tck.tests.event.broken.observer.beanNotManaged.ObserverMethodOnIncorrectBeanTest" time="0.001"/>
+    </testsuite>

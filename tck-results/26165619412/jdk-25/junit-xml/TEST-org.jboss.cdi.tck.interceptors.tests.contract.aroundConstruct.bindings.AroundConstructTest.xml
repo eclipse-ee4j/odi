@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.bindings.AroundConstructTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:30:51.617Z" hostname="runnervmrw5os" time="0.629">
+  <properties/>
+  <testcase name="testExceptions[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.bindings.AroundConstructTest" time="0.005"/>
+  <testcase name="testInterceptorInvocation[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.bindings.AroundConstructTest" time="0.006"/>
+  <testcase name="testReplacingParameters[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.bindings.AroundConstructTest" time="0.011"/>
+    </testsuite>

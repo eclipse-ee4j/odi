@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:32.374Z" hostname="runnervmrw5os" time="0.386">
+  <properties/>
+  <testcase name="testGetBeanClassOnObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" time="0.002"/>
+  <testcase name="testGetDeclaringBeanOnObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" time="0.002"/>
+  <testcase name="testGetNotifyOnObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" time="0.001"/>
+  <testcase name="testGetObservedQualifiersOnObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" time="0.001"/>
+  <testcase name="testGetObservedTypeOnObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" time="0.001"/>
+  <testcase name="testGetTransactionPhaseOnObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" time="0.001"/>
+  <testcase name="testInstanceOfBeanForEveryEnabledObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" time="0.001"/>
+  <testcase name="testNotifyOnObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.method.ObserverMethodTest" time="0.002"/>
+    </testsuite>

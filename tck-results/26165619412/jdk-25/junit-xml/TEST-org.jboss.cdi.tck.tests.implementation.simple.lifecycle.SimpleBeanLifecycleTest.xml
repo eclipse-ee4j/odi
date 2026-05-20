@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" tests="19" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:52.904Z" hostname="runnervmrw5os" time="0.536">
+  <properties/>
+  <testcase name="testBeanCreateInjectsDependenciesAndInvokesInitializerToInstantiateInstance" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.002"/>
+  <testcase name="testContextCreatesNewInstanceForInjection" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.002"/>
+  <testcase name="testContextualDestroyCatchesException" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.004"/>
+  <testcase name="testContextualDestroyDisposesWhenNecessary" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.002"/>
+  <testcase name="testCreateInjectsFieldsDeclaredInJava" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.001"/>
+  <testcase name="testCreateReturnsSameBeanPushed" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.001"/>
+  <testcase name="testCreationExceptionWrapsCheckedExceptionThrownFromCreate" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.003"/>
+  <testcase name="testDependentsDestroyedAfterPreDestroy" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.003"/>
+  <testcase name="testIndirectSubClassInheritsPostConstructOnSuperclass" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.001"/>
+  <testcase name="testIndirectSubClassInheritsPreDestroyOnSuperclass" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.001"/>
+  <testcase name="testInjectionOfParametersIntoBeanConstructor" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.001"/>
+  <testcase name="testManagedBean" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.002"/>
+  <testcase name="testPostConstructPreDestroy" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.0"/>
+  <testcase name="testQualifierTypeAnnotatedConstructor" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.001"/>
+  <testcase name="testSubClassDoesNotInheritPostConstructOnSuperclassBlockedByIntermediateClass" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.001"/>
+  <testcase name="testSubClassDoesNotInheritPreDestroyConstructOnSuperclassBlockedByIntermediateClass" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.001"/>
+  <testcase name="testSubClassInheritsPostConstructOnSuperclass[0](null)" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.002"/>
+  <testcase name="testSubClassInheritsPreDestroyOnSuperclass" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.002"/>
+  <testcase name="testUncheckedExceptionThrownFromCreateNotWrapped" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.SimpleBeanLifecycleTest" time="0.004"/>
+    </testsuite>

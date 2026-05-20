@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.alternative.selection.priority.ProducerExplicitPriorityTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:30:46.219Z" hostname="runnervmrw5os" time="0.797">
+  <properties/>
+  <testcase name="testAlternativeProducerWithPriority" classname="org.jboss.cdi.tck.tests.alternative.selection.priority.ProducerExplicitPriorityTest" time="0.004"/>
+  <testcase name="testPriorityOnProducerOverPriorityOnClass" classname="org.jboss.cdi.tck.tests.alternative.selection.priority.ProducerExplicitPriorityTest" time="0.003"/>
+    </testsuite>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:29.032Z" hostname="runnervmrw5os" time="0.347">
+  <properties/>
+  <testcase name="testGetAnnotatedType" classname="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest" time="0.006"/>
+  <testcase name="testGetBean" classname="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest" time="0.002"/>
+  <testcase name="testGetMember" classname="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest" time="0.002"/>
+  <testcase name="testGetQualifiers" classname="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest" time="0.003"/>
+  <testcase name="testGetType" classname="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest" time="0.004"/>
+  <testcase name="testIsTransient" classname="org.jboss.cdi.tck.tests.event.metadata.injectionpoint.EventMetadataInjectionPointTest" time="0.002"/>
+    </testsuite>

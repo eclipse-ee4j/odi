@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:54.096Z" hostname="runnervmrw5os" time="0.461">
+  <properties/>
+  <testcase name="testInstanceOfInterceptorForEveryEnabledInterceptor" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.007"/>
+  <testcase name="testInterceptionType" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.001"/>
+  <testcase name="testInterceptorBindingAnnotation" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.001"/>
+  <testcase name="testInterceptorBindingTypes" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.002"/>
+  <testcase name="testInterceptorBindingsCanDeclareOtherInterceptorBindings" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.003"/>
+  <testcase name="testInterceptorsImplementInterceptorInterface" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.003"/>
+  <testcase name="testNoBindingTypesToResolveInterceptorsFails" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.002"/>
+  <testcase name="testNonBindingTypeToResolveInterceptorsFails" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.002"/>
+  <testcase name="testResolveInterceptorsReturnsOrderedList" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.002"/>
+  <testcase name="testSameBindingTypesToResolveInterceptorsFails" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.002"/>
+  <testcase name="testStereotypeInterceptorBindings" classname="org.jboss.cdi.tck.tests.interceptors.definition.InterceptorDefinitionTest" time="0.005"/>
+    </testsuite>

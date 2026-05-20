@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:31:45.064Z" hostname="runnervmrw5os" time="0.546">
+  <properties/>
+  <testcase name="testApiTypeForArrayTypeReturn" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+  <testcase name="testApiTypeForClassReturn" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.002"/>
+  <testcase name="testApiTypeForInterfaceReturn" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+  <testcase name="testApiTypeForPrimitiveReturn" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.003"/>
+  <testcase name="testBeanDeclaresMultipleProducerFields" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.002"/>
+  <testcase name="testBindingType" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.003"/>
+  <testcase name="testDefaultBindingType" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+  <testcase name="testDefaultNamed" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+  <testcase name="testDefaultNamedByStereotype" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.002"/>
+  <testcase name="testNamedField" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.002"/>
+  <testcase name="testNonStaticProducerFieldNotIndirectlyInherited" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+  <testcase name="testNonStaticProducerFieldNotInherited" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+  <testcase name="testParameterizedReturnType" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+  <testcase name="testProducerFieldWithTypeVariable" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.002"/>
+  <testcase name="testScopeType" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+  <testcase name="testStereotype" classname="org.jboss.cdi.tck.tests.implementation.producer.field.definition.ProducerFieldDefinitionTest" time="0.001"/>
+    </testsuite>
