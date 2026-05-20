@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:17:25.999Z" hostname="runnervmg397c" time="0.49">
+  <properties/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithActualTypesToParameterizedTypeWithActualTypes" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.004"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithActualTypesToParameterizedTypeWithWildcards" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.003"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithActualTypesToParameterizedTypeWithWildcardsAtInjectionPoint" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.003"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithTypeVariableWithMultipleBoundsToParameterizedTypeWithTypeVariable" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.007"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithActualTypes" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.003"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithTypeVariable" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.003"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcardWithLowerBound" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.007"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcards" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.002"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithTypeVariablesToParameterizedTypeWithWildcards2" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.002"/>
+  <testcase name="testAssignabilityOfParameterizedTypeWithTypeVariablesWithMultipleBoundsToParameterizedTypeWithActualTypes" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.004"/>
+  <testcase name="testAssignabilityToRawType" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.AssignabilityOfRawAndParameterizedTypesTest" time="0.002"/>
+    </testsuite>

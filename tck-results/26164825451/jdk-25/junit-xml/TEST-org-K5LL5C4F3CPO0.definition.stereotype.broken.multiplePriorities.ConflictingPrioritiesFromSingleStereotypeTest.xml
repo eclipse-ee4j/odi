@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.ConflictingPrioritiesFromSingleStereotypeTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:21.117Z" hostname="runnervmg397c" time="0.181">
+  <properties/>
+  <testcase name="testConflictingPrioritiesFromStereotype" classname="org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.ConflictingPrioritiesFromSingleStereotypeTest" time="0.0"/>
+    </testsuite>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithTypeParameter.ParametrizedReturnTypeWithTypeVariable02Test" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:50.355Z" hostname="runnervmg397c" time="0.172">
+  <properties/>
+  <testcase name="testNonDependentScopedProducerMethodWithParameterizedTypeWithTypeVariable" classname="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithTypeParameter.ParametrizedReturnTypeWithTypeVariable02Test" time="0.001"/>
+    </testsuite>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.EventTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:24.662Z" hostname="runnervmg397c" time="0.413">
+  <properties/>
+  <testcase name="testEventObjectContainsTypeVariablesWhenResolvingFails" classname="org.jboss.cdi.tck.tests.event.EventTest" time="0.003"/>
+  <testcase name="testNonStaticObserverMethodIndirectlyInherited" classname="org.jboss.cdi.tck.tests.event.EventTest" time="0.002"/>
+  <testcase name="testNonStaticObserverMethodInherited" classname="org.jboss.cdi.tck.tests.event.EventTest" time="0.002"/>
+  <testcase name="testObserverMethodNotifiedWhenQualifiersMatch" classname="org.jboss.cdi.tck.tests.event.EventTest" time="0.002"/>
+  <testcase name="testObserverMethodParameterInjectionPoints" classname="org.jboss.cdi.tck.tests.event.EventTest" time="0.001"/>
+  <testcase name="testPrivateObserverMethodInvoked" classname="org.jboss.cdi.tck.tests.event.EventTest" time="0.001"/>
+    </testsuite>

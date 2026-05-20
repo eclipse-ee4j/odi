@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.simple.definition.constructorHasDisposesParameter.ConstructorHasDisposesParameterTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:53.377Z" hostname="runnervmg397c" time="0.182">
+  <properties/>
+  <testcase name="testConstructorHasDisposesParameter" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.constructorHasDisposesParameter.ConstructorHasDisposesParameterTest" time="0.0"/>
+    </testsuite>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:17:14.119Z" hostname="runnervmg397c" time="0.393">
+  <properties/>
+  <testcase name="testCircularInjectionOnOneNormalAndOneDependentBean" classname="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest" time="0.002"/>
+  <testcase name="testCircularInjectionOnTwoNormalBeans" classname="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest" time="0.001"/>
+  <testcase name="testNormalAndDependentCircularConstructors" classname="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest" time="0.001"/>
+  <testcase name="testNormalCircularConstructors" classname="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest" time="0.001"/>
+  <testcase name="testNormalProducerMethodDeclaredOnDependentBeanWhichInjectsProducedBean" classname="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest" time="0.001"/>
+  <testcase name="testNormalProducerMethodDeclaredOnNormalBeanWhichInjectsProducedBean" classname="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest" time="0.001"/>
+  <testcase name="testSelfConsumingConstructorsOnNormalBean" classname="org.jboss.cdi.tck.tests.lookup.circular.CircularDependencyTest" time="0.001"/>
+    </testsuite>

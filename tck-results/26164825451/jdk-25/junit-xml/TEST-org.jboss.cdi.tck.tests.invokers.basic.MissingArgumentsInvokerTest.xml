@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.invokers.basic.MissingArgumentsInvokerTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:17:02.995Z" hostname="runnervmg397c" time="0.372">
+  <properties/>
+  <testcase name="test[0](null, null)" classname="org.jboss.cdi.tck.tests.invokers.basic.MissingArgumentsInvokerTest" time="0.004"/>
+    </testsuite>

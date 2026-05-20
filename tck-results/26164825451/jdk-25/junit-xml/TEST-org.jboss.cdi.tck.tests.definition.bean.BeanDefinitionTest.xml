@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:14.448Z" hostname="runnervmg397c" time="0.645">
+  <properties/>
+  <testcase name="testAbstractApiType" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.002"/>
+  <testcase name="testBeanClassOnSimpleBean" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.002"/>
+  <testcase name="testBeanClientCanCastBeanInstanceToAnyBeanType" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.002"/>
+  <testcase name="testBeanExtendsAnotherBean" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.002"/>
+  <testcase name="testBeanTypes" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.001"/>
+  <testcase name="testBeanTypesNonEmpty" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.001"/>
+  <testcase name="testFinalApiType" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.001"/>
+  <testcase name="testGenericBeanTypes" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.012"/>
+  <testcase name="testHasScopeType" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.002"/>
+  <testcase name="testMultipleStereotypes" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.002"/>
+  <testcase name="testQualifiersNonEmpty" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.002"/>
+  <testcase name="testRawBeanTypes" classname="org.jboss.cdi.tck.tests.definition.bean.BeanDefinitionTest" time="0.004"/>
+    </testsuite>

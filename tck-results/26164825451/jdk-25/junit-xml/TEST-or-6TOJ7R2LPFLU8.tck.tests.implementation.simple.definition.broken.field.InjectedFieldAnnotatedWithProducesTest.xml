@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.simple.definition.broken.field.InjectedFieldAnnotatedWithProducesTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:53.016Z" hostname="runnervmg397c" time="0.187">
+  <properties/>
+  <testcase name="testDeployment" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.broken.field.InjectedFieldAnnotatedWithProducesTest" time="0.0"/>
+    </testsuite>

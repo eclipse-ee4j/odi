@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.stereotype.broken.nonEmptyNamed.NonEmptyNamedTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:21.732Z" hostname="runnervmg397c" time="0.177">
+  <properties/>
+  <testcase name="testStereotypeWithNonEmptyNamed" classname="org.jboss.cdi.tck.tests.definition.stereotype.broken.nonEmptyNamed.NonEmptyNamedTest" time="0.001"/>
+    </testsuite>

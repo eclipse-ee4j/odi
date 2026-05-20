@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedDisposes.ParameterAnnotatedDisposesTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:46.422Z" hostname="runnervmg397c" time="0.171">
+  <properties/>
+  <testcase name="testInitializerMethodHasParameterAnnotatedDisposes" classname="org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedDisposes.ParameterAnnotatedDisposesTest" time="0.0"/>
+    </testsuite>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:17:22.436Z" hostname="runnervmg397c" time="0.339">
+  <properties/>
+  <testcase name="testInjectionOfBeanWithTypeVariableWithMultipleBounds" classname="org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest" time="0.001"/>
+  <testcase name="testInjectionOfBeanWithTypeVariableWithMultipleBoundsToParameterizedTypeWithActualType" classname="org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest" time="0.001"/>
+  <testcase name="testInjectionOfBeanWithWildcardWithTypeVariableAsLowerBound" classname="org.jboss.cdi.tck.tests.lookup.injection.parameterized.multiple.bounds.ParameterizedTypesWithTypeVariableWithMultipleBoundsTest" time="0.0"/>
+    </testsuite>

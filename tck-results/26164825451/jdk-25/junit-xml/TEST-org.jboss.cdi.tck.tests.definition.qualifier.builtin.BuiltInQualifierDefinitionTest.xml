@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:18.273Z" hostname="runnervmg397c" time="0.363">
+  <properties/>
+  <testcase name="testAnyBeanHasDefaultQualifier" classname="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" time="0.002"/>
+  <testcase name="testDefaultQualifierDeclaredInJava" classname="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" time="0.002"/>
+  <testcase name="testDefaultQualifierForInjectionPoint" classname="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" time="0.002"/>
+  <testcase name="testNamedAndAnyBeanHasDefaultQualifier" classname="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" time="0.002"/>
+  <testcase name="testNamedBeanHasDefaultQualifier" classname="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" time="0.002"/>
+  <testcase name="testProducedAnyBeanHasDefaultQualifier" classname="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" time="0.002"/>
+  <testcase name="testProducedNamedAndAnyBeanHasDefaultQualifier" classname="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" time="0.001"/>
+  <testcase name="testProducedNamedBeanHasDefaultQualifier" classname="org.jboss.cdi.tck.tests.definition.qualifier.builtin.BuiltInQualifierDefinitionTest" time="0.002"/>
+    </testsuite>

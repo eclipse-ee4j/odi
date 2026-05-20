@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:15:58.747Z" hostname="runnervmg397c" time="0.722">
+  <properties/>
+  <testcase name="testInterceptorInstanceCreatedWhenTargetInstanceCreated[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest" time="0.033"/>
+  <testcase name="testInterceptorMethodsCalledAfterDependencyInjection" classname="org.jboss.cdi.tck.interceptors.tests.contract.interceptorLifeCycle.InterceptorLifeCycleTest" time="0.01"/>
+    </testsuite>

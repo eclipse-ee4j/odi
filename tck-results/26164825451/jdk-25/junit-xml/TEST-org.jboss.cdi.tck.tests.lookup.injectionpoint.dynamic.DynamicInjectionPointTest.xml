@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:17:23.495Z" hostname="runnervmg397c" time="0.311">
+  <properties/>
+  <testcase name="testInjectionPointGetAnnotated" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest" time="0.002"/>
+  <testcase name="testInjectionPointGetBean" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest" time="0.001"/>
+  <testcase name="testInjectionPointGetMember" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest" time="0.001"/>
+  <testcase name="testInjectionPointGetQualifiers" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest" time="0.001"/>
+  <testcase name="testInjectionPointGetType" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest" time="0.001"/>
+  <testcase name="testInjectionPointIsDelegate" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest" time="0.001"/>
+  <testcase name="testInjectionPointIsTransient" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.dynamic.DynamicInjectionPointTest" time="0.001"/>
+    </testsuite>

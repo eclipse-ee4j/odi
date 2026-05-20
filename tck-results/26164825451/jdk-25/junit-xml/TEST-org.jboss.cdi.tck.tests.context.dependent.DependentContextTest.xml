@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" tests="24" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:11.706Z" hostname="runnervmg397c" time="0.652">
+  <properties/>
+  <testcase name="testCallingCreationalContextReleaseDestroysDependents" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.003"/>
+  <testcase name="testContextGetWithCreateFalseReturnsNull" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.003"/>
+  <testcase name="testContextGetWithCreationalContextReturnsNewInstance" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testContextIsActive" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testContextIsActiveDuringBeanCreation" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.003"/>
+  <testcase name="testContextIsActiveDuringInjection" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testContextIsActiveWhenCreatingObserverMethodInstance" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.004"/>
+  <testcase name="testContextIsActiveWhenInvokingDisposalMethod" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.004"/>
+  <testcase name="testContextIsActiveWhenInvokingProducerField" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testContextIsActiveWhenInvokingProducerMethod" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testContextScopeType" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.001"/>
+  <testcase name="testDependentBeanIsDependentObjectOfBeanInjectedInto" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testDependentScopedInterceptorsAreDependentObjectsOfBean" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.008"/>
+  <testcase name="testDependentsDestroyedWhenDisposerMethodCompletes" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.003"/>
+  <testcase name="testDependentsDestroyedWhenObserverMethodEvaluationCompletes" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.003"/>
+  <testcase name="testDependentsDestroyedWhenProducerFieldCompletes" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testDependentsDestroyedWhenProducerMethodCompletes" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.003"/>
+  <testcase name="testDestroyingManagedParentDestroysDependentsOfSameBean" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testDestroyingSimpleParentDestroysDependents" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.001"/>
+  <testcase name="testInstanceNotSharedBetweenInjectionPoints" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testInstanceUsedForDisposalMethodNotShared" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.004"/>
+  <testcase name="testInstanceUsedForObserverMethodNotShared" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.003"/>
+  <testcase name="testInstanceUsedForProducerFieldNotShared" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.002"/>
+  <testcase name="testInstanceUsedForProducerMethodNotShared" classname="org.jboss.cdi.tck.tests.context.dependent.DependentContextTest" time="0.003"/>
+    </testsuite>

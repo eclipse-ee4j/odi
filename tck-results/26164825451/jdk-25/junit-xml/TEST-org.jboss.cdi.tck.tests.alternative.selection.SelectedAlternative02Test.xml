@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative02Test" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:15:45.964Z" hostname="runnervmg397c" time="0.717">
+  <properties/>
+  <testcase name="testDependencyResolvable" classname="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative02Test" time="0.008"/>
+    </testsuite>

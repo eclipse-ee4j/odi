@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:48.618Z" hostname="runnervmg397c" time="0.412">
+  <properties/>
+  <testcase name="testProducerFieldBeanCreate" classname="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest" time="0.002"/>
+  <testcase name="testProducerFieldBeanDestroy" classname="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest" time="0.002"/>
+  <testcase name="testProducerFieldForNullValueNotDependent" classname="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest" time="0.005"/>
+  <testcase name="testProducerFieldNotAnotherBean" classname="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest" time="0.001"/>
+  <testcase name="testProducerFieldReturnsNullIsDependent" classname="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest" time="0.002"/>
+  <testcase name="testProducerFieldReturnsNullIsNotDependent" classname="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest" time="0.002"/>
+  <testcase name="testProducerStaticFieldBean" classname="org.jboss.cdi.tck.tests.implementation.producer.field.lifecycle.ProducerFieldLifecycleTest" time="0.001"/>
+    </testsuite>

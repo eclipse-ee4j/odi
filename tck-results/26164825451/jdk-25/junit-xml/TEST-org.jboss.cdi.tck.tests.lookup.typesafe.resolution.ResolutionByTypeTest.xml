@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:17:24.701Z" hostname="runnervmg397c" time="0.497">
+  <properties/>
+  <testcase name="testAllQualifiersSpecifiedForResolutionMustAppearOnBean" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.002"/>
+  <testcase name="testBeanTypesOnManagedBean" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.001"/>
+  <testcase name="testBeanTypesOnProducerField" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.001"/>
+  <testcase name="testBeanTypesOnProducerMethod" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.0"/>
+  <testcase name="testDefaultBindingTypeAssumed" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.001"/>
+  <testcase name="testGenericBeanTypesOnManagedBean" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.003"/>
+  <testcase name="testGenericBeanTypesOnProducerField" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.002"/>
+  <testcase name="testGenericBeanTypesOnProducerMethod" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.002"/>
+  <testcase name="testResolveByTypeWithArray" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.001"/>
+  <testcase name="testResolveByTypeWithNonBindingMembers" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.002"/>
+  <testcase name="testResolveByTypeWithPrimitives" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.002"/>
+  <testcase name="testResolveByTypeWithTypeParameter" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.ResolutionByTypeTest" time="0.001"/>
+    </testsuite>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.initializer.broken.methodAnnotatedProduces.InitializerMethodAnnotatedProducesTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:46.074Z" hostname="runnervmg397c" time="0.167">
+  <properties/>
+  <testcase name="testInitializerMethodAnnotatedProduces" classname="org.jboss.cdi.tck.tests.implementation.initializer.broken.methodAnnotatedProduces.InitializerMethodAnnotatedProducesTest" time="0.001"/>
+    </testsuite>

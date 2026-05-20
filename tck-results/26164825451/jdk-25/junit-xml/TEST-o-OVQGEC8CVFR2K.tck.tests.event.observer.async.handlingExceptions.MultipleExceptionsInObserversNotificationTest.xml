@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.observer.async.handlingExceptions.MultipleExceptionsInObserversNotificationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:32.474Z" hostname="runnervmg397c" time="0.351">
+  <properties/>
+  <testcase name="testMultipleExceptionsDuringVariousObserversNotification" classname="org.jboss.cdi.tck.tests.event.observer.async.handlingExceptions.MultipleExceptionsInObserversNotificationTest" time="0.005"/>
+  <testcase name="testSingleExceptionDuringVariousObserversNotification" classname="org.jboss.cdi.tck.tests.event.observer.async.handlingExceptions.MultipleExceptionsInObserversNotificationTest" time="0.003"/>
+    </testsuite>

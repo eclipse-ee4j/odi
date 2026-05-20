@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.producer.field.ProducerFieldTooManyScopesTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:19.908Z" hostname="runnervmg397c" time="0.167">
+  <properties/>
+  <testcase name="testTooManyScopesSpecifiedInJava" classname="org.jboss.cdi.tck.tests.definition.scope.broken.tooManyScopes.producer.field.ProducerFieldTooManyScopesTest" time="0.001"/>
+    </testsuite>

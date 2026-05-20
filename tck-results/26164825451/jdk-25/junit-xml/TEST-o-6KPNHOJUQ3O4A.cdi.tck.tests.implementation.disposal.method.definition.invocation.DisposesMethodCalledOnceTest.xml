@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:44.856Z" hostname="runnervmg397c" time="0.364">
+  <properties/>
+  <testcase name="testDisposerCalledOnce1" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest" time="0.004"/>
+  <testcase name="testDisposerCalledOnce2" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest" time="0.002"/>
+  <testcase name="testDisposerCalledOnce3" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest" time="0.002"/>
+  <testcase name="testDisposerCalledOnce4" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest" time="0.002"/>
+  <testcase name="testDisposerCalledOnce5" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest" time="0.002"/>
+  <testcase name="testDisposerCalledOnce6" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.invocation.DisposesMethodCalledOnceTest" time="0.002"/>
+    </testsuite>

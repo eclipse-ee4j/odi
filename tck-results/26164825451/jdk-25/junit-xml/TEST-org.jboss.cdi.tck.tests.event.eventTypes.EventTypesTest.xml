@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:28.169Z" hostname="runnervmg397c" time="0.376">
+  <properties/>
+  <testcase name="testEventTypeIncludesAllSuperclassesAndInterfacesOfEventObject" classname="org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest" time="0.002"/>
+  <testcase name="testEventTypeIsArray" classname="org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest" time="0.003"/>
+  <testcase name="testEventTypeIsConcreteTypeWithNoTypeVariables" classname="org.jboss.cdi.tck.tests.event.eventTypes.EventTypesTest" time="0.006"/>
+    </testsuite>

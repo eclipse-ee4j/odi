@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierInheritedTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:15:40.465Z" hostname="runnervmg397c" time="1.08">
+  <properties/>
+  <testcase name="testResolution" classname="org.jboss.cdi.tck.tests.alternative.resolution.qualifier.QualifierInheritedTest" time="0.009"/>
+    </testsuite>

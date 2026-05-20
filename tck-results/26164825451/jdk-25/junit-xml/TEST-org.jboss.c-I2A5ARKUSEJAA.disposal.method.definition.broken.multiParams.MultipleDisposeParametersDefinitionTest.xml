@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiParams.MultipleDisposeParametersDefinitionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:43.195Z" hostname="runnervmg397c" time="0.18">
+  <properties/>
+  <testcase name="testMultipleDisposeParameters" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiParams.MultipleDisposeParametersDefinitionTest" time="0.0"/>
+    </testsuite>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamFieldTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:40.606Z" hostname="runnervmg397c" time="0.179">
+  <properties/>
+  <testcase name="testDeploymentFails" classname="org.jboss.cdi.tck.tests.implementation.builtin.metadata.broken.typeparam.BeanTypeParamFieldTest" time="0.001"/>
+    </testsuite>

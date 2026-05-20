@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParamsTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:03.140Z" hostname="runnervmg397c" time="0.262">
+  <properties/>
+  <testcase name="shouldFail" classname="org.jboss.cdi.tck.tests.build.compatible.extensions.invalid.RegistrationMultipleParamsTest" time="0.001"/>
+    </testsuite>

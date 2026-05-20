@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedObserves.ParameterAnnotatedObservesTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:46.597Z" hostname="runnervmg397c" time="0.183">
+  <properties/>
+  <testcase name="testInitializerMethodHasParameterAnnotatedObserves" classname="org.jboss.cdi.tck.tests.implementation.initializer.broken.parameterAnnotatedObserves.ParameterAnnotatedObservesTest" time="0.0"/>
+    </testsuite>

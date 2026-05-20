@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:59.412Z" hostname="runnervmg397c" time="0.443">
+  <properties/>
+  <testcase name="testDisposerMethodsAreIntercepted" classname="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest" time="0.01"/>
+  <testcase name="testInitializerMethodsNotIntercepted" classname="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest" time="0.004"/>
+  <testcase name="testLifecycleCallbacksAreIntercepted" classname="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest" time="0.004"/>
+  <testcase name="testManagedBeanIsIntercepted" classname="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest" time="0.004"/>
+  <testcase name="testObjectMethodsAreNotIntercepted" classname="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest" time="0.002"/>
+  <testcase name="testObserverMethodsAreIntercepted" classname="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest" time="0.004"/>
+  <testcase name="testProducerMethodsAreIntercepted" classname="org.jboss.cdi.tck.tests.interceptors.invocation.InterceptorInvocationTest" time="0.003"/>
+    </testsuite>

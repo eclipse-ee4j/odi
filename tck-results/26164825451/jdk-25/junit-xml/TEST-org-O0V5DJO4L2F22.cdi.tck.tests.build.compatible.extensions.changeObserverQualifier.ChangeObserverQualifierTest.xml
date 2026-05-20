@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.build.compatible.extensions.changeObserverQualifier.ChangeObserverQualifierTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:15:56.044Z" hostname="runnervmg397c" time="0.427">
+  <properties/>
+  <testcase name="test" classname="org.jboss.cdi.tck.tests.build.compatible.extensions.changeObserverQualifier.ChangeObserverQualifierTest" time="0.007"/>
+  <testcase name="testScopeIsRetained" classname="org.jboss.cdi.tck.tests.build.compatible.extensions.changeObserverQualifier.ChangeObserverQualifierTest" time="0.003"/>
+    </testsuite>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:35.773Z" hostname="runnervmg397c" time="0.422">
+  <properties/>
+  <testcase name="testAsyncObserver" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.002"/>
+  <testcase name="testBeanManagerResolveObserversSignature" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.001"/>
+  <testcase name="testBeanManagerResolveObserversWithIllegalQualifier" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.002"/>
+  <testcase name="testMethodWithParameterAnnotatedWithObservesRegistersObserverMethod" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.001"/>
+  <testcase name="testMultipleObserverMethodsForSameEventPermissible" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.001"/>
+  <testcase name="testMultipleObserverMethodsOnBeanPermissible" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.001"/>
+  <testcase name="testObserverMethodAutomaticallyRegistered" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.002"/>
+  <testcase name="testObserverMethodMayHaveMultipleBindingTypes" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.001"/>
+  <testcase name="testObserverMethodNotAutomaticallyRegisteredForDisabledBeans" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.001"/>
+  <testcase name="testObserverMethodRegistration" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.001"/>
+  <testcase name="testObserverMethodWithoutBindingTypesObservesEventsWithoutBindingTypes" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.001"/>
+  <testcase name="testSyncObserver" classname="org.jboss.cdi.tck.tests.event.observer.resolve.ResolveEventObserversTest" time="0.002"/>
+    </testsuite>

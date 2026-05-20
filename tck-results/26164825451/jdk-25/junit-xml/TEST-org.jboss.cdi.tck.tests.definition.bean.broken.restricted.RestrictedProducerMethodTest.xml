@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.bean.broken.restricted.RestrictedProducerMethodTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:16:16.239Z" hostname="runnervmg397c" time="0.19">
+  <properties/>
+  <testcase name="testInvalidTypedValueOnProducerField" classname="org.jboss.cdi.tck.tests.definition.bean.broken.restricted.RestrictedProducerMethodTest" time="0.001"/>
+    </testsuite>

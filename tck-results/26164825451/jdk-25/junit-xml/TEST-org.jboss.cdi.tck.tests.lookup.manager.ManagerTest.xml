@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:17:24.428Z" hostname="runnervmg397c" time="0.267">
+  <properties/>
+  <testcase name="testContainerProvidesManagerBean" classname="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest" time="0.001"/>
+  <testcase name="testGetReferenceReturnsContextualInstance" classname="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest" time="0.002"/>
+  <testcase name="testGetReferenceWithIllegalBeanType" classname="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest" time="0.001"/>
+  <testcase name="testInjectingManager" classname="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest" time="0.001"/>
+  <testcase name="testManagerBeanHasCurrentBinding" classname="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest" time="0.001"/>
+  <testcase name="testManagerBeanIsDependentScoped" classname="org.jboss.cdi.tck.tests.lookup.manager.ManagerTest" time="0.001"/>
+    </testsuite>

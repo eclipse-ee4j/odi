@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:17:19.169Z" hostname="runnervmg397c" time="0.317">
+  <properties/>
+  <testcase name="testInstanceProvidedForEveryLegalBeanType[0](null, null)" classname="org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest" time="0.004"/>
+  <testcase name="testNameOfBuiltinInstance" classname="org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest" time="0.001"/>
+  <testcase name="testScopeOfBuiltinInstance" classname="org.jboss.cdi.tck.tests.lookup.dynamic.builtin.BuiltinInstanceTest" time="0.0"/>
+    </testsuite>
