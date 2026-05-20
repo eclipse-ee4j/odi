@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:21.893Z" hostname="runnervmg397c" time="0.367">
+  <properties/>
+  <testcase name="testEventAlwaysHasAnyBinding" classname="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest" time="0.004"/>
+  <testcase name="testEventBindingTypeTargetsFieldParameterElementTypes" classname="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest" time="0.003"/>
+  <testcase name="testEventBindingTypeTargetsMethodFieldParameterElementTypes" classname="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest" time="0.003"/>
+  <testcase name="testFireEventWithNonBindingAnnotationsFails" classname="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest" time="0.004"/>
+  <testcase name="testFireEventWithNonRuntimeBindingTypeFails" classname="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest" time="0.004"/>
+  <testcase name="testNonRuntimeBindingTypeIsNotAnEventBindingType" classname="org.jboss.cdi.tck.tests.event.bindingTypes.EventBindingTypesTest" time="0.004"/>
+    </testsuite>

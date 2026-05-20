@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.bindings.members.InterceptorBindingTypeWithMemberTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:59:39.043Z" hostname="runnervmg397c" time="0.807">
+  <properties/>
+  <testcase name="testInterceptorBindingTypeMemberValuesComparedWithEquals" classname="org.jboss.cdi.tck.interceptors.tests.bindings.members.InterceptorBindingTypeWithMemberTest" time="0.028"/>
+  <testcase name="testInterceptorBindingTypeWithMember" classname="org.jboss.cdi.tck.interceptors.tests.bindings.members.InterceptorBindingTypeWithMemberTest" time="0.008"/>
+  <testcase name="testInterceptorBindingTypeWithNonBindingMember" classname="org.jboss.cdi.tck.interceptors.tests.bindings.members.InterceptorBindingTypeWithMemberTest" time="0.01"/>
+    </testsuite>

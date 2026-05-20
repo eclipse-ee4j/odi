@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.bindings.multiple.MultipleInterceptorBindingsTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:59:42.046Z" hostname="runnervmg397c" time="0.729">
+  <properties/>
+  <testcase name="testInterceptorAppliedToBeanWithAllBindings" classname="org.jboss.cdi.tck.interceptors.tests.bindings.multiple.MultipleInterceptorBindingsTest" time="0.015"/>
+  <testcase name="testInterceptorNotAppliedToBeanWithSomeBindings" classname="org.jboss.cdi.tck.interceptors.tests.bindings.multiple.MultipleInterceptorBindingsTest" time="0.008"/>
+  <testcase name="testMultipleInterceptorsOnMethod" classname="org.jboss.cdi.tck.interceptors.tests.bindings.multiple.MultipleInterceptorBindingsTest" time="0.006"/>
+    </testsuite>

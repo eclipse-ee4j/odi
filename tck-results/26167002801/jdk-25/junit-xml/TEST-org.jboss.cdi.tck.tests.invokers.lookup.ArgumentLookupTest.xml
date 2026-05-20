@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.invokers.lookup.ArgumentLookupTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:01:06.343Z" hostname="runnervmg397c" time="0.324">
+  <properties/>
+  <testcase name="test[0](null, null)" classname="org.jboss.cdi.tck.tests.invokers.lookup.ArgumentLookupTest" time="0.003"/>
+    </testsuite>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.dependency.resolution.AmbiguousDependencyResolutionTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:01:14.554Z" hostname="runnervmg397c" time="0.309">
+  <properties/>
+  <testcase name="testProducerFieldOnAlternativeIsNotEliminated[0](null)" classname="org.jboss.cdi.tck.tests.lookup.dependency.resolution.AmbiguousDependencyResolutionTest" time="0.002"/>
+  <testcase name="testProducerMethodOnAlternativeIsNotEliminated[0](null)" classname="org.jboss.cdi.tck.tests.lookup.dependency.resolution.AmbiguousDependencyResolutionTest" time="0.001"/>
+    </testsuite>

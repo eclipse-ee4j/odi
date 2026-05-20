@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:00.718Z" hostname="runnervmg397c" time="1.283">
+  <properties/>
+  <testcase name="testBusinessMethodNotCalledWithoutProceedInvocation" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.051"/>
+  <testcase name="testContextData" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.03"/>
+  <testcase name="testCtxProceedForLifecycleCallbackInterceptorMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.028"/>
+  <testcase name="testGetInterceptorBindings" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.03"/>
+  <testcase name="testGetMethodForAroundInvokeInterceptorMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.051"/>
+  <testcase name="testGetMethodForLifecycleCallbackInterceptorMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.032"/>
+  <testcase name="testGetTargetMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.033"/>
+  <testcase name="testGetTimerMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.032"/>
+  <testcase name="testIllegalNumberOfParameters" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.03"/>
+  <testcase name="testIllegalTypeOfParameters" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.034"/>
+  <testcase name="testMethodParameters" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.052"/>
+  <testcase name="testProceedReturnsNullForVoidMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.invocationContext.InvocationContextTest" time="0.04"/>
+    </testsuite>

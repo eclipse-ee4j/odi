@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.bean.types.illegal.BeanTypesWithIllegalTypeTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:13.385Z" hostname="runnervmg397c" time="0.371">
+  <properties/>
+  <testcase name="beanSetOfBeanTypesContainsOnlyLegalTypes" classname="org.jboss.cdi.tck.tests.definition.bean.types.illegal.BeanTypesWithIllegalTypeTest" time="0.008"/>
+  <testcase name="producerFieldsetOfBeanTypesContainsOnlyLegalTypes" classname="org.jboss.cdi.tck.tests.definition.bean.types.illegal.BeanTypesWithIllegalTypeTest" time="0.002"/>
+  <testcase name="producerMethodsetOfBeanTypesContainsOnlyLegalTypes" classname="org.jboss.cdi.tck.tests.definition.bean.types.illegal.BeanTypesWithIllegalTypeTest" time="0.003"/>
+    </testsuite>

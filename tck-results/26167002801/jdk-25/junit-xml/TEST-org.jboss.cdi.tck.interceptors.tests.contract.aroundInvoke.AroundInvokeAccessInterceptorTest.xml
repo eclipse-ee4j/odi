@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:59:50.381Z" hostname="runnervmg397c" time="0.674">
+  <properties/>
+  <testcase name="testPackagePrivateAroundInvokeInterceptor" classname="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest" time="0.02"/>
+  <testcase name="testPrivateAroundInvokeInterceptor" classname="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest" time="0.016"/>
+  <testcase name="testProtectedAroundInvokeInterceptor" classname="org.jboss.cdi.tck.interceptors.tests.contract.aroundInvoke.AroundInvokeAccessInterceptorTest" time="0.013"/>
+    </testsuite>

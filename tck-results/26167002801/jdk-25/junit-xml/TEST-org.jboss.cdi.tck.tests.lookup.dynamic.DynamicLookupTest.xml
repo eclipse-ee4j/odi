@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:01:15.233Z" hostname="runnervmg397c" time="0.44">
+  <properties/>
+  <testcase name="beanManageCreateInstance" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.002"/>
+  <testcase name="cdiSelectLookup" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.0"/>
+  <testcase name="testAlternatives" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.003"/>
+  <testcase name="testAmbiguousDependencyThrowsException" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.002"/>
+  <testcase name="testDuplicateBindingsThrowsException" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.003"/>
+  <testcase name="testGetMethod" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.003"/>
+  <testcase name="testIsAmbiguous" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.002"/>
+  <testcase name="testIsUnsatisfied" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.004"/>
+  <testcase name="testIteratorMethod" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.003"/>
+  <testcase name="testNonBindingThrowsException" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.002"/>
+  <testcase name="testObtainsInjectsInstanceOfInstance" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.001"/>
+  <testcase name="testStream[0](null)" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.003"/>
+  <testcase name="testUnsatisfiedDependencyThrowsException" classname="org.jboss.cdi.tck.tests.lookup.dynamic.DynamicLookupTest" time="0.001"/>
+    </testsuite>

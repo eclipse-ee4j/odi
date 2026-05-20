@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.raw.RawBeanTypeParameterizedRequiredTypeTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:01:24.211Z" hostname="runnervmg397c" time="0.319">
+  <properties/>
+  <testcase name="testAssignableTypeParams" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.raw.RawBeanTypeParameterizedRequiredTypeTest" time="0.003"/>
+  <testcase name="testNotAssignableTypeParams" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.parameterized.raw.RawBeanTypeParameterizedRequiredTypeTest" time="0.003"/>
+    </testsuite>

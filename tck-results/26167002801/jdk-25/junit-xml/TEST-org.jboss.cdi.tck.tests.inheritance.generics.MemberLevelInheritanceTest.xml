@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:51.943Z" hostname="runnervmg397c" time="0.352">
+  <properties/>
+  <testcase name="testInjectionPoint[0](null)" classname="org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest" time="0.003"/>
+  <testcase name="testInjectionPointDefinition" classname="org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest" time="0.004"/>
+  <testcase name="testObserver[0](null)" classname="org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest" time="0.002"/>
+  <testcase name="testObserverResolution" classname="org.jboss.cdi.tck.tests.inheritance.generics.MemberLevelInheritanceTest" time="0.001"/>
+    </testsuite>

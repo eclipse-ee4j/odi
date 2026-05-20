@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.initializer.InitializerMethodTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:42.518Z" hostname="runnervmg397c" time="0.323">
+  <properties/>
+  <testcase name="testBindingTypeOnInitializerParameter" classname="org.jboss.cdi.tck.tests.implementation.initializer.InitializerMethodTest" time="0.002"/>
+  <testcase name="testMultipleInitializerMethodsAreCalled" classname="org.jboss.cdi.tck.tests.implementation.initializer.InitializerMethodTest" time="0.001"/>
+    </testsuite>

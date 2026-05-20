@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:31.683Z" hostname="runnervmg397c" time="0.41">
+  <properties/>
+  <testcase name="testFireEventLowerPriorityBeforeDefaultPriority" classname="org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest" time="0.002"/>
+  <testcase name="testFireEventToMultipleObserversWithPriority" classname="org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest" time="0.001"/>
+  <testcase name="testPrioritizedEventBaseclass" classname="org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest" time="0.002"/>
+  <testcase name="testPrioritizedEventSubclass" classname="org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest" time="0.002"/>
+  <testcase name="testResolveObserversLowerPriorityBeforeDefaultPriority" classname="org.jboss.cdi.tck.tests.event.observer.priority.EventObserverOrderingTest" time="0.002"/>
+    </testsuite>

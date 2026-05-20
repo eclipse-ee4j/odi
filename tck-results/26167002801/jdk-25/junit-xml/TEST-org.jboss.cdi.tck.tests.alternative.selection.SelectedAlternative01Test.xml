@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative01Test" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:59:39.865Z" hostname="runnervmg397c" time="0.759">
+  <properties/>
+  <testcase name="testAlternativeManagedBeanSelected" classname="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative01Test" time="0.004"/>
+  <testcase name="testAlternativeProducerSelected" classname="org.jboss.cdi.tck.tests.alternative.selection.SelectedAlternative01Test" time="0.007"/>
+    </testsuite>

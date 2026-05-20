@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:26.414Z" hostname="runnervmg397c" time="0.342">
+  <properties/>
+  <testcase name="testImplicitEventExistsForEachEventType" classname="org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest" time="0.002"/>
+  <testcase name="testImplicitEventHasAllExplicitBindingTypes" classname="org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest" time="0.002"/>
+  <testcase name="testImplicitEventHasDependentScope" classname="org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest" time="0.002"/>
+  <testcase name="testImplicitEventHasImplementation" classname="org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest" time="0.003"/>
+  <testcase name="testImplicitEventHasNoName" classname="org.jboss.cdi.tck.tests.event.implicit.ImplicitEventTest" time="0.001"/>
+    </testsuite>

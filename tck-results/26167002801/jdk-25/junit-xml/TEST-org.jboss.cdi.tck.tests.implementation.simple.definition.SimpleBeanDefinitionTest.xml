@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:49.284Z" hostname="runnervmg397c" time="0.374">
+  <properties/>
+  <testcase name="testAbstractClassDeclaredInJavaNotDiscovered" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.002"/>
+  <testcase name="testDependentScopedBeanCanHaveNonStaticPublicField" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testEmptyConstructorUsed" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testExtensionNotDiscoveredAsSimpleBean" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testInitializerAnnotatedConstructor" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testInitializerAnnotatedConstructorUsedOverEmptyConstuctor" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testInterfaceNotDiscoveredAsSimpleBean" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testNonStaticInnerClassDeclaredInJavaNotDiscovered" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testSimpleBeanOnlyIfConstructorIsInitializer" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testSimpleBeanOnlyIfConstructorParameterless" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testSingletonScopedBeanCanHaveNonStaticPublicField" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+  <testcase name="testStaticInnerClassDeclaredInJavaAllowed" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.SimpleBeanDefinitionTest" time="0.001"/>
+    </testsuite>

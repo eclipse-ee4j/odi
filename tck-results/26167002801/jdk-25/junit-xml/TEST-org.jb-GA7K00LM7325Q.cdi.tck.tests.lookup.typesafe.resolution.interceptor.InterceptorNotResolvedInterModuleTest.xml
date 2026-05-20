@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.interceptor.InterceptorNotResolvedInterModuleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:01:23.284Z" hostname="runnervmg397c" time="0.211">
+  <properties/>
+  <testcase name="testInterceptorNotAvailableForInjection" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.interceptor.InterceptorNotResolvedInterModuleTest" time="0.0"/>
+    </testsuite>

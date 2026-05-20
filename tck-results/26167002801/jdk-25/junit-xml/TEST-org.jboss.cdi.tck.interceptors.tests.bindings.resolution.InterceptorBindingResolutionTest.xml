@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:59:45.583Z" hostname="runnervmg397c" time="0.871">
+  <properties/>
+  <testcase name="testBusinessMethodInterceptorBindings[0](null, null)" classname="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest" time="0.024"/>
+  <testcase name="testConstructorInterceptorBindings" classname="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest" time="0.011"/>
+  <testcase name="testLifecycleInterceptorBindings" classname="org.jboss.cdi.tck.interceptors.tests.bindings.resolution.InterceptorBindingResolutionTest" time="0.017"/>
+    </testsuite>

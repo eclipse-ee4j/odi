@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.stereotype.interceptor.StereotypeWithMultipleInterceptorBindingsTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:19.511Z" hostname="runnervmg397c" time="0.51">
+  <properties/>
+  <testcase name="testMultipleInterceptorBindings[0](null)" classname="org.jboss.cdi.tck.tests.definition.stereotype.interceptor.StereotypeWithMultipleInterceptorBindingsTest" time="0.015"/>
+    </testsuite>

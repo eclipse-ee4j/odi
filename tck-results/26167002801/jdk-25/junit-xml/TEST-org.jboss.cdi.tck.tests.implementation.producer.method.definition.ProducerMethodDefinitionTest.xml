@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" tests="21" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:47.981Z" hostname="runnervmg397c" time="0.564">
+  <properties/>
+  <testcase name="testApiTypeForArrayTypeReturn" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.002"/>
+  <testcase name="testApiTypeForClassReturn" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testApiTypeForInterfaceReturn" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testApiTypeForPrimitiveReturn" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.002"/>
+  <testcase name="testBindingType" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.003"/>
+  <testcase name="testBindingTypesAppliedToProducerMethodParameters" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testDefaultBindingType" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testDefaultNamedMethod" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testDependentProducerReturnsNullValue" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.002"/>
+  <testcase name="testNamedMethod" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testNonDependentProducerReturnsNullValue" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.003"/>
+  <testcase name="testNonStaticDisposerMethodWithStaticProducer" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.002"/>
+  <testcase name="testNonStaticProducerMethodNotInherited" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testParameterizedReturnType" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.002"/>
+  <testcase name="testProducerOnNonBean" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testScopeType" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testStaticDisposerMethod" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.002"/>
+  <testcase name="testStaticDisposerMethodWithNonStaticProducer" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testStaticMethod" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.001"/>
+  <testcase name="testStereotypeSpecifiesScope" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.0"/>
+  <testcase name="testTypeVariableReturnType" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.ProducerMethodDefinitionTest" time="0.002"/>
+    </testsuite>

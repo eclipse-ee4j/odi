@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.broken.disabled.DisabledBeanNotAvailableForInjectionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:01:22.893Z" hostname="runnervmg397c" time="0.2">
+  <properties/>
+  <testcase name="testDeployment" classname="org.jboss.cdi.tck.tests.lookup.typesafe.resolution.broken.disabled.DisabledBeanNotAvailableForInjectionTest" time="0.001"/>
+    </testsuite>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:07.068Z" hostname="runnervmg397c" time="0.377">
+  <properties/>
+  <testcase name="testApplicationScopedComponent" classname="org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest" time="0.004"/>
+  <testcase name="testNothingHappensIfNoInstanceToDestroy[0](null)" classname="org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest" time="0.004"/>
+  <testcase name="testRequestScopedComponent" classname="org.jboss.cdi.tck.tests.context.alterable.AlterableContextTest" time="0.003"/>
+    </testsuite>

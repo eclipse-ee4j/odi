@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:15.545Z" hostname="runnervmg397c" time="0.575">
+  <properties/>
+  <testcase name="testDefaultScope" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testMultipleCompatibleScopeStereotypes" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testMultipleIncompatibleScopeStereotypesWithScopeSpecified" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeDeclaredInJava" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeSpecifiedAndStereotyped" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.001"/>
+  <testcase name="testScopeTypeDeclaredInheritedIsBlockedByIntermediateScopeTypeMarkedInherited" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeTypeDeclaredInheritedIsBlockedByIntermediateScopeTypeNotMarkedInherited" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeTypeDeclaredInheritedIsIndirectlyInherited" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeTypeDeclaredInheritedIsInherited" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeTypeDeclaresScopeTypeAnnotation" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeTypeHasCorrectTarget" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.001"/>
+  <testcase name="testScopeTypeNotDeclaredInheritedIsNotIndirectlyInherited" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeTypeNotDeclaredInheritedIsNotInherited" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testScopeTypesAreExtensible" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+  <testcase name="testWebBeanScopeTypeOverridesStereotype" classname="org.jboss.cdi.tck.tests.definition.scope.ScopeDefinitionTest" time="0.002"/>
+    </testsuite>

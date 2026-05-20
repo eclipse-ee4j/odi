@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:54.302Z" hostname="runnervmg397c" time="0.439">
+  <properties/>
+  <testcase name="testInterceptorBindingDirectlyInheritedFromManagedBean[0](null)" classname="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest" time="0.005"/>
+  <testcase name="testInterceptorBindingIndirectlyInheritedFromManagedBean[0](null)" classname="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest" time="0.003"/>
+  <testcase name="testMethodInterceptorBindingDirectlyInheritedFromManagedBean[0](null)" classname="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest" time="0.001"/>
+  <testcase name="testMethodInterceptorBindingDirectlyNotInheritedFromManagedBean[0](null)" classname="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest" time="0.001"/>
+  <testcase name="testMethodInterceptorBindingIndirectlyInheritedFromManagedBean[0](null)" classname="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest" time="0.002"/>
+  <testcase name="testMethodInterceptorBindingIndirectlyNotInheritedFromManagedBean[0](null)" classname="org.jboss.cdi.tck.tests.interceptors.definition.inheritance.InterceptorBindingInheritanceTest" time="0.001"/>
+    </testsuite>

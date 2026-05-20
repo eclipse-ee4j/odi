@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.broken.observer.tooManyParameters.ObserverMethodWithObservesAndObservesAsyncParametersTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:23.452Z" hostname="runnervmg397c" time="0.175">
+  <properties/>
+  <testcase name="testObserverMethodMustHaveOnlyOneEventParameter" classname="org.jboss.cdi.tck.tests.event.broken.observer.tooManyParameters.ObserverMethodWithObservesAndObservesAsyncParametersTest" time="0.0"/>
+    </testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:59:31.141Z" hostname="runnervmg397c" time="3.817">
+  <properties/>
+  <testcase name="testConstructorLevelBinding[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest" time="0.044"/>
+  <testcase name="testMultipleConstructorLevelBinding[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest" time="0.015"/>
+  <testcase name="testOverridingTypeLevelBinding[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest" time="0.031"/>
+  <testcase name="testTypeLevelAndConstructorLevelBinding[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest" time="0.025"/>
+  <testcase name="testTypeLevelBinding[0](null)" classname="org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest" time="0.012"/>
+    </testsuite>

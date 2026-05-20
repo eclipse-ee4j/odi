@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-05-20T13:59:44.948Z" hostname="runnervmg397c" time="0.621">
+  <properties/>
+  <testcase name="testAmbiguousDependencyNotResolved" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.015"/>
+  <testcase name="testAmbiguousDependencyResolved" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.004"/>
+  <testcase name="testDetermineInterceptorBindingType" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.005"/>
+  <testcase name="testDetermineQualifierType" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.003"/>
+  <testcase name="testDetermineScope" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.005"/>
+  <testcase name="testDetermineScopeType" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.006"/>
+  <testcase name="testDetermineStereotype" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.007"/>
+  <testcase name="testGetContexts" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.004"/>
+  <testcase name="testResolveWithEmptySet" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.004"/>
+  <testcase name="testResolveWithNull" classname="org.jboss.cdi.tck.tests.beanContainer.BeanContainerTest" time="0.003"/>
+    </testsuite>

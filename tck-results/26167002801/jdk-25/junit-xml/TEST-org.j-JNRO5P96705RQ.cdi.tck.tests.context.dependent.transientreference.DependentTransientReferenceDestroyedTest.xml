@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.context.dependent.transientreference.DependentTransientReferenceDestroyedTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:10.463Z" hostname="runnervmg397c" time="0.379">
+  <properties/>
+  <testcase name="testConstructorAndInitializer" classname="org.jboss.cdi.tck.tests.context.dependent.transientreference.DependentTransientReferenceDestroyedTest" time="0.004"/>
+  <testcase name="testProducerMethod" classname="org.jboss.cdi.tck.tests.context.dependent.transientreference.DependentTransientReferenceDestroyedTest" time="0.003"/>
+    </testsuite>

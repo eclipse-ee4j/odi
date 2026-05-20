@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:04.533Z" hostname="runnervmg397c" time="0.731">
+  <properties/>
+  <testcase name="testAroundInvokeAndLifeCycleCallbackInterceptorsCanBeDefinedOnTheSameClass" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.013"/>
+  <testcase name="testLifeCycleCallbackInterceptorNotInvokedForMethodLevelInterceptor" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.005"/>
+  <testcase name="testPackagePrivateLifecycleInterceptorMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.006"/>
+  <testcase name="testPostConstructInterceptor" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.019"/>
+  <testcase name="testPreDestroyInterceptor" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.015"/>
+  <testcase name="testPrivateLifecycleInterceptorMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.004"/>
+  <testcase name="testProtectedLifecycleInterceptorMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.004"/>
+  <testcase name="testPublicLifecycleInterceptorMethod" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.004"/>
+  <testcase name="testSingleMethodInterposingMultipleLifecycleCallbackEvents" classname="org.jboss.cdi.tck.interceptors.tests.contract.lifecycleCallback.LifecycleCallbackInterceptorTest" time="0.009"/>
+    </testsuite>

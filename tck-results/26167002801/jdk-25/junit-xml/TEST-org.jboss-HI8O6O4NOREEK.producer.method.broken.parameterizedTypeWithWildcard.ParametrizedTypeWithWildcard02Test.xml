@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithWildcard.ParametrizedTypeWithWildcard02Test" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:00:47.632Z" hostname="runnervmg397c" time="0.165">
+  <properties/>
+  <testcase name="testParameterizedReturnTypeWithDoubleWildcard" classname="org.jboss.cdi.tck.tests.implementation.producer.method.broken.parameterizedTypeWithWildcard.ParametrizedTypeWithWildcard02Test" time="0.001"/>
+    </testsuite>
