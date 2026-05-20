@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:10:20.412Z" hostname="runnervmrw5os" time="0.456">
+  <properties/>
+  <testcase name="testApiTypeInjectionPoint" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.002"/>
+  <testcase name="testCurrentBinding" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.001"/>
+  <testcase name="testDependentScope" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.001"/>
+  <testcase name="testGetAnnotatedField" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.002"/>
+  <testcase name="testGetAnnotatedParameter" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.002"/>
+  <testcase name="testGetBean" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.001"/>
+  <testcase name="testGetBindingTypes" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.001"/>
+  <testcase name="testGetMemberConstructor" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.002"/>
+  <testcase name="testGetMemberField" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.002"/>
+  <testcase name="testGetMemberMethod" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.001"/>
+  <testcase name="testGetType" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.002"/>
+  <testcase name="testIsTransient" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.002"/>
+  <testcase name="testNullInjectionPointInjectedIntoNonInjectedObject" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.InjectionPointTest" time="0.002"/>
+    </testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:50.595Z" hostname="runnervmrw5os" time="0.33">
+  <properties/>
+  <testcase name="testNormalScopedUnproxyableBeanWithFinalClassResolution" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest" time="0.003"/>
+  <testcase name="testNormalScopedUnproxyableBeanWithPackagePrivateFinalMethodResolution" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest" time="0.003"/>
+  <testcase name="testNormalScopedUnproxyableBeanWithPrivateConstructorResolution" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest" time="0.003"/>
+  <testcase name="testNormalScopedUnproxyableBeanWithProtectedFinalMethodResolution" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest" time="0.001"/>
+  <testcase name="testNormalScopedUnproxyableBeanWithPublicFinalMethodResolution" classname="org.jboss.cdi.tck.tests.implementation.simple.lifecycle.unproxyable.UnproxyableManagedBeanTest" time="0.002"/>
+    </testsuite>

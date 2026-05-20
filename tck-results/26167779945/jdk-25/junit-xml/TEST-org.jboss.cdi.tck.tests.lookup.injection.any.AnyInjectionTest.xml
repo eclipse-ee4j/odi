@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.injection.any.AnyInjectionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:10:17.997Z" hostname="runnervmrw5os" time="0.279">
+  <properties/>
+  <testcase name="testAnyInjectionIfExactlyOneBeanForType" classname="org.jboss.cdi.tck.tests.lookup.injection.any.AnyInjectionTest" time="0.001"/>
+    </testsuite>

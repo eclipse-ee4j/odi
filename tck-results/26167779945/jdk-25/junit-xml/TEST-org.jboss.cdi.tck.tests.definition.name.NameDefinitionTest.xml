@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:11.988Z" hostname="runnervmrw5os" time="0.41">
+  <properties/>
+  <testcase name="testDefaultNamed" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.002"/>
+  <testcase name="testNameStartingWithDollarCharacter" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.002"/>
+  <testcase name="testNameStartingWithLowerCaseCharacter" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.002"/>
+  <testcase name="testNameStartingWithMultipleUpperCaseCharacters" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.001"/>
+  <testcase name="testNameStartingWithUnderScoreCharacter" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.002"/>
+  <testcase name="testNamedNotDeclaredByBean" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.001"/>
+  <testcase name="testNamedNotDeclaredByStereotype" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.002"/>
+  <testcase name="testNonDefaultNamed" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.002"/>
+  <testcase name="testStereotypeDefaultsName" classname="org.jboss.cdi.tck.tests.definition.name.NameDefinitionTest" time="0.001"/>
+    </testsuite>

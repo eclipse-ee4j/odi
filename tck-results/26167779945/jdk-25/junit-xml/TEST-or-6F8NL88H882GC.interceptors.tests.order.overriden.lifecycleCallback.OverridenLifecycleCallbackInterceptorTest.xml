@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.interceptors.tests.order.overriden.lifecycleCallback.OverridenLifecycleCallbackInterceptorTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:10.028Z" hostname="runnervmrw5os" time="0.346">
+  <properties/>
+  <testcase name="testCallbackOverridenByCallback" classname="org.jboss.cdi.tck.interceptors.tests.order.overriden.lifecycleCallback.OverridenLifecycleCallbackInterceptorTest" time="0.002"/>
+  <testcase name="testCallbackOverridenByNonCallback" classname="org.jboss.cdi.tck.interceptors.tests.order.overriden.lifecycleCallback.OverridenLifecycleCallbackInterceptorTest" time="0.003"/>
+    </testsuite>

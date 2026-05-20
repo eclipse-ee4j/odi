@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.observer.param.modification.SyncEventModificationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:29.387Z" hostname="runnervmrw5os" time="0.337">
+  <properties/>
+  <testcase name="testModifiedEventParameterIsPropagated" classname="org.jboss.cdi.tck.tests.event.observer.param.modification.SyncEventModificationTest" time="0.003"/>
+    </testsuite>

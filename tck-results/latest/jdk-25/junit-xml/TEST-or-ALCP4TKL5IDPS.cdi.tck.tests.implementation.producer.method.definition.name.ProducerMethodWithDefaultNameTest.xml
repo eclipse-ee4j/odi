@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:47.206Z" hostname="runnervmrw5os" time="0.326">
+  <properties/>
+  <testcase name="testJavaBeansPropertyName" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest" time="0.001"/>
+  <testcase name="testMethodName" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest" time="0.002"/>
+  <testcase name="testProducerMethodQualifiers" classname="org.jboss.cdi.tck.tests.implementation.producer.method.definition.name.ProducerMethodWithDefaultNameTest" time="0.003"/>
+    </testsuite>

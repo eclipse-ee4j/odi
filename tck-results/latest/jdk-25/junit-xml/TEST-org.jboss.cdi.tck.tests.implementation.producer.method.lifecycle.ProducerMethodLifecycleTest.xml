@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:47.539Z" hostname="runnervmrw5os" time="0.484">
+  <properties/>
+  <testcase name="testCreateFailsIfProducerReturnsNullAndNotDependent" classname="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" time="0.005"/>
+  <testcase name="testCreateRethrowsUncheckedException" classname="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" time="0.004"/>
+  <testcase name="testCreateReturnsNullIfProducerDoesAndDependent" classname="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" time="0.002"/>
+  <testcase name="testCreateWrapsCheckedExceptionAndRethrows" classname="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" time="0.005"/>
+  <testcase name="testProducerMethodBeanCreate" classname="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" time="0.002"/>
+  <testcase name="testProducerMethodBeanDestroy" classname="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" time="0.003"/>
+  <testcase name="testProducerMethodInvokedOnCreate" classname="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" time="0.002"/>
+  <testcase name="testWhenApplicationInvokesProducerMethodParametersAreNotInjected" classname="org.jboss.cdi.tck.tests.implementation.producer.method.lifecycle.ProducerMethodLifecycleTest" time="0.002"/>
+    </testsuite>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ODI CDI Lite Signature-Test Evidence - JDK 25</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; max-width: 960px; margin: 2rem auto; padding: 0 1rem; color: #1f2933; }
+    code, pre { background: #f5f7fa; border-radius: 4px; }
+    code { padding: 0.1rem 0.25rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #d9e2ec; padding: 0.5rem; text-align: left; }
+    th { background: #f5f7fa; }
+  </style>
+</head>
+<body>
+  <h1>ODI CDI Lite Signature-Test Evidence - JDK 25</h1>
+  <table>
+    <tr><th>Status</th><th>Tests</th><th>Failures</th><th>Errors</th><th>Skipped</th></tr>
+    <tr><td>passed</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+  </table>
+  <ul>
+    <li>Tool: jakarta.tck:sigtest-maven-plugin:2.6</li>
+    <li>TCK signature file: cdi-api-jdk17.sig</li>
+    <li>Signature source: cdi-tck-core-impl-4.1.0.jar</li>
+    <li>Boot class path release: 17</li>
+    <li>Checked packages: <code>jakarta.decorator,jakarta.enterprise.**,jakarta.interceptor</code></li>
+    <li>API artifacts: <code>jakarta.annotation-api-3.0.0.jar,jakarta.el-api-6.0.0.jar,jakarta.enterprise.cdi-api-4.1.0.jar,jakarta.enterprise.lang-model-4.1.0.jar,jakarta.inject-api-2.0.1.jar,jakarta.interceptor-api-2.2.0.jar</code></li>
+  </ul>
+  <p>The signature file is extracted dynamically from the resolved Jakarta CDI TCK artifact during the CI run.</p>
+  <h2>Artifacts</h2>
+  <ul>
+    <li><a href="./signature-test-report.txt">Signature-test report</a></li>
+    <li><a href="./signature-test.properties">Signature-test metadata</a></li>
+    <li><a href="./cdi-api-jdk17.sig">TCK signature file</a></li>
+    <li><a href="./junit-xml/TEST-cdi-signature-test.xml">JUnit XML</a></li>
+  </ul>
+</body>
+</html>

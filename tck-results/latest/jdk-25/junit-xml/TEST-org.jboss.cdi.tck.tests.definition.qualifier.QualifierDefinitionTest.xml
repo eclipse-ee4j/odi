@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:12.407Z" hostname="runnervmrw5os" time="0.438">
+  <properties/>
+  <testcase name="testMultipleQualifiers" classname="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" time="0.004"/>
+  <testcase name="testQualifierDeclaredInheritedIsBlockedByIntermediateClass" classname="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" time="0.002"/>
+  <testcase name="testQualifierDeclaredInheritedIsIndirectlyInherited" classname="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" time="0.001"/>
+  <testcase name="testQualifierDeclaredInheritedIsInherited" classname="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" time="0.001"/>
+  <testcase name="testQualifierDeclaresBindingAnnotation" classname="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" time="0.002"/>
+  <testcase name="testQualifierNotDeclaredInheritedIsNotIndirectlyInherited" classname="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" time="0.002"/>
+  <testcase name="testQualifierNotDeclaredInheritedIsNotInherited" classname="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" time="0.003"/>
+  <testcase name="testQualifiersDeclaredInJava" classname="org.jboss.cdi.tck.tests.definition.qualifier.QualifierDefinitionTest" time="0.003"/>
+    </testsuite>

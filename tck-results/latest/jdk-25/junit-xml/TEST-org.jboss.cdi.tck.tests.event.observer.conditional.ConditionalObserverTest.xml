@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:28.280Z" hostname="runnervmrw5os" time="0.375">
+  <properties/>
+  <testcase name="testAsyncConditionalObserver" classname="org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest" time="0.005"/>
+  <testcase name="testConditionalObserver" classname="org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest" time="0.002"/>
+  <testcase name="testNotifyEnumerationContainsNotifyValues" classname="org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest" time="0.002"/>
+  <testcase name="testObserverMethodInvokedOnReturnedInstanceFromContext" classname="org.jboss.cdi.tck.tests.event.observer.conditional.ConditionalObserverTest" time="0.002"/>
+    </testsuite>

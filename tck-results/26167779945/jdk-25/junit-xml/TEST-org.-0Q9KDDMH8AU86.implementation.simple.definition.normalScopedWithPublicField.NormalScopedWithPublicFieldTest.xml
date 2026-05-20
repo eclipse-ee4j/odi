@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.simple.definition.normalScopedWithPublicField.NormalScopedWithPublicFieldTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:49.271Z" hostname="runnervmrw5os" time="0.189">
+  <properties/>
+  <testcase name="testNormalScopedBeanCanNotHavePublicField" classname="org.jboss.cdi.tck.tests.implementation.simple.definition.normalScopedWithPublicField.NormalScopedWithPublicFieldTest" time="0.0"/>
+    </testsuite>

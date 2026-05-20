@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.vetoed.VetoedTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:10:25.089Z" hostname="runnervmrw5os" time="0.295">
+  <properties/>
+  <testcase name="testClassLevelVeto" classname="org.jboss.cdi.tck.tests.vetoed.VetoedTest" time="0.001"/>
+  <testcase name="testPackageLevelVeto" classname="org.jboss.cdi.tck.tests.vetoed.VetoedTest" time="0.002"/>
+    </testsuite>

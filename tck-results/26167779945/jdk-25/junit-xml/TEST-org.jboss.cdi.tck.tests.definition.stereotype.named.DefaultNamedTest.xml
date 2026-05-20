@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.stereotype.named.DefaultNamedTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:17.676Z" hostname="runnervmrw5os" time="0.331">
+  <properties/>
+  <testcase name="testStereotypeDeclaringNamed" classname="org.jboss.cdi.tck.tests.definition.stereotype.named.DefaultNamedTest" time="0.002"/>
+  <testcase name="testStereotypeNamedOverridenByBean" classname="org.jboss.cdi.tck.tests.definition.stereotype.named.DefaultNamedTest" time="0.002"/>
+    </testsuite>

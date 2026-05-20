@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:24.903Z" hostname="runnervmrw5os" time="0.36">
+  <properties/>
+  <testcase name="testParameterizedResolvedType[0](null, null)" classname="org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest" time="0.005"/>
+  <testcase name="testSimpleEvent[0](null, null)" classname="org.jboss.cdi.tck.tests.event.metadata.EventMetadataTest" time="0.004"/>
+    </testsuite>

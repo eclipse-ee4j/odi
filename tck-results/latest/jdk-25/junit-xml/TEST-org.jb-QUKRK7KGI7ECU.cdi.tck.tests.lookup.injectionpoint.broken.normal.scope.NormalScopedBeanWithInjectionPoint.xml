@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.lookup.injectionpoint.broken.normal.scope.NormalScopedBeanWithInjectionPoint" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:10:21.101Z" hostname="runnervmrw5os" time="0.172">
+  <properties/>
+  <testcase name="testRequestScopedBeanWithInjectionPoint" classname="org.jboss.cdi.tck.tests.lookup.injectionpoint.broken.normal.scope.NormalScopedBeanWithInjectionPoint" time="0.0"/>
+    </testsuite>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:08:45.001Z" hostname="runnervmrw5os" time="0.657">
+  <properties/>
+  <testcase name="testBeanMatching" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.005"/>
+  <testcase name="testBeanMatchingDefaultQualifiers" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.004"/>
+  <testcase name="testBeanMatchingNonQualifiersException" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.005"/>
+  <testcase name="testBeanMatchingNullException" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.004"/>
+  <testcase name="testEventMatching" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.004"/>
+  <testcase name="testEventMatchingAnyQualifier" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.004"/>
+  <testcase name="testEventMatchingDefaultQualifier" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.004"/>
+  <testcase name="testEventMatchingNonQualifiersException" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.003"/>
+  <testcase name="testEventMatchingNullException" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.004"/>
+  <testcase name="testEventMatchingParameterized" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.004"/>
+  <testcase name="testEventMatchingTypeVarException" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.004"/>
+  <testcase name="testNonLegalBeanTypesIgnored" classname="org.jboss.cdi.tck.tests.beanContainer.assignability.BeanEventAssignabilityTest" time="0.003"/>
+    </testsuite>

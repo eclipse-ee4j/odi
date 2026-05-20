@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.observer.abortProcessing.ObserverExceptionAbortsProcessingTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:25.842Z" hostname="runnervmrw5os" time="0.307">
+  <properties/>
+  <testcase name="testObserverThrowsExceptionAbortsNotifications" classname="org.jboss.cdi.tck.tests.event.observer.abortProcessing.ObserverExceptionAbortsProcessingTest" time="0.003"/>
+    </testsuite>

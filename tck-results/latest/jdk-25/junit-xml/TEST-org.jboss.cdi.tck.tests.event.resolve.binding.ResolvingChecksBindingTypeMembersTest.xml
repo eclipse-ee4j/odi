@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.resolve.binding.ResolvingChecksBindingTypeMembersTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:32.402Z" hostname="runnervmrw5os" time="0.336">
+  <properties/>
+  <testcase name="testResolvingChecksBindingTypeMembers" classname="org.jboss.cdi.tck.tests.event.resolve.binding.ResolvingChecksBindingTypeMembersTest" time="0.002"/>
+    </testsuite>

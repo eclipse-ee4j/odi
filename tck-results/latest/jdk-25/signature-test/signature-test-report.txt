@@ -1,0 +1,12 @@
+May 20, 2026 2:07:13 PM com.sun.tdk.signaturetest.SignatureTest parseParameters
+SignatureTest report
+Base version: 4.1.0-SNAPSHOT
+Tested version: 4.1.0
+Check mode: bin [throws removed]
+Constant checking: on
+
+Warning: The return type java.lang.reflect.Member can't be resolved 
+Warning: The return type java.lang.reflect.Member can't be resolved 
+Warning: The return type java.lang.reflect.Member can't be resolved 
+
+STATUS:Passed.

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.interceptors.definition.broken.nonDependent.NonDependentInterceptorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:52.659Z" hostname="runnervmrw5os" time="0.214">
+  <properties/>
+  <testcase name="testDeploymentWithScopedInterceptor" classname="org.jboss.cdi.tck.tests.interceptors.definition.broken.nonDependent.NonDependentInterceptorTest" time="0.0"/>
+    </testsuite>

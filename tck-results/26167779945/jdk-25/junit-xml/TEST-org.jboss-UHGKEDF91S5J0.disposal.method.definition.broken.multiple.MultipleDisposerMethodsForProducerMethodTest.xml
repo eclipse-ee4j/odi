@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiple.MultipleDisposerMethodsForProducerMethodTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:38.409Z" hostname="runnervmrw5os" time="0.186">
+  <properties/>
+  <testcase name="testMultipleDisposerMethodsForProducerMethodNotAllowed" classname="org.jboss.cdi.tck.tests.implementation.disposal.method.definition.broken.multiple.MultipleDisposerMethodsForProducerMethodTest" time="0.0"/>
+    </testsuite>

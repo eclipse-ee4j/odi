@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.beanContainer.injection.BeanContainerInjectionTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:08:46.835Z" hostname="runnervmrw5os" time="0.457">
+  <properties/>
+  <testcase name="testInjectionOfBeanContainerType" classname="org.jboss.cdi.tck.tests.beanContainer.injection.BeanContainerInjectionTest" time="0.005"/>
+    </testsuite>

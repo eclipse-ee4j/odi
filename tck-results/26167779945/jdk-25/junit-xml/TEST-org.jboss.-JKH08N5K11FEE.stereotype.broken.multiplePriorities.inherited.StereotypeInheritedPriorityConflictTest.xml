@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.inherited.StereotypeInheritedPriorityConflictTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:16.006Z" hostname="runnervmrw5os" time="0.195">
+  <properties/>
+  <testcase name="testInheritedStereotypesAreConflicting" classname="org.jboss.cdi.tck.tests.definition.stereotype.broken.multiplePriorities.inherited.StereotypeInheritedPriorityConflictTest" time="0.001"/>
+    </testsuite>

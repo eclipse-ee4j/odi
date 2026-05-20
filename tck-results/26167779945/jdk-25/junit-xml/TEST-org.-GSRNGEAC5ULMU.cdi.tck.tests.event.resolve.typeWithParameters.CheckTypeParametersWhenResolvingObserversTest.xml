@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-05-20T14:09:33.060Z" hostname="runnervmrw5os" time="0.442">
+  <properties/>
+  <testcase name="testEventTypeAssignableToATypeVariable" classname="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" time="0.003"/>
+  <testcase name="testEventTypeResolution" classname="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" time="0.002"/>
+  <testcase name="testObservedEventTypeParameterIsActualType" classname="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" time="0.002"/>
+  <testcase name="testObservedEventTypeParameterIsActualTypeNested" classname="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" time="0.002"/>
+  <testcase name="testObservedEventTypeParameterIsTypeVariable" classname="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" time="0.003"/>
+  <testcase name="testObservedEventTypeParameterIsWildcard" classname="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" time="0.003"/>
+  <testcase name="testParameterizedEventTypeAssignableToRawType" classname="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" time="0.001"/>
+  <testcase name="testResolvingChecksTypeParameters" classname="org.jboss.cdi.tck.tests.event.resolve.typeWithParameters.CheckTypeParametersWhenResolvingObserversTest" time="0.002"/>
+    </testsuite>
