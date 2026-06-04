@@ -49,8 +49,8 @@ public final class OdiExecutableInvokerInfo implements InvokerInfo, Invoker<Obje
         this.beanClassName = beanClassName;
         this.methodDeclaringClassName = methodDeclaringClassName;
         this.methodName = methodName;
-        this.parameterTypeNames = parameterTypeNames;
-        this.parameterArrayDimensions = parameterArrayDimensions;
+        this.parameterTypeNames = parameterTypeNames.clone();
+        this.parameterArrayDimensions = parameterArrayDimensions.clone();
         this.staticMethod = staticMethod;
         this.argumentLookups = new boolean[parameterTypeNames.length];
     }
@@ -68,11 +68,11 @@ public final class OdiExecutableInvokerInfo implements InvokerInfo, Invoker<Obje
     }
 
     public String[] getParameterTypeNames() {
-        return parameterTypeNames;
+        return parameterTypeNames.clone();
     }
 
     public int[] getParameterArrayDimensions() {
-        return parameterArrayDimensions;
+        return parameterArrayDimensions.clone();
     }
 
     public boolean isStaticMethod() {
