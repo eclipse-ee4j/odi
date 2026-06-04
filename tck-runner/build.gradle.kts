@@ -70,6 +70,11 @@ dependencies {
 
 val observingBeanSource = "org/jboss/cdi/tck/tests/se/events/lifecycle/ObservingBean.java"
 val addedBeanClassesProperty = "org.eclipse.odi.cdi.se.added-bean-classes"
+val cdiLiteExcludedTestClasses = listOf(
+    // CDI Lite does not require constructor interception; these TCK classes are not tagged cdi-full.
+    "org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest",
+    "org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest"
+)
 
 val unpackCdiTckSources by tasks.registering {
     val outputFile = generatedCdiTckSources.map { it.file(observingBeanSource) }
@@ -138,10 +143,21 @@ tasks.register<Test>("fullTckTest") {
         }
         val file = suiteFile.get().asFile
         file.parentFile.mkdirs()
+        val excludedClasses = cdiLiteExcludedTestClasses.joinToString(System.lineSeparator()) {
+            """            <class name="$it">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>"""
+        }
         file.writeText(
             testSuite.readText()
                 .replace("""                <listener class-name="org.testng.reporters.EmailableReporter"/>${System.lineSeparator()}""", "")
                 .replace("""        <listener class-name="org.testng.reporters.EmailableReporter"/>${System.lineSeparator()}""", "")
+                .replace(
+                    """        <classes>${System.lineSeparator()}        </classes>""",
+                    """        <classes>${System.lineSeparator()}$excludedClasses${System.lineSeparator()}        </classes>"""
+                )
         )
     }
 }
