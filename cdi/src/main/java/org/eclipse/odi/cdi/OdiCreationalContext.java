@@ -21,6 +21,10 @@ import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
+import org.eclipse.odi.cdi.context.DependentContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementation of {@link CreationalContext}.
@@ -33,6 +37,7 @@ public final class OdiCreationalContext<T> implements CreationalContext<T> {
     private final Contextual<T> contextual;
     private CreatedBean<T> createdBean;
     private T instance;
+    private List<DependentContext> dependentContexts;
 
     OdiCreationalContext(BeanContext beanContext, Contextual<T> contextual) {
         this.beanContext = beanContext;
@@ -46,20 +51,27 @@ public final class OdiCreationalContext<T> implements CreationalContext<T> {
 
     @Override
     public void release() {
-        if (contextual instanceof OdiBean) {
-            if (createdBean instanceof BeanRegistration) {
-                BeanRegistration<T> beanRegistration = (BeanRegistration<T>) createdBean;
-                beanContext.destroyBean(beanRegistration);
-            } else if (createdBean != null) {
-                createdBean.close();
-                this.createdBean = null;
-            } else if (instance != null) {
-                beanContext.destroyBean(instance);
+        try {
+            if (contextual instanceof OdiBean) {
+                if (createdBean instanceof BeanRegistration) {
+                    BeanRegistration<T> beanRegistration = (BeanRegistration<T>) createdBean;
+                    beanContext.destroyBean(beanRegistration);
+                } else if (createdBean != null) {
+                    createdBean.close();
+                    this.createdBean = null;
+                } else if (instance != null) {
+                    beanContext.destroyBean(instance);
+                    instance = null;
+                }
+            } else {
+                contextual.destroy(instance, this);
                 instance = null;
             }
-        } else {
-            contextual.destroy(instance, this);
-            instance = null;
+        } finally {
+            if (dependentContexts != null) {
+                dependentContexts.forEach(DependentContext::destroy);
+                dependentContexts.clear();
+            }
         }
     }
 
@@ -69,5 +81,12 @@ public final class OdiCreationalContext<T> implements CreationalContext<T> {
 
     void setCreatedBean(CreatedBean<T> createdBean) {
         this.createdBean = createdBean;
+    }
+
+    void addDependentContext(DependentContext dependentContext) {
+        if (dependentContexts == null) {
+            dependentContexts = new ArrayList<>(1);
+        }
+        dependentContexts.add(dependentContext);
     }
 }

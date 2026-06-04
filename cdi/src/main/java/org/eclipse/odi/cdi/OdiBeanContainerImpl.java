@@ -45,6 +45,7 @@ import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.UnproxyableResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
@@ -269,6 +270,9 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
     }
 
     private static boolean isEnabledBeanDefinition(BeanDefinition<?> beanDefinition) {
+        if (isReserve(beanDefinition) && getPriority(beanDefinition) <= 0) {
+            return false;
+        }
         return !beanDefinition.hasStereotype(Alternative.class) || getPriority(beanDefinition) > 0;
     }
 
@@ -300,7 +304,37 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     .limit(1)
                     .collect(Collectors.toList());
         }
+        List<BeanDefinition<T>> nonReserve = beanDefinitions
+                .stream()
+                .filter(bd -> !isReserve(bd))
+                .collect(Collectors.toList());
+        if (!nonReserve.isEmpty() && nonReserve.size() < beanDefinitions.size()) {
+            return nonReserve;
+        }
+        if (beanDefinitions.stream().allMatch(OdiBeanContainerImpl::isReserve)) {
+            return highestUniquePriority(beanDefinitions);
+        }
         return beanDefinitions;
+    }
+
+    private static <T> List<BeanDefinition<T>> highestUniquePriority(Collection<BeanDefinition<T>> beanDefinitions) {
+        List<BeanDefinition<T>> sorted = beanDefinitions.stream()
+                .filter(beanDefinition -> getPriority(beanDefinition) > 0)
+                .sorted(Comparator.<BeanDefinition<T>>comparingInt(OdiBeanContainerImpl::getPriority).reversed())
+                .collect(Collectors.toList());
+        if (sorted.isEmpty()) {
+            return List.of();
+        }
+        if (sorted.size() == 1 || getPriority(sorted.get(0)) != getPriority(sorted.get(1))) {
+            return List.of(sorted.get(0));
+        }
+        return sorted.stream()
+                .filter(beanDefinition -> getPriority(beanDefinition) == getPriority(sorted.get(0)))
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isReserve(BeanDefinition<?> beanDefinition) {
+        return beanDefinition.hasDeclaredAnnotation(Reserve.class) || beanDefinition.hasDeclaredStereotype(Reserve.class);
     }
 
     private static int getPriority(BeanDefinition<?> beanDefinition) {
@@ -348,8 +382,27 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     odiCreationalContext.setCreatedBean(beanRegistration);
                 }
             } else {
-                Context context = getContext(scope);
-                instance = context.get(odiBean, creationalContext);
+                if (odiAnnotations.isNormalScope(scope)) {
+                    Optional<BeanDefinition<Object>> proxyBeanDefinition = findProxyBeanDefinitionForReference(
+                            (Class<Object>) beanType,
+                            odiBean.getBeanDefinition().getDeclaredQualifier()
+                    );
+                    if (proxyBeanDefinition.isPresent()) {
+                        BeanRegistration<Object> beanRegistration = getBeanContext().getBeanRegistration(proxyBeanDefinition.get());
+                        instance = beanRegistration.getBean();
+                        if (creationalContext instanceof OdiCreationalContext) {
+                            OdiCreationalContext<Object> odiCreationalContext = (OdiCreationalContext<Object>) creationalContext;
+                            odiCreationalContext.push(instance);
+                            odiCreationalContext.setCreatedBean(beanRegistration);
+                        }
+                    } else {
+                        Context context = getContext(scope);
+                        instance = context.get(odiBean, creationalContext);
+                    }
+                } else {
+                    Context context = getContext(scope);
+                    instance = context.get(odiBean, creationalContext);
+                }
             }
             if (instance == null) {
                 return null;
@@ -361,6 +414,18 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         } else {
             throw new IllegalArgumentException("Unsupported by bean type: " + bean.getClass());
         }
+    }
+
+    private Optional<BeanDefinition<Object>> findProxyBeanDefinitionForReference(Class<Object> beanType,
+                                                                                Qualifier<Object> qualifier) {
+        Optional<BeanDefinition<Object>> proxyBeanDefinition = applicationContext.findProxyBeanDefinition(
+                Argument.of(beanType),
+                qualifier
+        );
+        if (proxyBeanDefinition.isPresent() || qualifier == null) {
+            return proxyBeanDefinition;
+        }
+        return applicationContext.findProxyBeanDefinition(Argument.of(beanType), null);
     }
 
     @Override
@@ -420,7 +485,45 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     .findFirst()
                     .orElse(null);
         }
+        List<Bean<? extends X>> nonReserve = beans.stream()
+                .filter(bean -> !isReserve(bean))
+                .collect(Collectors.toList());
+        if (!nonReserve.isEmpty() && nonReserve.size() < beans.size()) {
+            if (nonReserve.size() == 1) {
+                return nonReserve.iterator().next();
+            }
+            throw new AmbiguousResolutionException("Multiple beans are eligible for injection: " + nonReserve);
+        }
+        List<Bean<? extends X>> reserves = beans.stream()
+                .filter(OdiBeanContainerImpl::isReserve)
+                .collect(Collectors.toList());
+        if (reserves.size() == beans.size()) {
+            List<Bean<? extends X>> highestPriorityReserves = highestPriorityBeans(reserves);
+            if (highestPriorityReserves.size() == 1) {
+                return highestPriorityReserves.iterator().next();
+            }
+            if (!highestPriorityReserves.isEmpty()) {
+                throw new AmbiguousResolutionException("Multiple beans are eligible for injection: " + highestPriorityReserves);
+            }
+        }
         throw new AmbiguousResolutionException("Multiple beans are eligible for injection: " + beans);
+    }
+
+    private static <X> List<Bean<? extends X>> highestPriorityBeans(Collection<Bean<? extends X>> beans) {
+        int highestPriority = beans.stream()
+                .mapToInt(OdiBeanContainerImpl::getPriority)
+                .max()
+                .orElse(0);
+        if (highestPriority <= 0) {
+            return List.of();
+        }
+        return beans.stream()
+                .filter(bean -> getPriority(bean) == highestPriority)
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isReserve(Bean<?> bean) {
+        return bean instanceof OdiBean<?> odiBean && isReserve(odiBean.getBeanDefinition());
     }
 
     private static int getPriority(Bean<?> bean) {
@@ -606,6 +709,46 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
     @Override
     public OdiInstance<Object> createInstance(Context context) {
         return container.select(context);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T unwrapClientProxy(T instance) {
+        if (!(instance instanceof InterceptedProxy<?> interceptedProxy)) {
+            return instance;
+        }
+        Optional<BeanDefinition<T>> proxyBeanDefinition = applicationContext.findBeanRegistration(instance)
+                .map(BeanRegistration::getBeanDefinition)
+                .filter(BeanDefinition::isProxy);
+        if (proxyBeanDefinition.isEmpty()) {
+            proxyBeanDefinition = applicationContext.findBeanDefinition((Class<T>) instance.getClass(), null)
+                    .filter(BeanDefinition::isProxy);
+        }
+        if (proxyBeanDefinition.isEmpty()) {
+            return (T) interceptedProxy.interceptedTarget();
+        }
+        BeanDefinition<T> proxyDefinition = proxyBeanDefinition.get();
+        OdiBean<T> proxyBean = getBean(proxyDefinition);
+        OdiBean<T> targetBean = proxyBean.getProxyTargetBean();
+        Context context = getSingleActiveContextForUnwrap(targetBean.getScope());
+        T target = context.get(targetBean);
+        if (target == null) {
+            target = context.get(targetBean, createCreationalContext(targetBean));
+        }
+        return target;
+    }
+
+    private Context getSingleActiveContextForUnwrap(Class<? extends Annotation> scopeType) {
+        List<Context> activeContexts = getContexts(scopeType).stream()
+                .filter(Context::isActive)
+                .collect(Collectors.toList());
+        if (activeContexts.isEmpty()) {
+            throw new ContextNotActiveException("No context active for scope: " + scopeType.getSimpleName());
+        }
+        if (activeContexts.size() > 1) {
+            throw new IllegalStateException("More than one active context for scope: " + scopeType.getSimpleName());
+        }
+        return activeContexts.get(0);
     }
 
     @Override

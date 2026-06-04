@@ -17,6 +17,7 @@ package org.eclipse.odi.cdi;
 
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.ApplicationContextProvider;
+import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.Qualifier;
@@ -32,21 +33,26 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.InjectionPoint;
 import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.enterprise.context.spi.Context;
+import jakarta.enterprise.context.Eager;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.ResolutionException;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.spi.BeanContainer;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.util.TypeLiteral;
+import org.eclipse.odi.cdi.context.DependentContext;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -58,11 +64,38 @@ final class OdiSeContainer extends CDI<Object>
     private static final ReentrantReadWriteLock RUNNING_CONTAINERS_LOCK = new ReentrantReadWriteLock();
     private final ApplicationContext applicationContext;
     private final OdiBeanContainerImpl beanContainer;
+    private boolean eagerBeansInitialized;
 
     protected OdiSeContainer(ApplicationContext context) {
         this.applicationContext = context;
         this.beanContainer = new OdiBeanContainerImpl(this, context.getBean(OdiAnnotations.class), context);
         register(context, this);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    synchronized void initializeEagerBeans() {
+        if (eagerBeansInitialized) {
+            return;
+        }
+        eagerBeansInitialized = true;
+        for (BeanDefinition<?> beanDefinition : applicationContext.getAllBeanDefinitions()) {
+            if (isCdiEagerBean(beanDefinition)) {
+                OdiBean<?> bean = beanContainer.getBean((BeanDefinition) beanDefinition);
+                if (bean.isProxy()) {
+                    BeanRegistration<?> beanRegistration = applicationContext.getBeanRegistration((BeanDefinition) beanDefinition);
+                    beanRegistration.getBean().toString();
+                } else {
+                    Context context = beanContainer.getContext(bean.getScope());
+                    context.get((OdiBean) bean, beanContainer.createCreationalContext(bean));
+                }
+            }
+        }
+    }
+
+    private static boolean isCdiEagerBean(BeanDefinition<?> beanDefinition) {
+        return !beanDefinition.getBeanType().getName().startsWith("org.eclipse.odi.cdi.")
+                && (beanDefinition.hasAnnotation(Eager.class)
+                || beanDefinition.hasStereotype(Eager.class));
     }
 
     @Override
@@ -113,6 +146,15 @@ final class OdiSeContainer extends CDI<Object>
             RUNNING_CONTAINERS.remove(context);
         } finally {
             RUNNING_CONTAINERS_LOCK.writeLock().unlock();
+        }
+    }
+
+    static OdiSeContainer findRegistered(ApplicationContext context) {
+        RUNNING_CONTAINERS_LOCK.readLock().lock();
+        try {
+            return RUNNING_CONTAINERS.get(context);
+        } finally {
+            RUNNING_CONTAINERS_LOCK.readLock().unlock();
         }
     }
 
@@ -267,8 +309,93 @@ final class OdiSeContainer extends CDI<Object>
     }
 
     @Bean
+    SyntheticInjections syntheticInjections(ArgumentInjectionPoint<?, ?> injectionPoint,
+                                            BeanResolutionContext resolutionContext,
+                                            OdiBeanContainer beanContainer) {
+        final BeanDefinition<?> declaringBean = injectionPoint.getDeclaringBean();
+        Object value = OdiUtils.getSyntheticParameters(declaringBean)
+                .get(OdiSyntheticParameters.INJECTION_POINTS);
+        BeanDefinition<?> syntheticBeanDefinition = syntheticBeanDefinition(resolutionContext, declaringBean);
+        if (value == null && syntheticBeanDefinition != null) {
+            value = OdiUtils.getSyntheticParameters(syntheticBeanDefinition)
+                    .get(OdiSyntheticParameters.INJECTION_POINTS);
+        }
+        List<OdiSyntheticInjectionPoint> injectionPoints = value instanceof List<?> list
+                ? (List<OdiSyntheticInjectionPoint>) list
+                : List.of();
+        return new OdiSyntheticInjections(
+                beanContainer,
+                injectionPoints,
+                new DependentContext(null),
+                consumerInjectionPoint(resolutionContext, beanContainer),
+                syntheticBeanDefinition,
+                true
+        );
+    }
+
+    private static BeanDefinition<?> syntheticBeanDefinition(BeanResolutionContext resolutionContext,
+                                                            BeanDefinition<?> fallback) {
+        Map<String, Object> fallbackParameters = OdiUtils.getSyntheticParameters(fallback);
+        Object beanType = fallbackParameters.get(OdiSyntheticParameters.BEAN_TYPE);
+        if (beanType instanceof String beanTypeName) {
+            BeanDefinition<?> beanDefinition = findSyntheticBeanDefinition(resolutionContext, beanTypeName);
+            if (beanDefinition != null) {
+                return beanDefinition;
+            }
+        }
+        for (BeanResolutionContext.Segment<?, ?> segment : resolutionContext.getPath()) {
+            BeanDefinition<?> declaringType = segment.getDeclaringType();
+            Class<?> beanClass = declaringType.getDeclaringType().orElse(declaringType.getBeanType());
+            if (!SyntheticBeanCreator.class.isAssignableFrom(beanClass) && hasSyntheticInjectionPoints(declaringType)) {
+                return declaringType;
+            }
+        }
+        return hasSyntheticInjectionPoints(fallback) ? fallback : null;
+    }
+
+    private static BeanDefinition<?> findSyntheticBeanDefinition(BeanResolutionContext resolutionContext,
+                                                                String beanTypeName) {
+        return resolutionContext.getContext()
+                .getAllBeanDefinitions()
+                .stream()
+                .filter(beanDefinition -> beanDefinition.getBeanType().getName().equals(beanTypeName))
+                .filter(OdiSeContainer::hasSyntheticInjectionPoints)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static boolean hasSyntheticInjectionPoints(BeanDefinition<?> beanDefinition) {
+        return OdiUtils.getSyntheticParameters(beanDefinition).containsKey(OdiSyntheticParameters.INJECTION_POINTS);
+    }
+
+    private static jakarta.enterprise.inject.spi.InjectionPoint consumerInjectionPoint(BeanResolutionContext resolutionContext,
+                                                                                      OdiBeanContainer beanContainer) {
+        for (BeanResolutionContext.Segment<?, ?> segment : resolutionContext.getPath()) {
+            InjectionPoint<?> injectionPoint = segment.getInjectionPoint();
+            if (injectionPoint == null) {
+                continue;
+            }
+            BeanDefinition<?> declaringBean = injectionPoint.getDeclaringBean();
+            Class<?> declaringType = declaringBean.getDeclaringType().orElse(declaringBean.getBeanType());
+            if (!SyntheticBeanCreator.class.isAssignableFrom(declaringType)) {
+                Argument<?> argument = injectionPoint instanceof ArgumentCoercible<?> argumentCoercible
+                        ? argumentCoercible.asArgument()
+                        : segment.getArgument();
+                return new OdiInjectionPoint(
+                        resolutionContext.getContext().getClassLoader(),
+                        new OdiBeanImpl<>(beanContainer.getBeanContext(), declaringBean),
+                        injectionPoint,
+                        argument
+                );
+            }
+        }
+        return null;
+    }
+
+    @Bean
     @Default
     SeContainer seContainer() {
+        initializeEagerBeans();
         return this;
     }
 

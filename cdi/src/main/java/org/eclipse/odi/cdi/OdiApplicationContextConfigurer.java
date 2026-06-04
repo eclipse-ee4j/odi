@@ -21,16 +21,26 @@ import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.BeanResolutionCustomizer;
 import io.micronaut.context.annotation.ContextConfigurer;
+import io.micronaut.core.annotation.Order;
+import io.micronaut.core.order.Ordered;
 import io.micronaut.core.reflect.ReflectionUtils;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.QualifiedBeanType;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.NormalScope;
+import jakarta.enterprise.inject.Alternative;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.enterprise.inject.TransientReference;
 
 import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * ODI specific {@link ApplicationContextConfigurer}.
@@ -94,7 +104,75 @@ public final class OdiApplicationContextConfigurer implements ApplicationContext
                         }
                         return candidate.isCandidateBean(beanType);
                     }
+
+                    @Override
+                    public <T> Optional<BeanDefinition<T>> resolveNonUniqueBean(Argument<T> beanType,
+                                                                                io.micronaut.context.Qualifier<T> qualifier,
+                                                                                Collection<BeanDefinition<T>> candidates) {
+                        return resolveCdiBean(candidates);
+                    }
                 });
+    }
+
+    private static <T> Optional<BeanDefinition<T>> resolveCdiBean(Collection<BeanDefinition<T>> beanDefinitions) {
+        if (beanDefinitions.isEmpty() || beanDefinitions.size() == 1) {
+            return Optional.empty();
+        }
+        List<BeanDefinition<T>> alternatives = beanDefinitions
+                .stream()
+                .filter(bd -> bd.hasStereotype(Alternative.class))
+                .filter(bd -> getPriority(bd) > 0)
+                .collect(Collectors.toList());
+        if (!alternatives.isEmpty()) {
+            return highestUniquePriority(alternatives);
+        }
+        List<BeanDefinition<T>> nonReserve = beanDefinitions
+                .stream()
+                .filter(bd -> !isReserve(bd))
+                .collect(Collectors.toList());
+        if (!nonReserve.isEmpty() && nonReserve.size() < beanDefinitions.size()) {
+            if (nonReserve.size() == 1) {
+                return Optional.of(nonReserve.iterator().next());
+            }
+            return Optional.empty();
+        }
+        if (beanDefinitions.stream().allMatch(OdiApplicationContextConfigurer::isReserve)) {
+            return highestUniquePriority(beanDefinitions);
+        }
+        return Optional.empty();
+    }
+
+    private static <T> Optional<BeanDefinition<T>> highestUniquePriority(Collection<BeanDefinition<T>> beanDefinitions) {
+        List<BeanDefinition<T>> sorted = beanDefinitions.stream()
+                .filter(beanDefinition -> getPriority(beanDefinition) > 0)
+                .sorted(Comparator.<BeanDefinition<T>>comparingInt(OdiApplicationContextConfigurer::getPriority).reversed())
+                .collect(Collectors.toList());
+        if (sorted.isEmpty()) {
+            return Optional.empty();
+        }
+        if (sorted.size() == 1 || getPriority(sorted.get(0)) != getPriority(sorted.get(1))) {
+            return Optional.of(sorted.get(0));
+        }
+        return Optional.empty();
+    }
+
+    private static boolean isReserve(BeanDefinition<?> beanDefinition) {
+        return beanDefinition.hasDeclaredAnnotation(Reserve.class) || beanDefinition.hasDeclaredStereotype(Reserve.class);
+    }
+
+    private static int getPriority(BeanDefinition<?> beanDefinition) {
+        OptionalInt priority = beanDefinition.intValue(Priority.class);
+        if (priority.isPresent()) {
+            return priority.getAsInt();
+        }
+        int order = beanDefinition.intValue(Order.class).orElse(0);
+        if (order == 0) {
+            return 0;
+        }
+        if (order == Ordered.HIGHEST_PRECEDENCE) {
+            return Integer.MAX_VALUE;
+        }
+        return -order;
     }
 
     private static Object primitiveDefaultValue(Class<?> type) {

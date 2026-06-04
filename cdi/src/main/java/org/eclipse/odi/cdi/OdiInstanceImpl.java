@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -168,6 +169,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     @Override
     public void destroy(T instance) {
+        Objects.requireNonNull(instance, "instance");
         CreationalContext<?> creationalContext = created.remove(instance);
         if (creationalContext != null) {
             creationalContext.release();
@@ -250,13 +252,29 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                 .filter(bean -> getPriority(bean) > 0)
                 .collect(Collectors.toList());
         if (prioritizedAlternatives.isEmpty()) {
+            List<OdiBean<T>> nonReserve = beans.stream()
+                    .filter(bean -> !bean.isReserve())
+                    .collect(Collectors.toList());
+            if (!nonReserve.isEmpty() && nonReserve.size() < beans.size()) {
+                return nonReserve;
+            }
+            if (beans.stream().allMatch(Bean::isReserve)) {
+                return highestPriorityBeans(beans);
+            }
             return beans.stream().collect(Collectors.toList());
         }
-        int highestPriority = prioritizedAlternatives.stream()
+        return highestPriorityBeans(prioritizedAlternatives);
+    }
+
+    private List<OdiBean<T>> highestPriorityBeans(Collection<OdiBean<T>> beans) {
+        int highestPriority = beans.stream()
                 .mapToInt(this::getPriority)
                 .max()
                 .orElse(0);
-        return prioritizedAlternatives.stream()
+        if (highestPriority <= 0) {
+            return List.of();
+        }
+        return beans.stream()
                 .filter(bean -> getPriority(bean) == highestPriority)
                 .sorted(Comparator.comparing(bean -> bean.getBeanClass().getName()))
                 .collect(Collectors.toList());
@@ -279,7 +297,12 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     }
 
     private T create(OdiBean<T> resolvedBean, CreationalContext<T> creationalContext) {
-        if (injectionPoint == null || resolvedBean.getScope() != Dependent.class) {
+        if (resolvedBean.getScope() != Dependent.class) {
+            @SuppressWarnings("unchecked")
+            T reference = (T) beanContainer.getReference(resolvedBean, beanType.getType(), creationalContext);
+            return reference;
+        }
+        if (injectionPoint == null) {
             return context.get(resolvedBean, creationalContext);
         }
         return OdiCurrentInjectionPoint.call(

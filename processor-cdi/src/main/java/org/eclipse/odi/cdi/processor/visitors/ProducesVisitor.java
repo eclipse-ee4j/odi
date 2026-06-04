@@ -17,6 +17,9 @@ package org.eclipse.odi.cdi.processor.visitors;
 
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.context.annotation.Requires;
+import io.micronaut.context.annotation.Secondary;
+import io.micronaut.core.annotation.AnnotationClassValue;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.annotation.Order;
@@ -32,6 +35,7 @@ import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.Reserve;
 import org.eclipse.odi.cdi.processor.CdiUtil;
 
 import java.lang.annotation.Annotation;
@@ -42,6 +46,11 @@ import java.util.Set;
  * Validates elements annotated with {@link jakarta.enterprise.inject.Produces}.
  */
 public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
+    private static final AnnotationClassValue<Object> SELECTED_ALTERNATIVE_CONDITION =
+            new AnnotationClassValue<>("org.eclipse.odi.cdi.condition.SelectedAlternativeCondition");
+    private static final AnnotationClassValue<Object> UNSELECTED_RESERVE_CONDITION =
+            new AnnotationClassValue<>("org.eclipse.odi.cdi.condition.UnselectedReserveCondition");
+
     private ClassElement currentClass;
 
     @Override
@@ -122,6 +131,7 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
             this.currentClass.annotate(Factory.class);
         }
         inheritAlternativeMetadata(element);
+        inheritReserveMetadata(element, context);
         if (CdiUtil.hasDependentScope(element, context) && !element.hasDeclaredAnnotation(Dependent.class)) {
             element.annotate(Dependent.class);
         }
@@ -145,6 +155,22 @@ public class ProducesVisitor implements TypeElementVisitor<Object, Produces> {
             element.annotate(Order.class, builder -> builder.value(-value));
         } else {
             copyAnnotation(declaringType, element, Order.class);
+            element.annotate(Requires.class, builder -> builder.member("condition", SELECTED_ALTERNATIVE_CONDITION));
+        }
+    }
+
+    private void inheritReserveMetadata(MemberElement element, VisitorContext context) {
+        if (!CdiUtil.isReserve(element)) {
+            return;
+        }
+        OptionalInt priority = CdiUtil.resolvePriority(context, element);
+        if (priority.isPresent()) {
+            int value = priority.getAsInt();
+            element.annotate(Priority.class, builder -> builder.value(value));
+            element.annotate(Order.class, builder -> builder.value(-value));
+            element.annotate(Secondary.class);
+        } else {
+            element.annotate(Requires.class, builder -> builder.member("condition", UNSELECTED_RESERVE_CONDITION));
         }
     }
 

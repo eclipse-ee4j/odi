@@ -29,11 +29,14 @@ import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.Stereotype;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Validates elements annotated with {@link jakarta.inject.Named}.
@@ -186,9 +189,12 @@ public class NamedVisitor implements TypeElementVisitor<Object, Object> {
         if (beanName.isEmpty()) {
             return;
         }
-        if (!isNameResolutionCandidate(context, element)) {
+        NameCandidate currentCandidate = toNameCandidate(context, element, beanName.get());
+        if (currentCandidate == null) {
             return;
         }
+        List<NameCandidate> candidates = new ArrayList<>();
+        candidates.add(currentCandidate);
         for (String configuredBeanClass : configuredBeanClasses) {
             if (configuredBeanClass.equals(element.getName())) {
                 continue;
@@ -197,21 +203,28 @@ public class NamedVisitor implements TypeElementVisitor<Object, Object> {
             if (candidate.isEmpty() || !isNamedBeanClass(candidate.get())) {
                 continue;
             }
-            if (!isNameResolutionCandidate(context, candidate.get())) {
-                continue;
-            }
             Optional<String> candidateName = resolveBeanName(candidate.get());
             if (candidateName.isPresent()
-                    && isAmbiguousBeanName(beanName.get(), candidateName.get())
-                    && !hasResolvableAmbiguity(context, element, candidate.get())) {
-                context.fail(
-                        DEPLOYMENT_EXCEPTION_MARKER
-                                + "Ambiguous bean name '" + beanName.get()
-                                + "' conflicts with bean name '" + candidateName.get() + "'",
-                        element
-                );
-                return;
+                    && isAmbiguousBeanName(beanName.get(), candidateName.get())) {
+                NameCandidate nameCandidate = toNameCandidate(context, candidate.get(), candidateName.get());
+                if (nameCandidate != null) {
+                    candidates.add(nameCandidate);
+                }
             }
+        }
+        List<NameCandidate> resolvedCandidates = selectNameResolutionCandidates(candidates);
+        if (resolvedCandidates.size() > 1) {
+            String conflictingName = resolvedCandidates.stream()
+                    .map(NameCandidate::beanName)
+                    .filter(candidateName -> !candidateName.equals(beanName.get()))
+                    .findFirst()
+                    .orElse(beanName.get());
+            context.fail(
+                    DEPLOYMENT_EXCEPTION_MARKER
+                            + "Ambiguous bean name '" + beanName.get()
+                            + "' conflicts with bean name '" + conflictingName + "'",
+                    element
+            );
         }
     }
 
@@ -233,42 +246,50 @@ public class NamedVisitor implements TypeElementVisitor<Object, Object> {
         return Optional.empty();
     }
 
-    private static boolean isNameResolutionCandidate(VisitorContext context, ClassElement element) {
-        return !isAlternative(element) || hasPriority(element) || isSelectedAlternative(context, element);
-    }
-
-    private static boolean hasResolvableAmbiguity(VisitorContext context, ClassElement element, ClassElement candidate) {
-        return isResolvingAlternative(context, element) || isResolvingAlternative(context, candidate);
-    }
-
-    private static boolean isResolvingAlternative(VisitorContext context, ClassElement element) {
-        return isAlternative(element) && (hasPriority(element) || isSelectedAlternative(context, element));
-    }
-
-    private static boolean isAlternative(ClassElement element) {
-        return element.hasAnnotation(jakarta.enterprise.inject.Alternative.class)
-                || element.hasStereotype(jakarta.enterprise.inject.Alternative.class);
-    }
-
-    private static boolean hasPriority(ClassElement element) {
-        return element.hasAnnotation(jakarta.annotation.Priority.class)
-                || element.hasStereotype(jakarta.annotation.Priority.class);
-    }
-
-    private static boolean isSelectedAlternative(VisitorContext context, ClassElement element) {
-        String selectedAlternatives = context.getOptions().get("odi.selected-alternatives");
-        if (selectedAlternatives == null || selectedAlternatives.isBlank()) {
-            selectedAlternatives = System.getProperty("odi.selected-alternatives");
+    private static NameCandidate toNameCandidate(VisitorContext context, ClassElement element, String beanName) {
+        if (!CdiUtil.isBeanEnabled(context, element)) {
+            return null;
         }
-        if (selectedAlternatives == null || selectedAlternatives.isBlank()) {
-            return false;
+        return new NameCandidate(
+                beanName,
+                CdiUtil.isAlternative(element),
+                CdiUtil.isReserve(element),
+                CdiUtil.resolvePriority(context, element).orElse(0)
+        );
+    }
+
+    private static List<NameCandidate> selectNameResolutionCandidates(List<NameCandidate> candidates) {
+        List<NameCandidate> nonReserveCandidates = candidates.stream()
+                .filter(candidate -> !candidate.reserve)
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (!nonReserveCandidates.isEmpty() && nonReserveCandidates.size() < candidates.size()) {
+            candidates = nonReserveCandidates;
         }
-        for (String selectedAlternative : selectedAlternatives.split(",")) {
-            if (selectedAlternative.trim().equals(element.getName())) {
-                return true;
+        List<NameCandidate> alternatives = candidates.stream()
+                .filter(candidate -> candidate.alternative)
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (!alternatives.isEmpty()) {
+            return selectHighestPriorityCandidates(alternatives);
+        }
+        if (candidates.stream().allMatch(candidate -> candidate.reserve)) {
+            List<NameCandidate> priorityReserves = candidates.stream()
+                    .filter(candidate -> candidate.priority > 0)
+                    .collect(Collectors.toCollection(ArrayList::new));
+            if (!priorityReserves.isEmpty()) {
+                return selectHighestPriorityCandidates(priorityReserves);
             }
         }
-        return false;
+        return candidates;
+    }
+
+    private static List<NameCandidate> selectHighestPriorityCandidates(List<NameCandidate> candidates) {
+        int highestPriority = candidates.stream()
+                .map(candidate -> candidate.priority)
+                .max(Comparator.naturalOrder())
+                .orElse(0);
+        return candidates.stream()
+                .filter(candidate -> candidate.priority == highestPriority)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private static boolean isAmbiguousBeanName(String beanName, String candidateName) {
@@ -329,5 +350,23 @@ public class NamedVisitor implements TypeElementVisitor<Object, Object> {
     @Override
     public VisitorKind getVisitorKind() {
         return VisitorKind.ISOLATING;
+    }
+
+    private static final class NameCandidate {
+        private final String beanName;
+        private final boolean alternative;
+        private final boolean reserve;
+        private final int priority;
+
+        private NameCandidate(String beanName, boolean alternative, boolean reserve, int priority) {
+            this.beanName = beanName;
+            this.alternative = alternative;
+            this.reserve = reserve;
+            this.priority = priority;
+        }
+
+        String beanName() {
+            return beanName;
+        }
     }
 }

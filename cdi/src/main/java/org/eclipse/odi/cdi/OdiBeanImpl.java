@@ -35,7 +35,9 @@ import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
 import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.annotation.Priority;
+import jakarta.enterprise.context.AutoClose;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.Eager;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
@@ -44,6 +46,7 @@ import jakarta.enterprise.inject.CreationException;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.IllegalProductException;
 import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.InjectionPoint;
@@ -107,6 +110,9 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public Class<?> getBeanClass() {
+        if (OdiUtils.getSyntheticParameters(definition).containsKey(OdiSyntheticParameters.BEAN_TYPE)) {
+            return definition.getBeanType();
+        }
         return definition.getDeclaringType().orElseGet(() -> {
             if (definition instanceof AdvisedBeanType) {
                 return ((AdvisedBeanType<?>) definition).getInterceptedType();
@@ -160,6 +166,7 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
                 if (creationalContext instanceof OdiCreationalContext) {
                     OdiCreationalContext<T> odiCreationalContext = (OdiCreationalContext<T>) creationalContext;
                     odiCreationalContext.setCreatedBean(beanRegistration);
+                    OdiSyntheticInjections.releaseCreatorInjections(creationDefinition, odiCreationalContext);
                 }
             }
             return beanRegistration.getBean();
@@ -204,7 +211,7 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
     }
 
     private BeanDefinition<T> getCreationDefinition() {
-        if (definition instanceof ProxyBeanDefinition && definition.hasAnnotation(Produces.class)) {
+        if (definition instanceof ProxyBeanDefinition) {
             return beanContext.getProxyTargetBeanDefinition(
                     ((ProxyBeanDefinition<T>) definition).getTargetType(),
                     definition.getDeclaredQualifier()
@@ -461,6 +468,21 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
     @Override
     public boolean isAlternative() {
         return definition.hasAnnotation(Alternative.class) || definition.hasStereotype(Alternative.class);
+    }
+
+    @Override
+    public boolean isReserve() {
+        return definition.hasDeclaredAnnotation(Reserve.class) || definition.hasDeclaredStereotype(Reserve.class);
+    }
+
+    @Override
+    public boolean isEager() {
+        return definition.hasAnnotation(Eager.class) || definition.hasStereotype(Eager.class);
+    }
+
+    @Override
+    public boolean isAutoClose() {
+        return definition.hasAnnotation(AutoClose.class) || definition.hasStereotype(AutoClose.class);
     }
 
     @Override

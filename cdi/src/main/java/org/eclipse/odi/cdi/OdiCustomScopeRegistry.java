@@ -15,6 +15,7 @@
  */
 package org.eclipse.odi.cdi;
 
+import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.exceptions.BeanCreationException;
@@ -58,7 +59,15 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
 
     private OdiBeanContainer getBeanContainer() {
         if (beanContainer == null) {
-            beanContainer = beanContext.getBean(OdiBeanContainer.class);
+            if (beanContext instanceof ApplicationContext) {
+                OdiSeContainer container = OdiSeContainer.findRegistered((ApplicationContext) beanContext);
+                if (container != null) {
+                    beanContainer = container.beanContainer();
+                }
+            }
+            if (beanContainer == null) {
+                beanContainer = beanContext.getBean(OdiBeanContainer.class);
+            }
         }
         return beanContainer;
     }

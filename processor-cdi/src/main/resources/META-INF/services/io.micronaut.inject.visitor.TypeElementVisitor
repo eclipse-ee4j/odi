@@ -2,6 +2,7 @@ org.eclipse.odi.cdi.processor.visitors.ProducesVisitor
 org.eclipse.odi.cdi.processor.visitors.InjectVisitor
 org.eclipse.odi.cdi.processor.visitors.NamedVisitor
 org.eclipse.odi.cdi.processor.visitors.AlternativeVisitor
+org.eclipse.odi.cdi.processor.visitors.Cdi5AnnotationVisitor
 org.eclipse.odi.cdi.processor.ClassStereotypeValidator
 org.eclipse.odi.cdi.processor.visitors.SpecializesVisitor
 org.eclipse.odi.cdi.processor.visitors.DisposesMethodVisitor

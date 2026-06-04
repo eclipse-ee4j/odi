@@ -63,12 +63,7 @@ public final class OdiUtils {
                 );
             }
         }
-        Map<String, Object> syntheticParameters = map.getOrDefault(
-                OdiSyntheticParameters.PROPERTY,
-                AnnotationValue.builder(Property.class).build()
-        ).stringValue()
-                .map(OdiSyntheticParameters::find)
-                .orElse(Map.of());
+        Map<String, Object> syntheticParameters = getSyntheticParameters(map);
         return new Parameters() {
             @Override
             public <T> T get(String key, Class<T> type) {
@@ -95,6 +90,28 @@ public final class OdiUtils {
                 return defaultValue;
             }
         };
+    }
+
+    public static Map<String, Object> getSyntheticParameters(BeanDefinition<?> declaringBean) {
+        final List<AnnotationValue<Property>> values = declaringBean.getAnnotationValuesByType(Property.class);
+        Map<String, AnnotationValue<Property>> map = new LinkedHashMap<>(values.size());
+        if (!values.isEmpty()) {
+            for (AnnotationValue<Property> value : values) {
+                value.stringValue("name").ifPresent(n ->
+                    map.put(n, value)
+                );
+            }
+        }
+        return getSyntheticParameters(map);
+    }
+
+    private static Map<String, Object> getSyntheticParameters(Map<String, AnnotationValue<Property>> map) {
+        return map.getOrDefault(
+                OdiSyntheticParameters.PROPERTY,
+                AnnotationValue.builder(Property.class).build()
+        ).stringValue()
+                .map(OdiSyntheticParameters::find)
+                .orElse(Map.of());
     }
 
     private static <T> T convert(Object value, Class<T> type) {

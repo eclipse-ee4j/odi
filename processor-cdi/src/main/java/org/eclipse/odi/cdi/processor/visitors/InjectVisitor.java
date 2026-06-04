@@ -19,6 +19,7 @@ import io.micronaut.context.annotation.Property;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ConstructorElement;
+import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
@@ -28,7 +29,6 @@ import jakarta.inject.Inject;
 import org.eclipse.odi.cdi.processor.CdiUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -41,8 +41,8 @@ public class InjectVisitor implements TypeElementVisitor<Object, Object> {
     private List<ConstructorElement> injectConstructors = new ArrayList<>(2);
 
     @Override
-    public Set<String> getSupportedAnnotationNames() {
-        return Collections.singleton(AnnotationUtil.INJECT);
+    public String getElementType() {
+        return AnnotationUtil.INJECT;
     }
 
     @Override
@@ -59,39 +59,54 @@ public class InjectVisitor implements TypeElementVisitor<Object, Object> {
     @Override
     public void visitClass(ClassElement element, VisitorContext context) {
         injectConstructors.clear();
+        element.getEnclosedElements(ElementQuery.CONSTRUCTORS)
+                .stream()
+                .filter(constructor -> constructor.hasAnnotation(AnnotationUtil.INJECT))
+                .forEach(constructor -> validateInjectConstructor(constructor, context));
+        element.getEnclosedElements(ElementQuery.ALL_METHODS.onlyDeclared())
+                .stream()
+                .filter(method -> method.hasAnnotation(AnnotationUtil.INJECT))
+                .forEach(method -> validateInjectMethod(method, context));
+        element.getEnclosedElements(ElementQuery.ALL_FIELDS.onlyDeclared())
+                .stream()
+                .filter(field -> field.hasAnnotation(AnnotationUtil.INJECT))
+                .forEach(field -> validateInjectField(field, context));
     }
 
     @Override
     public void visitConstructor(ConstructorElement element, VisitorContext context) {
-        if (element.hasDeclaredAnnotation(AnnotationUtil.INJECT)) {
-
-            validateInjectMethod(element, context);
-            injectConstructors.add(element);
-            if (injectConstructors.size() == 2) {
-                final String methodDesc = injectConstructors.stream()
-                        .map((me) -> me.getDescription(true))
-                        .collect(Collectors.joining(" and "));
-                context.fail("More than one constructor annotated with @Inject found: "
-                                     + methodDesc
-                                     + ". See "
-                                     + CdiUtil.SPEC_LOCATION
-                                     + "#declaring_bean_constructor",
-                             element);
-                injectConstructors.clear();
-            }
-        }
+        // Validated from visitClass to keep member scanning language-neutral and consistent.
     }
 
     @Override
     public void visitMethod(MethodElement element, VisitorContext context) {
-        if (element.hasDeclaredAnnotation(AnnotationUtil.INJECT)) {
-            validateInjectMethod(element, context);
-        }
+        // Validated from visitClass to keep member scanning language-neutral and consistent.
     }
 
     @Override
     public void visitField(FieldElement element, VisitorContext context) {
-        if (element.hasDeclaredAnnotation(AnnotationUtil.INJECT)) {
+        // Validated from visitClass to keep member scanning language-neutral and consistent.
+    }
+
+    private void validateInjectConstructor(ConstructorElement element, VisitorContext context) {
+        validateInjectMethod(element, context);
+        injectConstructors.add(element);
+        if (injectConstructors.size() == 2) {
+            final String methodDesc = injectConstructors.stream()
+                    .map((me) -> me.getDescription(true))
+                    .collect(Collectors.joining(" and "));
+            context.fail("More than one constructor annotated with @Inject found: "
+                                 + methodDesc
+                                 + ". See "
+                                 + CdiUtil.SPEC_LOCATION
+                                 + "#declaring_bean_constructor",
+                         element);
+            injectConstructors.clear();
+        }
+    }
+
+    private void validateInjectField(FieldElement element, VisitorContext context) {
+        if (element.hasAnnotation(AnnotationUtil.INJECT)) {
             if (element.hasDeclaredAnnotation(Property.class)) {
                 element.removeAnnotation(AnnotationUtil.INJECT);
             }

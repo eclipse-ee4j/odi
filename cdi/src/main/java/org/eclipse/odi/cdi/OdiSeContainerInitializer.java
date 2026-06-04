@@ -36,6 +36,7 @@ import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.QualifiedBeanType;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
+import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
 import jakarta.enterprise.inject.spi.Extension;
 import org.eclipse.odi.cdi.annotation.OdiBeanDefinition;
 
@@ -128,6 +129,17 @@ public class OdiSeContainerInitializer extends SeContainerInitializer implements
         throw new UnsupportedOperationException("addExtensions is not yet supported");
     }
 
+    @SafeVarargs
+    @Override
+    public final SeContainerInitializer addBuildCompatibleExtensions(Class<? extends BuildCompatibleExtension>... classes) {
+        throw new UnsupportedOperationException(
+                "Programmatic build-compatible extension registration is not supported by ODI SE bootstrap. "
+                        + "ODI runs build-compatible extensions during annotation processing; add extension classes "
+                        + "through META-INF/services/jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension "
+                        + "on the annotation processor path instead."
+        );
+    }
+
     @Override
     public SeContainerInitializer enableInterceptors(Class<?>... classes) {
         throw new UnsupportedOperationException("enableInterceptors is not yet supported");
@@ -181,7 +193,9 @@ public class OdiSeContainerInitializer extends SeContainerInitializer implements
         }
         final ApplicationContext context = contextBuilder.build();
         context.start();
-        return new OdiSeContainer(context);
+        OdiSeContainer container = new OdiSeContainer(context);
+        container.initializeEagerBeans();
+        return container;
     }
 
     @SafeVarargs
