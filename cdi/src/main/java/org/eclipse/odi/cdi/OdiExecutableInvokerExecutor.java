@@ -21,6 +21,8 @@ import io.micronaut.context.DefaultBeanResolutionContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.reflect.ClassUtils;
+import io.micronaut.core.reflect.exception.InvocationException;
 import io.micronaut.core.type.Argument;
 import io.micronaut.inject.AdvisedBeanType;
 import io.micronaut.inject.BeanDefinition;
@@ -34,14 +36,22 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.BeanContainer;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.invoke.AsyncHandler;
 import jakarta.inject.Singleton;
 import org.eclipse.odi.cdi.context.DependentContext;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ServiceLoader;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Flow;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Internal
 @Singleton
 final class OdiExecutableInvokerExecutor implements OdiInvokerExecutor {
+    private static final String REACTIVE_STREAMS_PUBLISHER = "org.reactivestreams.Publisher";
+
     @Override
     public Object invoke(OdiExecutableInvokerInfo invokerInfo, Object instance, Object[] arguments) throws Exception {
         OdiBeanContainer beanContainer = (OdiBeanContainer) CDI.current().getBeanContainer();
@@ -58,6 +68,7 @@ final class OdiExecutableInvokerExecutor implements OdiInvokerExecutor {
                 beanDefinition
         )) {
             DependentContext dependentContext = new DependentContext(resolutionContext);
+            Completion completion = new Completion(dependentContext);
             try {
                 Object target = null;
                 if (!invokerInfo.isStaticMethod()) {
@@ -68,9 +79,34 @@ final class OdiExecutableInvokerExecutor implements OdiInvokerExecutor {
                     }
                 }
                 Object[] invocationArguments = resolveArguments(beanContainer, executableMethod, invokerInfo, arguments, dependentContext);
-                return executableMethod.invoke(target, invocationArguments);
-            } finally {
-                dependentContext.destroy();
+                int asyncParameter = invokerInfo.getAsyncParameterIndex();
+                AsyncHandler.ParameterType parameterTypeHandler = asyncParameter >= 0
+                        ? loadHandler(
+                                AsyncHandler.ParameterType.class,
+                                invokerInfo.getAsyncParameterHandlerClassName(),
+                                executableMethod.getArguments()[asyncParameter].getType().getClassLoader()
+                        )
+                        : null;
+                if (asyncParameter >= 0) {
+                    completion.manage();
+                    invocationArguments[asyncParameter] = parameterTypeHandler.transformArgument(invocationArguments[asyncParameter], completion);
+                }
+                Object result = executableMethod.invoke(target, invocationArguments);
+                Object transformed = transformResult(result, executableMethod.getReturnType().getType(), invokerInfo, completion, parameterTypeHandler);
+                if (!completion.isManaged()) {
+                    completion.complete();
+                }
+                completion.releaseIfCompleted();
+                return transformed;
+            } catch (InvocationException e) {
+                completion.fail();
+                throw unwrapInvocationException(e);
+            } catch (Exception e) {
+                completion.fail();
+                throw e;
+            } catch (Error e) {
+                completion.fail();
+                throw e;
             }
         }
     }
@@ -254,4 +290,164 @@ final class OdiExecutableInvokerExecutor implements OdiInvokerExecutor {
         }
         return value;
     }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private Object transformResult(Object result,
+                                   Class<?> returnType,
+                                   OdiExecutableInvokerInfo invokerInfo,
+                                   Completion completion,
+                                   AsyncHandler.ParameterType parameterTypeHandler) {
+        if (result instanceof CompletionStage) {
+            completion.manage();
+            ((CompletionStage<?>) result).whenComplete((value, error) -> completion.complete());
+            return result;
+        }
+        if (result instanceof Flow.Publisher) {
+            completion.manage();
+            return destroyOnPublisherCompletion((Flow.Publisher<?>) result, completion);
+        }
+        if (result != null
+                && ClassUtils.isPresent(REACTIVE_STREAMS_PUBLISHER, result.getClass().getClassLoader())
+                && OdiReactiveStreamsSupport.isPublisher(result)) {
+            completion.manage();
+            return OdiReactiveStreamsSupport.destroyOnCompletion(result, completion);
+        }
+        if (invokerInfo.getAsyncReturnHandlerClassName() != null) {
+            AsyncHandler.ReturnType returnTypeHandler = loadHandler(
+                    AsyncHandler.ReturnType.class,
+                    invokerInfo.getAsyncReturnHandlerClassName(),
+                    returnType.getClassLoader()
+            );
+            completion.manage();
+            return returnTypeHandler.transform(result, completion);
+        }
+        if (parameterTypeHandler != null) {
+            return parameterTypeHandler.transformReturnValue(result, completion);
+        }
+        return result;
+    }
+
+    private Flow.Publisher<?> destroyOnPublisherCompletion(Flow.Publisher<?> publisher, Completion completion) {
+        return destroyOnPublisherCompletionTyped(publisher, completion);
+    }
+
+    private <T> Flow.Publisher<T> destroyOnPublisherCompletionTyped(Flow.Publisher<T> publisher, Completion completion) {
+        return subscriber -> {
+            try {
+                publisher.subscribe(new Flow.Subscriber<T>() {
+                    @Override
+                    public void onSubscribe(Flow.Subscription subscription) {
+                        subscriber.onSubscribe(subscription);
+                    }
+
+                    @Override
+                    public void onNext(T item) {
+                        subscriber.onNext(item);
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        try {
+                            subscriber.onError(throwable);
+                        } finally {
+                            completion.complete();
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        try {
+                            subscriber.onComplete();
+                        } finally {
+                            completion.complete();
+                        }
+                    }
+                });
+            } catch (Throwable e) {
+                completion.fail();
+                throw e;
+            }
+        };
+    }
+
+    private <T> T loadHandler(Class<T> handlerType, String handlerClassName, ClassLoader classLoader) {
+        if (handlerClassName == null) {
+            throw new IllegalStateException("No async handler configured for " + handlerType.getName());
+        }
+        for (T handler : ServiceLoader.load(handlerType, classLoader)) {
+            if (handler.getClass().getName().equals(handlerClassName)) {
+                return handler;
+            }
+        }
+        throw new IllegalStateException("Async handler " + handlerClassName + " is not available for " + handlerType.getName());
+    }
+
+    private Exception unwrapInvocationException(Exception e) throws Exception {
+        Throwable cause = e.getCause();
+        while (cause instanceof InvocationException || cause instanceof InvocationTargetException) {
+            cause = cause.getCause();
+        }
+        if (cause instanceof Exception exception) {
+            return exception;
+        }
+        if (cause instanceof Error error) {
+            throw error;
+        }
+        return e;
+    }
+
+    static final class Completion implements Runnable {
+        private final DependentContext dependentContext;
+        private final AtomicBoolean destroyed = new AtomicBoolean();
+
+        private boolean managed;
+        private boolean completed;
+        private boolean failed;
+        private boolean releaseAllowed;
+
+        private Completion(DependentContext dependentContext) {
+            this.dependentContext = dependentContext;
+        }
+
+        @Override
+        public void run() {
+            complete();
+        }
+
+        private synchronized void manage() {
+            managed = true;
+        }
+
+        private synchronized boolean isManaged() {
+            return managed;
+        }
+
+        synchronized void complete() {
+            if (!failed) {
+                completed = true;
+                if (releaseAllowed) {
+                    destroy();
+                }
+            }
+        }
+
+        private synchronized void releaseIfCompleted() {
+            releaseAllowed = true;
+            if (completed) {
+                destroy();
+            }
+        }
+
+        synchronized void fail() {
+            failed = true;
+            destroy();
+        }
+
+        private void destroy() {
+            if (destroyed.compareAndSet(false, true)) {
+                dependentContext.destroy();
+            }
+        }
+    }
+
 }

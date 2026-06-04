@@ -15,7 +15,9 @@
  */
 package org.eclipse.odi.cdi.processor.extensions;
 
+import io.micronaut.aop.Around;
 import io.micronaut.context.annotation.Primary;
+import io.micronaut.context.annotation.Bean;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.util.CollectionUtils;
@@ -23,23 +25,31 @@ import io.micronaut.inject.annotation.MutableAnnotationMetadata;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
+import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.ast.beans.BeanElement;
 import io.micronaut.inject.ast.beans.BeanElementBuilder;
 import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.BeanElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import io.micronaut.runtime.context.scope.ScopedProxy;
+import jakarta.enterprise.context.AutoClose;
+import jakarta.enterprise.context.NormalScope;
+import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
 import jakarta.enterprise.inject.spi.EventContext;
 import jakarta.enterprise.util.Nonbinding;
 import jakarta.inject.Singleton;
+import org.eclipse.odi.cdi.OdiSyntheticInjectionPoint;
 import org.eclipse.odi.cdi.annotation.meta.RuntimeMetaAnnotation;
 import org.eclipse.odi.cdi.OdiSyntheticParameters;
 import org.eclipse.odi.cdi.processor.CdiUtil;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +90,9 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                 final List<SyntheticBeanBuilderImpl<?>> syntheticBeanBuilders =
                         syntheticComponents.getSyntheticBeanBuilders();
                 for (SyntheticBeanBuilderImpl<?> syntheticBeanBuilder : syntheticBeanBuilders) {
+                    registry.validateSyntheticInjectionPoints(visitorContext, syntheticBeanBuilder);
+                    syntheticBeanBuilder.getParams().put(OdiSyntheticParameters.BEAN_TYPE, syntheticBeanBuilder.getBeanType().getName());
+                    registerSyntheticInjectionPoints(syntheticBeanBuilder);
                     registerSyntheticParameters(syntheticBeanBuilder);
                     final ClassElement beanType = syntheticBeanBuilder.getBeanType();
                     final Class<? extends SyntheticBeanCreator<?>> creatorClass = syntheticBeanBuilder.getCreatorClass();
@@ -170,11 +183,22 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                             syntheticBeanBuilder.getAnnotationMetadata(),
                             disposerBuilder
                     );
-                    ElementQuery<MethodElement> disposeMethod =
-                            ElementQuery.ALL_METHODS
-                                    .onlyInstance()
-                                    .named(n -> n.equals("dispose"))
-                                    .filter(m -> m.getParameters().length == 3);
+                    String disposeInjectionType = selectSyntheticMethodInjectionType(
+                            visitorContext,
+                            disposerElement,
+                            "dispose",
+                            1,
+                            3
+                    );
+                    if (disposeInjectionType == null) {
+                        return;
+                    }
+                    ElementQuery<MethodElement> disposeMethod = syntheticMethodQuery(
+                            "dispose",
+                            1,
+                            3,
+                            disposeInjectionType
+                    );
                     disposerBuilder.withMethods(disposeMethod, BeanMethodElement::executable);
                 }
             }
@@ -205,9 +229,22 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
 
     private void defineSyntheticCreator(VisitorContext visitorContext, SyntheticBeanBuilderImpl<?> syntheticBeanBuilder, ClassElement beanType, ClassElement creatorElement) {
         MutableAnnotationMetadata syntheticBeanMetadata = syntheticBeanBuilder.getAnnotationMetadata();
-        final ElementQuery<MethodElement> creatorMethods = ElementQuery.ALL_METHODS
-                .named(name -> name.equals("create"))
-                .filter(method -> method.getParameters().length == 2);
+        String createInjectionType = selectSyntheticMethodInjectionType(
+                visitorContext,
+                creatorElement,
+                "create",
+                0,
+                2
+        );
+        if (createInjectionType == null) {
+            return;
+        }
+        final ElementQuery<MethodElement> creatorMethods = syntheticMethodQuery(
+                "create",
+                0,
+                2,
+                createInjectionType
+        );
 
 
         BeanElementBuilder beanFactory = applicationClassElement.addAssociatedBean(creatorElement, visitorContext)
@@ -217,6 +254,17 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                             builder.typed(beanType);
 
                             copySyntheticAnnotationMetadata(visitorContext, syntheticBeanMetadata, builder);
+                            if (isNormalScopedSyntheticBean(visitorContext, syntheticBeanMetadata)) {
+                                builder.intercept(AnnotationValue.builder(Around.class)
+                                        .member("proxyTarget", true)
+                                        .member("lazy", true)
+                                        .build());
+                                builder.annotate(ScopedProxy.class);
+                                builder.annotate(io.micronaut.core.annotation.AnnotationUtil.SCOPE);
+                            }
+                            if (syntheticBeanMetadata.hasAnnotation(AutoClose.class) && beanType.isAssignable(AutoCloseable.class)) {
+                                builder.annotate(Bean.class, annotation -> annotation.member("preDestroy", "close"));
+                            }
                             final Set<ClassElement> exposedTypes = syntheticBeanBuilder
                                     .getExposedTypes();
                             if (!exposedTypes.isEmpty()) {
@@ -226,6 +274,16 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                 );
 
         copyQualifiersToFactory(syntheticBeanMetadata, beanFactory);
+    }
+
+    private boolean isNormalScopedSyntheticBean(VisitorContext visitorContext, MutableAnnotationMetadata syntheticBeanMetadata) {
+        if (!syntheticBeanMetadata.getAnnotationNamesByStereotype(NormalScope.class).isEmpty()) {
+            return true;
+        }
+        return syntheticBeanMetadata.getAnnotationNames()
+                .stream()
+                .flatMap(annotationName -> visitorContext.getClassElement(annotationName).stream())
+                .anyMatch(annotationType -> annotationType.hasAnnotation(NormalScope.class) || annotationType.hasStereotype(NormalScope.class));
     }
 
     private void copyQualifiersToFactory(MutableAnnotationMetadata syntheticBeanMetadata, BeanElementBuilder beanFactory) {
@@ -250,6 +308,77 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
             String id = OdiSyntheticParameters.register(syntheticBuilder.getParams());
             syntheticBuilder.withParam(OdiSyntheticParameters.PROPERTY, id);
         }
+    }
+
+    private void registerSyntheticInjectionPoints(SyntheticBeanBuilderImpl<?> syntheticBeanBuilder) {
+        List<SyntheticBeanBuilderImpl.SyntheticInjectionPoint> injectionPoints = syntheticBeanBuilder.getInjectionPoints();
+        if (injectionPoints.isEmpty()) {
+            return;
+        }
+        List<OdiSyntheticInjectionPoint> descriptors = new ArrayList<>(injectionPoints.size());
+        for (SyntheticBeanBuilderImpl.SyntheticInjectionPoint injectionPoint : injectionPoints) {
+            List<String> qualifierNames = new ArrayList<>();
+            for (Annotation qualifier : injectionPoint.qualifiers()) {
+                qualifierNames.add(qualifier.annotationType().getName());
+            }
+            injectionPoint.qualifierInfos().stream()
+                    .map(jakarta.enterprise.lang.model.AnnotationInfo::name)
+                    .forEach(qualifierNames::add);
+            descriptors.add(new OdiSyntheticInjectionPoint(injectionPoint.type().getName(), qualifierNames));
+        }
+        syntheticBeanBuilder.getParams().put(OdiSyntheticParameters.INJECTION_POINTS, descriptors);
+    }
+
+    private String selectSyntheticMethodInjectionType(VisitorContext visitorContext,
+                                                      ClassElement declaringType,
+                                                      String methodName,
+                                                      int injectionParameterIndex,
+                                                      int parameterCount) {
+        boolean hasCdi5Method = hasDeclaredSyntheticMethod(declaringType, methodName, injectionParameterIndex, parameterCount, SyntheticInjections.class.getName());
+        boolean hasDeprecatedMethod = hasDeclaredSyntheticMethod(declaringType, methodName, injectionParameterIndex, parameterCount, Instance.class.getName());
+        if (hasCdi5Method && hasDeprecatedMethod) {
+            visitorContext.fail("Synthetic bean " + methodName + " method must not implement both CDI 5 SyntheticInjections and deprecated Instance signatures", declaringType);
+            return null;
+        }
+        if (hasCdi5Method) {
+            return SyntheticInjections.class.getName();
+        }
+        if (hasDeprecatedMethod) {
+            return Instance.class.getName();
+        }
+        visitorContext.fail("Synthetic bean " + methodName + " method must implement either the CDI 5 SyntheticInjections signature or the deprecated Instance signature", declaringType);
+        return null;
+    }
+
+    private boolean hasDeclaredSyntheticMethod(ClassElement declaringType,
+                                               String methodName,
+                                               int injectionParameterIndex,
+                                               int parameterCount,
+                                               String injectionTypeName) {
+        return declaringType.getEnclosedElements(syntheticMethodQuery(methodName, injectionParameterIndex, parameterCount, injectionTypeName))
+                .stream()
+                .anyMatch(method -> method.getDeclaringType().getName().equals(declaringType.getName()));
+    }
+
+    private ElementQuery<MethodElement> syntheticMethodQuery(String methodName,
+                                                             int injectionParameterIndex,
+                                                             int parameterCount,
+                                                             String injectionTypeName) {
+        return ElementQuery.ALL_METHODS
+                .onlyInstance()
+                .named(name -> name.equals(methodName))
+                .filter(method -> method.getDeclaringType().getName().equals(method.getOwningType().getName()))
+                .filter(method -> isSyntheticMethodSignature(method, injectionParameterIndex, parameterCount, injectionTypeName));
+    }
+
+    private boolean isSyntheticMethodSignature(MethodElement method,
+                                               int injectionParameterIndex,
+                                               int parameterCount,
+                                               String injectionTypeName) {
+        ParameterElement[] parameters = method.getParameters();
+        return parameters.length == parameterCount
+                && parameters[injectionParameterIndex].getType().getName().equals(injectionTypeName)
+                && parameters[parameters.length - 1].getType().isAssignable(Parameters.class);
     }
 
     private void copySyntheticAnnotationMetadata(VisitorContext visitorContext, MutableAnnotationMetadata syntheticBeanMetadata, BeanElementBuilder builder) {

@@ -30,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Internal
 public final class OdiSyntheticParameters {
     public static final String PROPERTY = "org.eclipse.odi.synthetic.parameters";
+    public static final String INJECTION_POINTS = "org.eclipse.odi.synthetic.injection.points";
+    public static final String BEAN_TYPE = "org.eclipse.odi.synthetic.bean.type";
 
     private static final Map<String, Map<String, Object>> PARAMETERS = new ConcurrentHashMap<>();
 

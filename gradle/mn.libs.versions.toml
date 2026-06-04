@@ -7,6 +7,7 @@ slf4j = "2.0.17"
 [libraries]
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 micronaut-context = { module = "io.micronaut:micronaut-context", version.ref = "micronaut" }
+micronaut-core-reactive = { module = "io.micronaut:micronaut-core-reactive", version.ref = "micronaut" }
 micronaut-inject = { module = "io.micronaut:micronaut-inject", version.ref = "micronaut" }
 micronaut-inject-java = { module = "io.micronaut:micronaut-inject-java", version.ref = "micronaut" }
 micronaut-inject-java-test = { module = "io.micronaut:micronaut-inject-java-test", version.ref = "micronaut" }
