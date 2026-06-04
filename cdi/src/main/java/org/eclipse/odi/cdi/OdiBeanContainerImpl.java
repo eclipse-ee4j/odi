@@ -371,9 +371,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
             }
             Class<? extends Annotation> scope = odiBean.getScope();
             Object instance;
-            if (odiAnnotations.isDependent(scope)) {
-                instance = odiBean.create(creationalContext);
-            } else if (odiBean.isProxy()) {
+            if (odiBean.isProxy()) {
                 BeanRegistration<Object> beanRegistration = getBeanContext().getBeanRegistration(odiBean.getBeanDefinition());
                 instance = beanRegistration.getBean();
                 if (creationalContext instanceof OdiCreationalContext) {
@@ -381,6 +379,8 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     odiCreationalContext.push(instance);
                     odiCreationalContext.setCreatedBean(beanRegistration);
                 }
+            } else if (odiAnnotations.isDependent(scope)) {
+                instance = odiBean.create(creationalContext);
             } else {
                 if (odiAnnotations.isNormalScope(scope)) {
                     Optional<BeanDefinition<Object>> proxyBeanDefinition = findProxyBeanDefinitionForReference(
@@ -621,7 +621,12 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
     private static AnnotationValue<?> bindingValues(Annotation annotation) {
         AnnotationValue<?> annotationValue = AnnotationReflection.toAnnotationValue(annotation);
         String[] nonBindingMembers = annotationValue.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE);
-        Map<CharSequence, Object> values = new LinkedHashMap<>(annotationValue.getValues());
+        Map<CharSequence, Object> values = new LinkedHashMap<>();
+        Map<CharSequence, Object> defaultValues = annotationValue.getDefaultValues();
+        if (defaultValues != null) {
+            values.putAll(defaultValues);
+        }
+        values.putAll(annotationValue.getValues());
         values.remove(AnnotationUtil.NON_BINDING_ATTRIBUTE);
         for (String nonBindingMember : nonBindingMembers) {
             values.remove(nonBindingMember);
