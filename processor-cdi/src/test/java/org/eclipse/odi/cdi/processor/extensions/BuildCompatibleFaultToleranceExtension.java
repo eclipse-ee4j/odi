@@ -34,6 +34,7 @@ import org.eclipse.microprofile.faulttolerance.Timeout;
 //@SkipIfPortableExtensionPresent(FaultToleranceExtension.class)
 public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleExtension {
     public static final String FAULT_TOLERANCE_EXT_ENABLED = "Fault_Tolerance_Enabled";
+    static final String MUTATED_ARRAY_VALUE = "mutated-after-with-param";
 
     private static final Set<String> FAULT_TOLERANCE_ANNOTATIONS = new HashSet<>(Arrays.asList(
             Asynchronous.class.getName(),
@@ -124,6 +125,7 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
                 .priority(1)
                 .withParam("classes", classesArray)
                 .createWith(BuildCompatibleFaultToleranceOperationProvider.Creator.class);
+        Arrays.fill(classesArray, MUTATED_ARRAY_VALUE);
 
 //        syn.addObserver()
 //                .declaringClass(BuildCompatibleFaultToleranceOperationProvider.class)
@@ -139,6 +141,7 @@ public class BuildCompatibleFaultToleranceExtension implements BuildCompatibleEx
                 .priority(1)
                 .withParam("names", circuitBreakersArray)
                 .createWith(BuildCompatibleExistingCircuitBreakerNames.Creator.class);
+        Arrays.fill(circuitBreakersArray, MUTATED_ARRAY_VALUE);
     }
 
     @Validation

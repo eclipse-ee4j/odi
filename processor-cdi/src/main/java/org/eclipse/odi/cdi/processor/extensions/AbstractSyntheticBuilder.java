@@ -99,7 +99,7 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, boolean[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
@@ -109,7 +109,7 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, int[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
@@ -119,7 +119,7 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, long[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
@@ -129,7 +129,7 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, double[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
@@ -139,7 +139,7 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, String[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
@@ -149,7 +149,7 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, Enum<?>[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
@@ -164,12 +164,12 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, Class<?>[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
     protected Object withParam(String key, ClassInfo[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
@@ -186,12 +186,12 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, AnnotationInfo[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
     protected Object withParam(String key, Annotation[] value) {
-        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(value).build());
+        addAnnotation(AnnotationBuilder.of(Property.class).member("name", key).value(copyArray(value)).build());
         return this;
     }
 
@@ -201,8 +201,28 @@ abstract class AbstractSyntheticBuilder extends AnnotationTargetImpl implements 
     }
 
     protected Object withParam(String key, InvokerInfo[] value) {
-        params.put(key, value);
+        params.put(key, copyArray(value));
         return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T copyArray(T value) {
+        if (value instanceof boolean[]) {
+            return (T) ((boolean[]) value).clone();
+        }
+        if (value instanceof int[]) {
+            return (T) ((int[]) value).clone();
+        }
+        if (value instanceof long[]) {
+            return (T) ((long[]) value).clone();
+        }
+        if (value instanceof double[]) {
+            return (T) ((double[]) value).clone();
+        }
+        if (value instanceof Object[]) {
+            return (T) ((Object[]) value).clone();
+        }
+        return value;
     }
 
     private static AnnotationMetadata cloneMetadata(AnnotationMetadata annotationMetadata) {
