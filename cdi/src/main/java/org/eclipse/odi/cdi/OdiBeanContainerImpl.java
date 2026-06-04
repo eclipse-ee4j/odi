@@ -133,11 +133,11 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                             arguments
                     )) {
                         if (argument.getType() == Instance.class) {
-                            Instance<?> instance = createInstance(dependentContext).select(argument.getFirstTypeVariable()
+                            Instance<?> instance = createInstance(dependentContext, false).select(argument.getFirstTypeVariable()
                                     .orElseThrow(() -> new IllegalArgumentException("Expected the type of Instance!")));
                             values[i] = instance;
                         } else {
-                            Instance<?> instance = createInstance(dependentContext).select(argument);
+                            Instance<?> instance = createInstance(dependentContext, false).select(argument);
                             values[i] = instance.get();
                         }
                     }
@@ -708,7 +708,18 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public OdiInstance<Object> createInstance(Context context) {
-        return container.select(context);
+        return createInstance(context, true);
+    }
+
+    private OdiInstance<Object> createInstance(Context context, boolean allowDynamicInjectionPoint) {
+        return new OdiInstanceImpl<>(
+                this,
+                context,
+                Argument.OBJECT_ARGUMENT,
+                null,
+                (Qualifier<Object>) null,
+                allowDynamicInjectionPoint
+        );
     }
 
     @Override

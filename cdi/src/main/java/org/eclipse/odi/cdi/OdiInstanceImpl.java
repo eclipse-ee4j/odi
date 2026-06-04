@@ -61,6 +61,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     private final InjectionPoint injectionPoint;
     @Nullable
     private final Qualifier<T> qualifier;
+    private final boolean allowDynamicInjectionPoint;
     @Nullable
     private OdiBean<T> bean;
 
@@ -72,7 +73,17 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     Argument<T> beanType,
                     @Nullable InjectionPoint injectionPoint,
                     @Nullable Qualifier<T> qualifier) {
-        this(beanContainer, context, beanType, injectionPoint, qualifier, new HashMap<>());
+        this(beanContainer, context, beanType, injectionPoint, qualifier, true);
+    }
+
+    OdiInstanceImpl(OdiBeanContainer beanContainer,
+                    @Nullable
+                    Context context,
+                    Argument<T> beanType,
+                    @Nullable InjectionPoint injectionPoint,
+                    @Nullable Qualifier<T> qualifier,
+                    boolean allowDynamicInjectionPoint) {
+        this(beanContainer, context, beanType, injectionPoint, qualifier, allowDynamicInjectionPoint, new HashMap<>());
     }
 
     private OdiInstanceImpl(OdiBeanContainer beanContainer,
@@ -81,12 +92,14 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                             Argument<T> beanType,
                             @Nullable InjectionPoint injectionPoint,
                             @Nullable Qualifier<T> qualifier,
+                            boolean allowDynamicInjectionPoint,
                             Map<Object, CreationalContext<?>> created) {
         this.beanContainer = beanContainer;
         this.context = context == null ? NoOpDependentContext.INSTANCE : context;
         this.beanType = beanType;
         this.qualifier = qualifier;
         this.injectionPoint = injectionPoint;
+        this.allowDynamicInjectionPoint = allowDynamicInjectionPoint;
         this.created = created;
     }
 
@@ -118,6 +131,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     argument,
                     selectInjectionPoint(argument, qualifierAnnotations),
                     withQualifier(qualifier),
+                    allowDynamicInjectionPoint,
                     created
             );
         }
@@ -131,6 +145,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                 beanType,
                 selectInjectionPoint(beanType, qualifiers),
                 withAnnotations(qualifiers),
+                allowDynamicInjectionPoint,
                 created
         );
     }
@@ -318,7 +333,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Nullable
     private InjectionPoint selectInjectionPoint(Argument<?> selectedBeanType, @Nullable Annotation[] qualifierAnnotations) {
         if (!(injectionPoint instanceof OdiInjectionPoint)) {
-            return injectionPoint == null
+            return injectionPoint == null && allowDynamicInjectionPoint
                     ? new DynamicInjectionPoint(selectedBeanType.asType(), selectedQualifiers(qualifierAnnotations))
                     : injectionPoint;
         }
