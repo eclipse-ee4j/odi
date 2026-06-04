@@ -23,7 +23,6 @@ import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.DefaultBeanResolutionContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationMetadata;
-import io.micronaut.core.annotation.AnnotationMetadataProvider;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Order;
@@ -55,7 +54,6 @@ import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.enterprise.inject.spi.Prioritized;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import org.eclipse.odi.cdi.annotation.ObservesMethod;
 import org.eclipse.odi.cdi.annotation.reflect.AnnotationReflection;
 import org.eclipse.odi.cdi.context.DependentContext;
 import org.eclipse.odi.cdi.context.SingletonContext;
@@ -83,8 +81,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 final class OdiBeanContainerImpl implements OdiBeanContainer {
-    private static final String JAKARTA_INTERCEPTOR_BINDING = "jakarta.interceptor.InterceptorBinding";
-    private static final String MICRONAUT_INTERCEPTOR_BINDING = "io.micronaut.aop.InterceptorBinding";
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     private final ApplicationContext applicationContext;
     private final OdiSeContainer container;
@@ -92,6 +89,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
     private final OdiAnnotations odiAnnotations;
     private OdiObserverMethodRegistry observerMethodRegistry;
     private Event<Object> objectEvent;
+    private Map<String, String[]> interceptorNonBindingMembers;
 
     OdiBeanContainerImpl(OdiSeContainer container, OdiAnnotations odiAnnotations, ApplicationContext applicationContext) {
         this.container = container;
@@ -178,35 +176,8 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                             executableMethod.getMethodName(),
                             executableMethod.getArgumentTypes()
                     );
-                    if (shouldInvokeObserverOnProxyTarget(beanDefinition, proxyDefinition, executableMethod)
-                            && proxyBean instanceof InterceptedProxy<?> interceptedProxy) {
-                        return new MethodInvocation<>((B) interceptedProxy.interceptedTarget(), executableMethod);
-                    }
                     return new MethodInvocation<>(proxyBean, proxyMethod.orElse(executableMethod));
                 });
-    }
-
-    private boolean shouldInvokeObserverOnProxyTarget(BeanDefinition<?> beanDefinition,
-                                                      BeanDefinition<?> proxyDefinition,
-                                                      ExecutableMethod<?, ?> executableMethod) {
-        return executableMethod.hasAnnotation(ObservesMethod.class)
-                && !hasCdiInterceptorBinding(beanDefinition)
-                && !hasCdiInterceptorBinding(proxyDefinition)
-                && !hasCdiInterceptorBinding(executableMethod);
-    }
-
-    private boolean hasCdiInterceptorBinding(AnnotationMetadataProvider metadataProvider) {
-        AnnotationMetadata annotationMetadata = metadataProvider.getAnnotationMetadata();
-        return hasCdiInterceptorBinding(annotationMetadata, JAKARTA_INTERCEPTOR_BINDING)
-                || hasCdiInterceptorBinding(annotationMetadata, MICRONAUT_INTERCEPTOR_BINDING);
-    }
-
-    private boolean hasCdiInterceptorBinding(AnnotationMetadata annotationMetadata, String stereotype) {
-        return annotationMetadata
-                .getAnnotationNamesByStereotype(stereotype)
-                .stream()
-                .anyMatch(annotationName -> !JAKARTA_INTERCEPTOR_BINDING.equals(annotationName)
-                        && !MICRONAUT_INTERCEPTOR_BINDING.equals(annotationName));
     }
 
     private record MethodInvocation<B, R>(B bean, ExecutableMethod<B, R> executableMethod) {
@@ -585,7 +556,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         }
     }
 
-    private static boolean interceptorBindingsMatch(Interceptor<?> interceptor, Annotation... requiredBindings) {
+    private boolean interceptorBindingsMatch(Interceptor<?> interceptor, Annotation... requiredBindings) {
         Set<Annotation> interceptorBindings = interceptor.getInterceptorBindings();
         if (interceptorBindings.isEmpty()) {
             return false;
@@ -598,7 +569,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         return true;
     }
 
-    private static boolean containsInterceptorBinding(Annotation[] requiredBindings, Annotation interceptorBinding) {
+    private boolean containsInterceptorBinding(Annotation[] requiredBindings, Annotation interceptorBinding) {
         Class<? extends Annotation> interceptorBindingType = AnnotationUtils.findAnnotationClass(interceptorBinding);
         for (Annotation requiredBinding : requiredBindings) {
             if (AnnotationUtils.findAnnotationClass(requiredBinding).equals(interceptorBindingType)
@@ -609,7 +580,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         return false;
     }
 
-    private static boolean interceptorBindingValuesMatch(Annotation requiredBinding, Annotation interceptorBinding) {
+    private boolean interceptorBindingValuesMatch(Annotation requiredBinding, Annotation interceptorBinding) {
         if (requiredBinding.equals(interceptorBinding) || interceptorBinding.equals(requiredBinding)) {
             return true;
         }
@@ -618,9 +589,10 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         return requiredBindingValues.equals(interceptorBindingValues);
     }
 
-    private static AnnotationValue<?> bindingValues(Annotation annotation) {
+    private AnnotationValue<?> bindingValues(Annotation annotation) {
         AnnotationValue<?> annotationValue = AnnotationReflection.toAnnotationValue(annotation);
-        String[] nonBindingMembers = annotationValue.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+        Set<String> nonBindingMembers = new LinkedHashSet<>(List.of(annotationValue.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)));
+        Collections.addAll(nonBindingMembers, interceptorNonBindingMembers(annotationValue.getAnnotationName()));
         Map<CharSequence, Object> values = new LinkedHashMap<>();
         Map<CharSequence, Object> defaultValues = annotationValue.getDefaultValues();
         if (defaultValues != null) {
@@ -634,6 +606,26 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         return AnnotationValue.builder(annotationValue.getAnnotationName())
                 .members(values)
                 .build();
+    }
+
+    private String[] interceptorNonBindingMembers(String annotationName) {
+        Map<String, String[]> members = interceptorNonBindingMembers;
+        if (members == null) {
+            members = new LinkedHashMap<>();
+            for (BeanDefinition<Interceptor> interceptorDefinition : applicationContext.getBeanDefinitions(Interceptor.class)) {
+                for (String bindingName : interceptorDefinition.getAnnotationMetadata().getAnnotationNamesByStereotype(jakarta.interceptor.InterceptorBinding.class)) {
+                    AnnotationValue<Annotation> binding = interceptorDefinition.getAnnotation(bindingName);
+                    if (binding != null) {
+                        String[] nonBinding = binding.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+                        if (nonBinding.length > 0) {
+                            members.putIfAbsent(bindingName, nonBinding);
+                        }
+                    }
+                }
+            }
+            interceptorNonBindingMembers = members;
+        }
+        return members.getOrDefault(annotationName, EMPTY_STRING_ARRAY);
     }
 
     @Override

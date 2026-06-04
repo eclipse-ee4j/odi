@@ -211,12 +211,6 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
     }
 
     private BeanDefinition<T> getCreationDefinition() {
-        if (definition instanceof ProxyBeanDefinition) {
-            return beanContext.getProxyTargetBeanDefinition(
-                    ((ProxyBeanDefinition<T>) definition).getTargetType(),
-                    definition.getDeclaredQualifier()
-            );
-        }
         return definition;
     }
 

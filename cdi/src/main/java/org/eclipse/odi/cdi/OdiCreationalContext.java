@@ -19,12 +19,18 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.inject.BeanDefinition;
+import io.micronaut.inject.ExecutableMethod;
+import io.micronaut.inject.proxy.InterceptedMethodProvider;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 import org.eclipse.odi.cdi.context.DependentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Implementation of {@link CreationalContext}.
@@ -32,6 +38,7 @@ import java.util.List;
  */
 @Internal
 public final class OdiCreationalContext<T> implements CreationalContext<T> {
+    private static final Logger LOG = LoggerFactory.getLogger(OdiCreationalContext.class);
 
     private final BeanContext beanContext;
     private final Contextual<T> contextual;
@@ -55,6 +62,7 @@ public final class OdiCreationalContext<T> implements CreationalContext<T> {
             if (contextual instanceof OdiBean) {
                 if (createdBean instanceof BeanRegistration) {
                     BeanRegistration<T> beanRegistration = (BeanRegistration<T>) createdBean;
+                    closeAutoCloseBean(beanRegistration);
                     beanContext.destroyBean(beanRegistration);
                 } else if (createdBean != null) {
                     createdBean.close();
@@ -71,6 +79,48 @@ public final class OdiCreationalContext<T> implements CreationalContext<T> {
             if (dependentContexts != null) {
                 dependentContexts.forEach(DependentContext::destroy);
                 dependentContexts.clear();
+            }
+        }
+    }
+
+    private void closeAutoCloseBean(BeanRegistration<T> beanRegistration) {
+        if (!(contextual instanceof OdiBean<?> odiBean) || !odiBean.isAutoClose()) {
+            return;
+        }
+        T bean = beanRegistration.getBean();
+        findAutoCloseMethod(beanRegistration.getBeanDefinition(), bean)
+                .ifPresent(closeMethod -> invokeClose(closeMethod, bean));
+    }
+
+    private Optional<ExecutableMethod<T, ?>> findAutoCloseMethod(BeanDefinition<T> beanDefinition, T bean) {
+        if (bean instanceof InterceptedMethodProvider<?> interceptedMethodProvider) {
+            for (ExecutableMethod<?, ?> method : interceptedMethodProvider.interceptedMethods()) {
+                if (method.getMethodName().equals("close") && method.getArguments().length == 0) {
+                    return Optional.of((ExecutableMethod<T, ?>) method);
+                }
+            }
+        }
+        BeanDefinition<T> closeDefinition = findAutoCloseDefinition(beanDefinition, bean);
+        return closeDefinition.findMethod("close")
+                .map(method -> (ExecutableMethod<T, ?>) method);
+    }
+
+    private BeanDefinition<T> findAutoCloseDefinition(BeanDefinition<T> beanDefinition, T bean) {
+        if (beanDefinition.isProxy()) {
+            return beanDefinition;
+        }
+        Class<T> beanClass = (Class<T>) bean.getClass();
+        return (BeanDefinition<T>) beanContext.findBeanDefinition(beanClass, beanDefinition.getDeclaredQualifier())
+                .or(() -> beanContext.findBeanDefinition(beanClass, null))
+                .orElse(beanDefinition);
+    }
+
+    private void invokeClose(ExecutableMethod<T, ?> closeMethod, T bean) {
+        try {
+            closeMethod.invoke(bean);
+        } catch (Exception e) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Exception thrown by @AutoClose close() method", e);
             }
         }
     }

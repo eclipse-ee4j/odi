@@ -16,6 +16,7 @@
 package org.eclipse.odi.cdi.processor.visitors;
 
 import io.micronaut.context.annotation.Bean;
+import io.micronaut.aop.Around;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.annotation.Secondary;
@@ -31,7 +32,6 @@ import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.Priority;
-import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.AutoClose;
 import jakarta.enterprise.context.Eager;
@@ -68,7 +68,8 @@ public class Cdi5AnnotationVisitor implements TypeElementVisitor<Object, Object>
                     .stream()
                     .filter(method -> method.getParameters().length == 0)
                     .findFirst()
-                    .ifPresent(method -> method.annotate(PreDestroy.class));
+                    .ifPresent(method -> method.annotate(Around.class, builder -> builder
+                            .member("proxyTarget", false)));
         }
     }
 

@@ -28,7 +28,7 @@ import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserver;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Implementation of {@link ExecutableMethodProcessor} that collects {@link ObservesMethod} and register them.
@@ -73,32 +73,18 @@ final class ObservesMethodProcessor implements ExecutableMethodProcessor<Observe
     }
 
     public BeanDefinition<?> findTargetBeanDefinitions(BeanDefinition<?> originalBeanDefinition) {
-        // We need to get all bean definitions and filter them for cases when bean inherit each other
         if (SyntheticObserver.class.isAssignableFrom(originalBeanDefinition.getBeanType())) {
             return originalBeanDefinition;
         }
-        if (originalBeanDefinition instanceof ProxyBeanDefinition<?> proxyBeanDefinition) {
-            return beanContainer.getBeanContext().getProxyTargetBeanDefinition(
-                    (Class) proxyBeanDefinition.getTargetType(),
-                    originalBeanDefinition.getDeclaredQualifier()
-            );
+        if (originalBeanDefinition instanceof ProxyBeanDefinition<?>) {
+            return originalBeanDefinition;
         }
         if (originalBeanDefinition instanceof AdvisedBeanType) {
             return originalBeanDefinition;
         }
-        Collection<BeanDefinition<?>> beanDefinitions =
-                beanContainer.getBeanContext().getBeanDefinitions((Argument) originalBeanDefinition.asArgument());
-        for (BeanDefinition<?> beanDefinition : beanDefinitions) {
-            if (beanDefinition instanceof AdvisedBeanType) {
-                if (((AdvisedBeanType<?>) beanDefinition).getInterceptedType().equals(originalBeanDefinition.getBeanType())) {
-                    return beanDefinition;
-                }
-            } else if (beanDefinition.getBeanType().equals(originalBeanDefinition.getBeanType())) {
-                return beanDefinition;
-            }
-        }
-        // Instance is replaced by something else
-        return null;
+        Optional<BeanDefinition<Object>> proxyBeanDefinition = beanContainer.getBeanContext()
+                .findProxyBeanDefinition((Argument) originalBeanDefinition.asArgument(), originalBeanDefinition.getDeclaredQualifier());
+        return proxyBeanDefinition.isPresent() ? proxyBeanDefinition.get() : originalBeanDefinition;
     }
 
 }

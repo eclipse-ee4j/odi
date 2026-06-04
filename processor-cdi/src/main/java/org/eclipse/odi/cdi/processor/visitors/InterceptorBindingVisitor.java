@@ -29,6 +29,7 @@ import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.context.AutoClose;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.util.Nonbinding;
 import jakarta.interceptor.AroundInvoke;
@@ -105,25 +106,27 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Object, Int
                 .filter(method -> hasClassInterceptorBinding || hasSelfInterceptorMethods || hasInterceptorBinding(method))
                 .collect(Collectors.toList());
         boolean hasBoundBusinessMethod = businessMethods.stream().anyMatch(this::hasInterceptorBinding);
+        boolean hasConstructorInterceptorBinding = element.getPrimaryConstructor().map(this::hasInterceptorBinding).orElse(false);
         boolean hasClassOrMethodInterceptorBinding = !interceptedBusinessMethods.isEmpty()
                 || hasSelfInterceptorMethods;
+        boolean hasConstructorInterception = hasClassInterceptorBinding || hasConstructorInterceptorBinding;
 
         if (hasClassInterceptorBinding
                 || hasBoundBusinessMethod
-                || element.getPrimaryConstructor().map(this::hasInterceptorBinding).orElse(false)
+                || hasConstructorInterceptorBinding
                 || !selfInterceptorMethods.isEmpty()) {
             element.getPrimaryConstructor().ifPresent(this::annotateConstructorTarget);
         }
 
-        if (hasClassOrMethodInterceptorBinding) {
+        if (hasClassOrMethodInterceptorBinding || hasConstructorInterception) {
             if (CdiUtil.validateInterceptedBeanProxyability(context, element, interceptedBusinessMethods)) {
                 return;
             }
             if (CdiUtil.validateInterceptedBeanConstructor(context, element)) {
                 return;
             }
-            if (hasClassInterceptorBinding || hasSelfInterceptorMethods) {
-                annotateAround(element);
+            if (hasClassInterceptorBinding || hasSelfInterceptorMethods || hasConstructorInterception) {
+                annotateAround(element, !element.hasAnnotation(AutoClose.class));
             } else {
                 interceptedBusinessMethods.forEach(InterceptorBindingVisitor::annotateAround);
             }
@@ -154,9 +157,13 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Object, Int
     }
 
     private static void annotateAround(Element element) {
+        annotateAround(element, true);
+    }
+
+    private static void annotateAround(Element element, boolean proxyTarget) {
         element.annotate(Around.class, builder -> builder
-                .member("proxyTarget", true)
-                .member("cacheableLazyTarget", true));
+                .member("proxyTarget", proxyTarget)
+                .member("cacheableLazyTarget", proxyTarget));
     }
 
     static void removeInheritedMethodInterceptorBindings(MethodElement methodElement) {
@@ -182,6 +189,8 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Object, Int
                     ? sourceMetadata.getAnnotation(interceptorBinding)
                     : null;
             if (annotationValue != null) {
+                annotationValue = withNonBindingMembers(annotationValue, context, interceptorBinding);
+                target.annotate(annotationValue);
                 collectedBindings.put(interceptorBinding, annotationValue);
             }
         }
@@ -207,6 +216,7 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Object, Int
                             && declaredStereotypeAnnotations.contains(interceptorBinding)) {
                         AnnotationValue<Annotation> annotationValue = stereotypeElement.getAnnotation(interceptorBinding);
                         if (annotationValue != null && !declaredAnnotations.contains(interceptorBinding)) {
+                            annotationValue = withNonBindingMembers(annotationValue, context, interceptorBinding);
                             collectInterceptorBinding(target, context, collectedBindings, interceptorBinding, annotationValue, false);
                         }
                     }
@@ -234,6 +244,7 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Object, Int
                             && !declaredAnnotations.contains(nestedBinding)) {
                         AnnotationValue<Annotation> nestedAnnotation = bindingElement.getAnnotation(nestedBinding);
                         if (nestedAnnotation != null) {
+                            nestedAnnotation = withNonBindingMembers(nestedAnnotation, context, nestedBinding);
                             if (!collectInterceptorBinding(target, context, collectedBindings, nestedBinding, nestedAnnotation, true)) {
                                 return;
                             }
@@ -278,6 +289,19 @@ public class InterceptorBindingVisitor implements TypeElementVisitor<Object, Int
     private static boolean isNestedInterceptorBinding(String interceptorBinding, String nestedBinding) {
         return !nestedBinding.equals(interceptorBinding)
                 && !nestedBinding.equals(InterceptorBinding.class.getName());
+    }
+
+    private static AnnotationValue<Annotation> withNonBindingMembers(AnnotationValue<Annotation> annotationValue,
+                                                                     VisitorContext context,
+                                                                     String annotationName) {
+        Set<String> nonBindingMembers = nonBindingMembers(context, annotationName);
+        if (nonBindingMembers.isEmpty()) {
+            return annotationValue;
+        }
+        nonBindingMembers.add(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+        return AnnotationValue.builder(annotationValue)
+                .member(AnnotationUtil.NON_BINDING_ATTRIBUTE, nonBindingMembers.toArray(String[]::new))
+                .build();
     }
 
     private static boolean interceptorBindingValuesMatch(AnnotationValue<?> left,
