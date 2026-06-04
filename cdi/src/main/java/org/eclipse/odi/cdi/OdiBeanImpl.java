@@ -15,6 +15,7 @@
  */
 package org.eclipse.odi.cdi;
 
+import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.exceptions.BeanInstantiationException;
@@ -161,6 +162,12 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
         BeanDefinition<T> creationDefinition = getCreationDefinition();
         try {
             BeanRegistration<T> beanRegistration = beanContext.getBeanRegistration(creationDefinition);
+            if (beanRegistration.getBean() == null && isIllegalNullProduct(creationDefinition)) {
+                throw new IllegalProductException("Producer bean returned null for non-dependent bean: " + creationDefinition.getBeanType().getName());
+            }
+            if (isIllegalNullProduct(creationDefinition)) {
+                forceProxyTargetCreation(beanRegistration.getBean(), creationDefinition);
+            }
             if (creationalContext != null) {
                 creationalContext.push(beanRegistration.bean());
                 if (creationalContext instanceof OdiCreationalContext) {
@@ -210,12 +217,28 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
         }
     }
 
+    private void forceProxyTargetCreation(T bean, BeanDefinition<T> definition) {
+        if (bean instanceof InterceptedProxy<?> interceptedProxy && interceptedProxy.interceptedTarget() == null) {
+            throw new IllegalProductException("Producer bean returned null for non-dependent bean: " + definition.getBeanType().getName());
+        }
+    }
+
+    static boolean isIllegalNullProduct(BeanDefinition<?> definition) {
+        return isProducerDefinition(definition)
+                && MetaAnnotationSupport.resolveDeclaredScope(definition.getAnnotationMetadata()) != Dependent.class;
+    }
+
+    private static boolean isProducerDefinition(BeanDefinition<?> definition) {
+        return definition.hasAnnotation(Produces.class)
+                || definition.hasDeclaredAnnotation(Produces.class);
+    }
+
     private BeanDefinition<T> getCreationDefinition() {
         return definition;
     }
 
     static boolean isNullProducerResult(BeanDefinition<?> definition, Throwable exception) {
-        if (!definition.hasAnnotation(Produces.class)) {
+        if (!isProducerDefinition(definition)) {
             return false;
         }
         Throwable current = exception;

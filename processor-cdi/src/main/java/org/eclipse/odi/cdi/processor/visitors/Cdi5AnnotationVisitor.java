@@ -15,8 +15,8 @@
  */
 package org.eclipse.odi.cdi.processor.visitors;
 
-import io.micronaut.context.annotation.Bean;
 import io.micronaut.aop.Around;
+import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.annotation.Secondary;
@@ -32,6 +32,7 @@ import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.Priority;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.AutoClose;
 import jakarta.enterprise.context.Eager;
@@ -39,6 +40,8 @@ import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.Reserve;
 import jakarta.enterprise.inject.Stereotype;
+import jakarta.interceptor.AroundInvoke;
+import jakarta.interceptor.InterceptorBinding;
 import org.eclipse.odi.cdi.processor.CdiUtil;
 
 import java.util.Set;
@@ -47,6 +50,7 @@ import java.util.Set;
  * Processes CDI 5 bean annotations that need Micronaut metadata.
  */
 public class Cdi5AnnotationVisitor implements TypeElementVisitor<Object, Object> {
+    private static final String MICRONAUT_INTERCEPTOR_BINDING = "io.micronaut.aop.InterceptorBinding";
     private static final AnnotationClassValue<Object> UNSELECTED_RESERVE_CONDITION =
             new AnnotationClassValue<>("org.eclipse.odi.cdi.condition.UnselectedReserveCondition");
 
@@ -68,8 +72,13 @@ public class Cdi5AnnotationVisitor implements TypeElementVisitor<Object, Object>
                     .stream()
                     .filter(method -> method.getParameters().length == 0)
                     .findFirst()
-                    .ifPresent(method -> method.annotate(Around.class, builder -> builder
-                            .member("proxyTarget", false)));
+                    .ifPresent(method -> {
+                        if (hasInterception(element, method)) {
+                            method.annotate(Around.class, builder -> builder.member("proxyTarget", false));
+                        } else {
+                            method.annotate(PreDestroy.class);
+                        }
+                    });
         }
     }
 
@@ -179,6 +188,22 @@ public class Cdi5AnnotationVisitor implements TypeElementVisitor<Object, Object>
 
     private static boolean hasAutoClose(Element element) {
         return element.hasAnnotation(AutoClose.class) || element.hasStereotype(AutoClose.class);
+    }
+
+    private static boolean hasInterception(ClassElement element, MethodElement closeMethod) {
+        return hasInterceptorBinding(element)
+                || hasInterceptorBinding(closeMethod)
+                || !element.getEnclosedElements(ElementQuery.ALL_METHODS
+                        .onlyInstance()
+                        .onlyConcrete()
+                        .onlyDeclared()
+                        .annotated(annotationMetadata -> annotationMetadata.hasAnnotation(AroundInvoke.class)))
+                .isEmpty();
+    }
+
+    private static boolean hasInterceptorBinding(Element element) {
+        return !element.getAnnotationNamesByStereotype(InterceptorBinding.class).isEmpty()
+                || !element.getAnnotationNamesByStereotype(MICRONAUT_INTERCEPTOR_BINDING).isEmpty();
     }
 
     private static boolean isApplicationScoped(Element element) {

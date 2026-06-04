@@ -117,6 +117,9 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                     try {
                         final CreatedBean<T> createdBean = creationContext.create();
                         ((OdiCreationalContext<T>) creationalContext).setCreatedBean(createdBean);
+                        if (createdBean.bean() == null && OdiBeanImpl.isIllegalNullProduct(creationContext.definition())) {
+                            throw new IllegalProductException("Producer bean returned null for non-dependent bean: " + creationContext.definition().getBeanType().getName());
+                        }
                         return createdBean.bean();
                     } catch (BeanCreationException e) {
                         if (OdiBeanImpl.isNullProducerResult(creationContext.definition(), e)) {
