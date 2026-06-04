@@ -61,6 +61,7 @@ import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserverBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.inject.build.compatible.spi.Validation;
 import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.enterprise.util.TypeLiteral;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
@@ -350,7 +351,6 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         for (BuildCompatibleExtensionEntry entry : buildTimeExtensions) {
             final BuildCompatibleExtension extension = entry.extension;
             final List<Method> processingMethods = entry.registrationMethods;
-            methods:
             for (Method processingMethod : processingMethods) {
                 if (processingMethod.getParameterTypes().length == 0) {
                     visitorContext.fail("Registration method '"
@@ -358,13 +358,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                                                 + "' of extension: " + extension.getClass().getName() + " specifies no parameters", beanElement);
                     continue;
                 }
-                final Class<?>[] types = processingMethod.getAnnotation(Registration.class).types();
-                for (Class<?> et : types) {
-                    if (et != null && beanTypes.stream().anyMatch(ce -> ce.isAssignable(et))) {
-                        runRegistration(extension, processingMethod, beanElement, visitorContext);
-                        continue methods;
-                    }
-                }
+                runRegistration(extension, processingMethod, beanElement, visitorContext);
             }
         }
     }
@@ -534,14 +528,20 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 throw new BuildTimeExtensionException("At least 1 parameter of type BeanInfo, ObserverInfo or InterceptorInfo is required");
             } else {
                 final Class<?> type = extensionParameter.type;
+                List<RegistrationType> registrationTypes = registrationTypes(registrationMethod, visitorContext);
+                if (registrationTypes == null) {
+                    return;
+                }
                 final BeanInfoImpl beanInfo = new BeanInfoImpl(
                         beanElement,
                         visitorContext
                 );
-                if (BeanInfo.class == type) {
+                if (BeanInfo.class == type && matchesBeanRegistration(beanElement, registrationTypes)) {
                     parameters[extensionParameter.index] = beanInfo;
                     invokeExtensionMethod(extension, registrationMethod, parameters);
-                } else if (InterceptorInfo.class == type && beanElement.hasDeclaredAnnotation(Interceptor.class)) {
+                } else if (InterceptorInfo.class == type
+                        && beanElement.hasDeclaredAnnotation(Interceptor.class)
+                        && matchesBeanRegistration(beanElement, registrationTypes)) {
                     parameters[extensionParameter.index] = new InterceptorInfoImpl(
                             beanElement,
                             visitorContext
@@ -550,6 +550,9 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 } else if (ObserverInfo.class == type) {
                     List<ObserverInfo> observerInfos = beanInfo.observers();
                     for (ObserverInfo observerInfo : observerInfos) {
+                        if (!matchesObserverRegistration(observerInfo, registrationTypes)) {
+                            continue;
+                        }
                         parameters[extensionParameter.index] = observerInfo;
                         invokeExtensionMethod(extension, registrationMethod, parameters);
                     }
@@ -567,6 +570,132 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                     "Error running build time registration in method '"
             );
 
+        }
+    }
+
+    @Nullable
+    private List<RegistrationType> registrationTypes(Method registrationMethod, VisitorContext visitorContext) {
+        List<RegistrationType> registrationTypes = new ArrayList<>();
+        for (Class<?> type : registrationMethod.getAnnotation(Registration.class).types()) {
+            if (type == null) {
+                continue;
+            }
+            ClassElement typeElement = visitorContext.getClassElement(type).orElse(ClassElement.of(type));
+            if (typeElement.isAssignable(TypeLiteral.class)) {
+                Map<String, ClassElement> typeArguments = typeElement.getTypeArguments(TypeLiteral.class);
+                if (typeArguments.size() != 1 || typeElement.isRawType()) {
+                    visitorContext.fail("Registration type literal must declare exactly one type argument: " + type.getName(), null);
+                    return null;
+                }
+                ClassElement literalType = typeArguments.values().iterator().next();
+                if (containsInvalidRegistrationTypeArgument(literalType)) {
+                    visitorContext.fail("Registration type literal must not contain type variables or wildcards: " + type.getName(), null);
+                    return null;
+                }
+                registrationTypes.add(new RegistrationType(literalType));
+            } else {
+                registrationTypes.add(new RegistrationType(typeElement));
+            }
+        }
+        return registrationTypes;
+    }
+
+    private boolean containsInvalidRegistrationTypeArgument(ClassElement type) {
+        if (type.isTypeVariable()
+                || type.isGenericPlaceholder()
+                || type.isWildcard()
+                || type.hasUnresolvedTypes()) {
+            return true;
+        }
+        for (ClassElement typeArgument : type.getBoundGenericTypes()) {
+            if (containsInvalidRegistrationTypeArgument(typeArgument)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesBeanRegistration(BeanElement beanElement, List<RegistrationType> registrationTypes) {
+        Set<ClassElement> beanTypes = beanElement.getBeanTypes();
+        for (RegistrationType registrationType : registrationTypes) {
+            for (ClassElement beanType : beanTypes) {
+                if (matchesRegistrationType(beanType, registrationType)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesObserverRegistration(ObserverInfo observerInfo, List<RegistrationType> registrationTypes) {
+        ClassElement eventType = classElement(observerInfo.eventType());
+        if (eventType == null) {
+            return false;
+        }
+        for (RegistrationType registrationType : registrationTypes) {
+            if (matchesRegistrationType(eventType, registrationType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Nullable
+    private ClassElement classElement(Type type) {
+        if (type instanceof ClassTypeImpl classType) {
+            return classType.getClassElement();
+        }
+        if (type instanceof ParameterizedTypeImpl parameterizedType) {
+            return parameterizedType.getClassElement();
+        }
+        return null;
+    }
+
+    private boolean matchesRegistrationType(ClassElement candidateType, RegistrationType registrationType) {
+        if (!candidateType.isAssignable(registrationType.rawTypeName())) {
+            return false;
+        }
+        List<? extends ClassElement> requiredTypeArguments = registrationType.typeArguments();
+        if (requiredTypeArguments.isEmpty()) {
+            return true;
+        }
+        List<? extends ClassElement> candidateTypeArguments = candidateType.getTypeArguments(registrationType.rawTypeName())
+                .values()
+                .stream()
+                .toList();
+        if (candidateTypeArguments.isEmpty()) {
+            candidateTypeArguments = candidateType.getBoundGenericTypes();
+        }
+        return typeArgumentsEqual(candidateTypeArguments, requiredTypeArguments);
+    }
+
+    private boolean typeArgumentsEqual(List<? extends ClassElement> candidateTypeArguments,
+                                       List<? extends ClassElement> requiredTypeArguments) {
+        if (candidateTypeArguments.size() != requiredTypeArguments.size()) {
+            return false;
+        }
+        for (int i = 0; i < requiredTypeArguments.size(); i++) {
+            if (!typeArgumentEqual(candidateTypeArguments.get(i), requiredTypeArguments.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean typeArgumentEqual(ClassElement candidateTypeArgument, ClassElement requiredTypeArgument) {
+        if (!candidateTypeArgument.getName().equals(requiredTypeArgument.getName())) {
+            return false;
+        }
+        return typeArgumentsEqual(candidateTypeArgument.getBoundGenericTypes(), requiredTypeArgument.getBoundGenericTypes());
+    }
+
+    private record RegistrationType(ClassElement type) {
+        String rawTypeName() {
+            return type.getName();
+        }
+
+        List<? extends ClassElement> typeArguments() {
+            return type.getBoundGenericTypes();
         }
     }
 

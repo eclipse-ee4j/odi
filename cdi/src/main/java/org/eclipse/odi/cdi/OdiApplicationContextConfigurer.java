@@ -20,6 +20,7 @@ import io.micronaut.context.ApplicationContextConfigurer;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.BeanResolutionCustomizer;
+import io.micronaut.context.Qualifier;
 import io.micronaut.context.annotation.ContextConfigurer;
 import io.micronaut.core.annotation.Order;
 import io.micronaut.core.order.Ordered;
@@ -107,16 +108,29 @@ public final class OdiApplicationContextConfigurer implements ApplicationContext
 
                     @Override
                     public <T> Optional<BeanDefinition<T>> resolveNonUniqueBean(Argument<T> beanType,
-                                                                                io.micronaut.context.Qualifier<T> qualifier,
+                                                                                Qualifier<T> qualifier,
                                                                                 Collection<BeanDefinition<T>> candidates) {
-                        return resolveCdiBean(candidates);
+                        return resolveCdiBean(qualifier, candidates);
                     }
                 });
     }
 
-    private static <T> Optional<BeanDefinition<T>> resolveCdiBean(Collection<BeanDefinition<T>> beanDefinitions) {
+    private static <T> Optional<BeanDefinition<T>> resolveCdiBean(Qualifier<T> qualifier,
+                                                                  Collection<BeanDefinition<T>> beanDefinitions) {
         if (beanDefinitions.isEmpty() || beanDefinitions.size() == 1) {
             return Optional.empty();
+        }
+        if (isDefaultQualifier(qualifier)) {
+            List<BeanDefinition<T>> defaultBeans = beanDefinitions
+                    .stream()
+                    .filter(DefaultQualifier::hasDefaultQualifier)
+                    .collect(Collectors.toList());
+            if (!defaultBeans.isEmpty() && defaultBeans.size() < beanDefinitions.size()) {
+                if (defaultBeans.size() == 1) {
+                    return Optional.of(defaultBeans.iterator().next());
+                }
+                beanDefinitions = defaultBeans;
+            }
         }
         List<BeanDefinition<T>> alternatives = beanDefinitions
                 .stream()
@@ -140,6 +154,11 @@ public final class OdiApplicationContextConfigurer implements ApplicationContext
             return highestUniquePriority(beanDefinitions);
         }
         return Optional.empty();
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static <T> boolean isDefaultQualifier(Qualifier<T> qualifier) {
+        return qualifier == null || DefaultQualifier.instance().contains((Qualifier) qualifier);
     }
 
     private static <T> Optional<BeanDefinition<T>> highestUniquePriority(Collection<BeanDefinition<T>> beanDefinitions) {

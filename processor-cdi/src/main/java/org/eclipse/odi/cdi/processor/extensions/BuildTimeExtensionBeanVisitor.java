@@ -389,6 +389,7 @@ public final class BuildTimeExtensionBeanVisitor implements BeanElementVisitor<A
                 builder.annotate(av);
             }
         }
+        BuildTimeExtensionRegistry.getInstance().runDiscoveryEnhancements(builder);
         CdiUtil.visitBeanDefinition(visitorContext, builder);
     }
 }
