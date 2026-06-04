@@ -29,12 +29,15 @@ import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.CreationException;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.Prioritized;
 import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Member;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -315,13 +318,26 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Nullable
     private InjectionPoint selectInjectionPoint(Argument<?> selectedBeanType, @Nullable Annotation[] qualifierAnnotations) {
         if (!(injectionPoint instanceof OdiInjectionPoint)) {
-            return injectionPoint;
+            return injectionPoint == null
+                    ? new DynamicInjectionPoint(selectedBeanType.asType(), selectedQualifiers(qualifierAnnotations))
+                    : injectionPoint;
         }
         OdiInjectionPoint odiInjectionPoint = (OdiInjectionPoint) injectionPoint;
         Set<Annotation> selectedQualifiers = qualifierAnnotations == null
                 ? null
                 : mergeQualifiers(injectionPoint.getQualifiers(), qualifierAnnotations);
         return odiInjectionPoint.withArgument(selectedBeanType, selectedQualifiers);
+    }
+
+    private static Set<Annotation> selectedQualifiers(@Nullable Annotation[] qualifierAnnotations) {
+        if (qualifierAnnotations == null || qualifierAnnotations.length == 0) {
+            return Set.of(jakarta.enterprise.inject.Default.Literal.INSTANCE);
+        }
+        Set<Annotation> qualifiers = new LinkedHashSet<>();
+        for (Annotation qualifierAnnotation : qualifierAnnotations) {
+            qualifiers.add(qualifierAnnotation);
+        }
+        return qualifiers;
     }
 
     private static Set<Annotation> mergeQualifiers(Set<Annotation> existingQualifiers, Annotation[] selectedQualifiers) {
@@ -356,6 +372,44 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
             return Qualifiers.byQualifiers(qualifier, (Qualifier) newQualifier);
         }
         return (Qualifier<K>) qualifier;
+    }
+
+    private record DynamicInjectionPoint(Type type, Set<Annotation> qualifiers) implements InjectionPoint {
+
+        @Override
+        public Type getType() {
+            return type;
+        }
+
+        @Override
+        public Set<Annotation> getQualifiers() {
+            return qualifiers;
+        }
+
+        @Override
+        public Bean<?> getBean() {
+            return null;
+        }
+
+        @Override
+        public Member getMember() {
+            return null;
+        }
+
+        @Override
+        public Annotated getAnnotated() {
+            return null;
+        }
+
+        @Override
+        public boolean isDelegate() {
+            return false;
+        }
+
+        @Override
+        public boolean isTransient() {
+            return false;
+        }
     }
 
 }
