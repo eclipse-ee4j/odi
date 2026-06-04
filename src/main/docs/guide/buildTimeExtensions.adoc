@@ -10,7 +10,7 @@ dependencies {
 
     implementation("org.eclipse.odi:micronaut-odi-cdi:<version>")
     implementation("com.example:payment-cdi-extension:<version>")
-    implementation("jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0")
+    implementation("jakarta.cdi:jakarta.cdi-api:5.0.0.Beta1")
 }
 
 tasks.withType(JavaCompile).configureEach {

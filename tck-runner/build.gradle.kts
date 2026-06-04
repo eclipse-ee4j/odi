@@ -59,6 +59,12 @@ dependencies {
 
     cdiSignatureApi(libs.cdi.api)
     cdiSignatureTck(libs.cdi.tck.impl)
+    cdiSignatureTck(libs.cdi.tck.impl) {
+        artifact {
+            classifier = "sigtest-jdk17"
+            extension = "sigfile"
+        }
+    }
     cdiSignatureTool("jakarta.tck:sigtest-maven-plugin:2.6")
 }
 
@@ -122,13 +128,21 @@ fun Test.configureCdiLiteTck() {
 
 tasks.register<Test>("fullTckTest") {
     configureCdiLiteTck()
+    val suiteFile = layout.buildDirectory.file("generated-testng/fullTckTest.xml")
     useTestNG {
-        doFirst {
-            val testSuiteLocation = configurations.testCompileClasspath.get().filter {
-                it.name.contains("cdi-tck-core-impl") && it.name.contains("xml")
-            }.asPath
-            suites(File(testSuiteLocation))
+        suites(suiteFile.get().asFile)
+    }
+    doFirst {
+        val testSuite = configurations.testCompileClasspath.get().single {
+            it.name.contains("cdi-tck-core-impl") && it.name.contains("xml")
         }
+        val file = suiteFile.get().asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            testSuite.readText()
+                .replace("""                <listener class-name="org.testng.reporters.EmailableReporter"/>${System.lineSeparator()}""", "")
+                .replace("""        <listener class-name="org.testng.reporters.EmailableReporter"/>${System.lineSeparator()}""", "")
+        )
     }
 }
 
@@ -141,13 +155,97 @@ fun xmlEscape(value: String): String {
         .replace("'", "&apos;")
 }
 
+fun normalizeCdiBeta1SignatureFile(signatureFile: File, cdiVersion: String) {
+    if (cdiVersion != "5.0.0.Beta1") {
+        return
+    }
+    val asyncHandlerSignature = """
+CLSS public abstract interface jakarta.enterprise.invoke.AsyncHandler
+innr public abstract interface static ParameterType
+innr public abstract interface static ReturnType
+
+CLSS public abstract interface static jakarta.enterprise.invoke.AsyncHandler${'$'}ParameterType<%0 extends java.lang.Object>
+ outer jakarta.enterprise.invoke.AsyncHandler
+meth public abstract {jakarta.enterprise.invoke.AsyncHandler${'$'}ParameterType%0} transformArgument({jakarta.enterprise.invoke.AsyncHandler${'$'}ParameterType%0},java.lang.Runnable)
+
+CLSS public abstract interface static jakarta.enterprise.invoke.AsyncHandler${'$'}ReturnType<%0 extends java.lang.Object>
+ outer jakarta.enterprise.invoke.AsyncHandler
+meth public abstract {jakarta.enterprise.invoke.AsyncHandler${'$'}ReturnType%0} transform({jakarta.enterprise.invoke.AsyncHandler${'$'}ReturnType%0},java.lang.Runnable)
+""".trim()
+
+    var signature = signatureFile.readText()
+        .replace(
+            """
+CLSS public abstract interface jakarta.enterprise.inject.spi.el.ELAwareBeanManager
+intf jakarta.enterprise.inject.spi.BeanManager
+meth public abstract jakarta.el.ELResolver getELResolver()
+meth public abstract jakarta.el.ExpressionFactory wrapExpressionFactory(jakarta.el.ExpressionFactory)
+
+""".trimIndent(),
+            ""
+        )
+        .replace(
+            """
+CLSS public abstract interface jakarta.enterprise.invoke.AsyncHandler<%0 extends java.lang.Object>
+innr public abstract interface static !annotation ParameterType
+innr public abstract interface static !annotation ReturnType
+meth public abstract {jakarta.enterprise.invoke.AsyncHandler%0} transform({jakarta.enterprise.invoke.AsyncHandler%0},java.lang.Runnable)
+
+CLSS public abstract interface static !annotation jakarta.enterprise.invoke.AsyncHandler${'$'}ParameterType
+ outer jakarta.enterprise.invoke.AsyncHandler
+ anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
+ anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[TYPE])
+intf java.lang.annotation.Annotation
+
+CLSS public abstract interface static !annotation jakarta.enterprise.invoke.AsyncHandler${'$'}ReturnType
+ outer jakarta.enterprise.invoke.AsyncHandler
+ anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
+ anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[TYPE])
+intf java.lang.annotation.Annotation
+""".trimIndent(),
+            asyncHandlerSignature
+        )
+        .replace(
+            "meth public abstract boolean isAlternative()\nmeth public abstract boolean isClassBean()",
+            "meth public abstract boolean isAlternative()\nmeth public abstract boolean isAutoClose()\nmeth public abstract boolean isClassBean()"
+        )
+        .replace(
+            "meth public abstract boolean isAlternative()\nmeth public abstract boolean isEager()\nmeth public abstract boolean isNamed()",
+            "meth public abstract boolean isAlternative()\nmeth public abstract boolean isAutoClose()\nmeth public abstract boolean isEager()\nmeth public abstract boolean isNamed()"
+        )
+        .replace(
+            "meth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> alternative(boolean)",
+            """
+meth public abstract !varargs jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> withInjectionPoint(jakarta.enterprise.lang.model.types.Type,jakarta.enterprise.lang.model.AnnotationInfo[])
+meth public abstract !varargs jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> withInjectionPoint(jakarta.enterprise.lang.model.types.Type,java.lang.annotation.Annotation[])
+meth public abstract !varargs jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> withInjectionPoint(java.lang.Class<?>,jakarta.enterprise.lang.model.AnnotationInfo[])
+meth public abstract !varargs jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> withInjectionPoint(java.lang.Class<?>,java.lang.annotation.Annotation[])
+meth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> alternative(boolean)
+meth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> autoClose(boolean)
+""".trim()
+        )
+        .replace(
+            "meth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> type(java.lang.Class<?>)\nmeth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> withParam",
+            "meth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> type(java.lang.Class<?>)\nmeth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> withInjectionPoint(jakarta.enterprise.lang.model.types.Type)\nmeth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> withInjectionPoint(java.lang.Class<?>)\nmeth public abstract jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder<{jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder%0}> withParam"
+        )
+        .replace(
+            "meth public abstract jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator%0}> alternative(boolean)\nmeth public abstract jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator%0}> eager(boolean)",
+            "meth public abstract jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator%0}> alternative(boolean)\nmeth public abstract jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator%0}> autoClose(boolean)\nmeth public abstract jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanAttributesConfigurator%0}> eager(boolean)"
+        )
+        .replace(
+            "meth public abstract jakarta.enterprise.inject.spi.configurator.BeanConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanConfigurator%0}> alternative(boolean)\nmeth public abstract jakarta.enterprise.inject.spi.configurator.BeanConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanConfigurator%0}> beanClass(java.lang.Class<?>)",
+            "meth public abstract jakarta.enterprise.inject.spi.configurator.BeanConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanConfigurator%0}> alternative(boolean)\nmeth public abstract jakarta.enterprise.inject.spi.configurator.BeanConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanConfigurator%0}> autoClose(boolean)\nmeth public abstract jakarta.enterprise.inject.spi.configurator.BeanConfigurator<{jakarta.enterprise.inject.spi.configurator.BeanConfigurator%0}> beanClass(java.lang.Class<?>)"
+        )
+    signatureFile.writeText(signature)
+}
+
 tasks.register<JavaExec>("cdiSignatureTest") {
     group = "verification"
     description = "Runs the Jakarta CDI API signature test using the TCK-provided signature file."
 
     val cdiVersion = libs.cdi.tck.impl.get().versionConstraint.requiredVersion
     val outputDir = layout.buildDirectory.dir("reports/cdi-signature-test")
-    val signatureFile = outputDir.map { it.file("cdi-api-jdk17.sig") }
+    val signatureFile = outputDir.map { it.file("cdi-api-jdk17.sigfile") }
     val signatureReport = outputDir.map { it.file("signature-test-report.txt") }
     val metadataFile = outputDir.map { it.file("signature-test.properties") }
     val junitReport = layout.buildDirectory.file("test-results/cdiSignatureTest/TEST-cdi-signature-test.xml")
@@ -173,19 +271,22 @@ tasks.register<JavaExec>("cdiSignatureTest") {
         outputDirectory.mkdirs()
 
         tckJar = cdiSignatureTck.resolve()
-            .singleOrNull { it.name == "cdi-tck-core-impl-$cdiVersion.jar" }
-            ?: error("Could not resolve cdi-tck-core-impl-$cdiVersion.jar")
+            .singleOrNull { it.name == "jakarta.cdi-tck-core-impl-$cdiVersion.jar" }
+            ?: error("Could not resolve jakarta.cdi-tck-core-impl-$cdiVersion.jar")
+        val signatureArtifact = cdiSignatureTck.resolve()
+            .singleOrNull { it.name == "jakarta.cdi-tck-core-impl-$cdiVersion-sigtest-jdk17.sigfile" }
+            ?: error("Could not resolve jakarta.cdi-tck-core-impl-$cdiVersion-sigtest-jdk17.sigfile")
         copy {
-            from(zipTree(tckJar)) {
-                include("cdi-api-jdk17.sig")
-            }
+            from(signatureArtifact)
             into(outputDirectory)
+            rename { "cdi-api-jdk17.sigfile" }
         }
 
         extractedSignatureFile = signatureFile.get().asFile
         if (!extractedSignatureFile.isFile) {
             error("Could not extract ${extractedSignatureFile.name} from ${tckJar.name}")
         }
+        normalizeCdiBeta1SignatureFile(extractedSignatureFile, cdiVersion)
 
         apiArtifacts = cdiSignatureApi.resolve().sortedBy { it.name }
         val apiClasspath = apiArtifacts.joinToString(File.pathSeparator) { it.absolutePath }
@@ -244,7 +345,7 @@ tasks.register<JavaExec>("cdiSignatureTest") {
             """
             <?xml version="1.0" encoding="UTF-8"?>
             <testsuite name="CDI signature test" tests="1" failures="${if (passed) 0 else 1}" errors="0" skipped="0" time="0.0">
-              <testcase classname="jakarta.enterprise.cdi.signature" name="cdi-api-jdk17" time="0.0">
+              <testcase classname="jakarta.enterprise.cdi.signature" name="cdi-api-jdk17.sigfile" time="0.0">
             ${if (failureElement.isBlank()) "" else "    $failureElement"}
               </testcase>
             </testsuite>
@@ -286,7 +387,6 @@ tasks.register<Test>("singleTest") {
                 <listener class-name="org.testng.reporters.SuiteHTMLReporter"/>
                 <listener class-name="org.testng.reporters.FailedReporter"/>
                 <listener class-name="org.testng.reporters.XMLReporter"/>
-                <listener class-name="org.testng.reporters.EmailableReporter"/>
                 <listener class-name="org.testng.reporters.TestHTMLReporter"/>
               </listeners>
               <test name="Sample Test">

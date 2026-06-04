@@ -27,7 +27,7 @@ dependencies {
     annotationProcessor("org.eclipse.odi:micronaut-odi-processor-cdi:<version>")
 
     implementation("org.eclipse.odi:micronaut-odi-cdi:<version>")
-    implementation("jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0")
+    implementation("jakarta.cdi:jakarta.cdi-api:5.0.0.Beta1")
 }
 ```
 
