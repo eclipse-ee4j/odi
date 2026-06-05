@@ -16,6 +16,7 @@
 package org.eclipse.odi.cdi;
 
 import io.micronaut.core.annotation.Internal;
+import jakarta.enterprise.inject.Default;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -28,6 +29,8 @@ import java.util.List;
  */
 @Internal
 public record OdiSyntheticInjectionPoint(String typeName, List<String> qualifierNames) {
+    private static final String DEFAULT_QUALIFIER = Default.class.getName();
+
     public OdiSyntheticInjectionPoint {
         qualifierNames = qualifierNames == null ? List.of() : List.copyOf(qualifierNames);
     }
@@ -37,7 +40,10 @@ public record OdiSyntheticInjectionPoint(String typeName, List<String> qualifier
             return false;
         }
         if (qualifiers == null || qualifiers.length == 0) {
-            return qualifierNames.isEmpty();
+            return isImplicitDefault(qualifierNames);
+        }
+        if (isImplicitDefault(qualifierNames) && qualifiers.length == 1 && isDefault(qualifiers[0])) {
+            return true;
         }
         if (qualifiers.length != qualifierNames.size()) {
             return false;
@@ -48,5 +54,13 @@ public record OdiSyntheticInjectionPoint(String typeName, List<String> qualifier
             }
         }
         return true;
+    }
+
+    private static boolean isImplicitDefault(List<String> qualifierNames) {
+        return qualifierNames.isEmpty() || (qualifierNames.size() == 1 && DEFAULT_QUALIFIER.equals(qualifierNames.get(0)));
+    }
+
+    private static boolean isDefault(Annotation qualifier) {
+        return qualifier != null && qualifier.annotationType().getName().equals(DEFAULT_QUALIFIER);
     }
 }

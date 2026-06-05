@@ -42,7 +42,21 @@ final class OdiReactiveStreamsSupport {
                 publisher.subscribe(new Subscriber<T>() {
                     @Override
                     public void onSubscribe(Subscription subscription) {
-                        subscriber.onSubscribe(subscription);
+                        subscriber.onSubscribe(new Subscription() {
+                            @Override
+                            public void request(long n) {
+                                subscription.request(n);
+                            }
+
+                            @Override
+                            public void cancel() {
+                                try {
+                                    subscription.cancel();
+                                } finally {
+                                    completion.complete();
+                                }
+                            }
+                        });
                     }
 
                     @Override

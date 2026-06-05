@@ -337,7 +337,21 @@ final class OdiExecutableInvokerExecutor implements OdiInvokerExecutor {
                 publisher.subscribe(new Flow.Subscriber<T>() {
                     @Override
                     public void onSubscribe(Flow.Subscription subscription) {
-                        subscriber.onSubscribe(subscription);
+                        subscriber.onSubscribe(new Flow.Subscription() {
+                            @Override
+                            public void request(long n) {
+                                subscription.request(n);
+                            }
+
+                            @Override
+                            public void cancel() {
+                                try {
+                                    subscription.cancel();
+                                } finally {
+                                    completion.complete();
+                                }
+                            }
+                        });
                     }
 
                     @Override
