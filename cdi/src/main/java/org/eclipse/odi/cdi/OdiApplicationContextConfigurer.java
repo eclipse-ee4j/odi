@@ -17,7 +17,6 @@ package org.eclipse.odi.cdi;
 
 import io.micronaut.context.ApplicationContextBuilder;
 import io.micronaut.context.ApplicationContextConfigurer;
-import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.BeanResolutionCustomizer;
 import io.micronaut.context.Qualifier;
@@ -78,7 +77,7 @@ public final class OdiApplicationContextConfigurer implements ApplicationContext
                     }
 
                     @Override
-                    public boolean shouldDestroyDependentBeanAfterResolution(BeanResolutionContext resolutionContext, BeanRegistration<?> beanRegistration) {
+                    public boolean shouldDestroyDependentBeanAfterResolution(BeanResolutionContext resolutionContext, BeanDefinition<?> beanDefinition) {
                         return resolutionContext.getPath().currentSegment()
                                 .map(segment -> segment.getArgument().getAnnotationMetadata().hasAnnotation(TransientReference.class))
                                 .orElse(false);
