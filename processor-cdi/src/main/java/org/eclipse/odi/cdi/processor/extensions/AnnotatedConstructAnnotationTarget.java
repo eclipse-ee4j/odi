@@ -115,6 +115,12 @@ final class AnnotatedConstructAnnotationTarget implements AnnotationTarget {
 
     @Override
     public boolean hasAnnotation(Class<? extends Annotation> annotationType) {
+        if (annotationType == null) {
+            throw new IllegalArgumentException("Argument annotationType cannot be null");
+        }
+        if (annotatedConstruct == null) {
+            return false;
+        }
         Annotation annotation = annotatedConstruct.getAnnotation(annotationType);
         if (annotation == null) {
             return false;
