@@ -22,6 +22,7 @@ import io.micronaut.aop.chain.DefaultInterceptorRegistry;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.annotation.Primary;
+import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.beans.BeanConstructor;
 import io.micronaut.core.type.Executable;
 import jakarta.inject.Singleton;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * CDI specific interceptor registry that supports custom interceptor order.
@@ -50,9 +52,50 @@ public class CdiInterceptorRegistry implements InterceptorRegistry {
                                                        Collection<BeanRegistration<Interceptor<T, ?>>> interceptors,
                                                        InterceptorKind interceptorKind) {
         Interceptor<T, ?>[] resolvedInterceptors = defaultInterceptorRegistry.resolveInterceptors(method, interceptors, interceptorKind);
+        if (resolvedInterceptors.length == 0
+                && interceptorKind == InterceptorKind.AROUND
+                && method.getAnnotationMetadata().getAnnotationValuesByName(AnnotationUtil.ANN_INTERCEPTOR_BINDING).isEmpty()) {
+            resolvedInterceptors = resolveClassLevelAroundInterceptors(method, interceptors);
+        }
         resolvedInterceptors = selectInterceptorsForKind(method, resolvedInterceptors, interceptorKind);
         sortInterceptors(resolvedInterceptors);
         return resolvedInterceptors;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private <T> Interceptor<T, ?>[] resolveClassLevelAroundInterceptors(Executable<T, ?> method,
+                                                                        Collection<BeanRegistration<Interceptor<T, ?>>> interceptors) {
+        List<Interceptor<T, ?>> selected = new ArrayList<>(interceptors.size());
+        Class<?> declaringType = method.getDeclaringType();
+        for (BeanRegistration<Interceptor<T, ?>> interceptor : interceptors) {
+            if (hasClassLevelBinding(declaringType, interceptor)) {
+                selected.add(interceptor.getBean());
+            }
+        }
+        return selected.toArray(new Interceptor[0]);
+    }
+
+    private boolean hasClassLevelBinding(Class<?> declaringType,
+                                         BeanRegistration<? extends Interceptor<?, ?>> interceptor) {
+        return interceptor.getBeanDefinition()
+                .getAnnotationMetadata()
+                .getAnnotationValuesByName(AnnotationUtil.ANN_INTERCEPTOR_BINDING)
+                .stream()
+                .filter(binding -> binding.enumValue("kind", InterceptorKind.class)
+                        .map(InterceptorKind.AROUND::equals)
+                        .orElse(false))
+                .map(binding -> binding.stringValue().orElse(null))
+                .filter(Objects::nonNull)
+                .anyMatch(bindingName -> classHasAnnotation(declaringType, bindingName));
+    }
+
+    private boolean classHasAnnotation(Class<?> declaringType, String annotationName) {
+        for (java.lang.annotation.Annotation annotation : declaringType.getAnnotations()) {
+            if (annotation.annotationType().getName().equals(annotationName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

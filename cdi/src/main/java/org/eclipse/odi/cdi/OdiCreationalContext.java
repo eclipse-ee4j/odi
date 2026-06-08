@@ -22,7 +22,7 @@ import io.micronaut.context.scope.CreatedBean;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
-import io.micronaut.inject.proxy.InterceptedMethodProvider;
+import io.micronaut.inject.proxy.InterceptedBean;
 import jakarta.enterprise.context.spi.Contextual;
 import jakarta.enterprise.context.spi.CreationalContext;
 import org.eclipse.odi.cdi.context.DependentContext;
@@ -133,8 +133,8 @@ public final class OdiCreationalContext<T> implements CreationalContext<T> {
     }
 
     private <B> Optional<ExecutableMethod<B, ?>> findAutoCloseMethod(BeanDefinition<B> beanDefinition, B bean) {
-        if (bean instanceof InterceptedMethodProvider<?> interceptedMethodProvider) {
-            for (ExecutableMethod<?, ?> method : interceptedMethodProvider.interceptedMethods()) {
+        if (bean instanceof InterceptedBean interceptedBean) {
+            for (ExecutableMethod<?, ?> method : interceptedBean.interceptedMethods()) {
                 if (method.getMethodName().equals("close") && method.getArguments().length == 0) {
                     return Optional.of((ExecutableMethod<B, ?>) method);
                 }

@@ -16,6 +16,8 @@
 package org.eclipse.odi.cdi.processor.extensions;
 
 import io.micronaut.context.LifeCycle;
+import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
@@ -36,6 +38,7 @@ import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.ast.beans.BeanElement;
+import io.micronaut.inject.qualifiers.InterceptorBindingQualifier;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
@@ -70,6 +73,7 @@ import jakarta.enterprise.lang.model.types.Type;
 import jakarta.enterprise.invoke.AsyncHandler;
 import jakarta.interceptor.Interceptor;
 import org.eclipse.odi.cdi.OdiExecutableInvokerInfo;
+import org.eclipse.odi.cdi.processor.transformers.InterceptorBindingTransformer;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.RetentionPolicy;
@@ -79,6 +83,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -306,6 +311,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
     public void runDiscoveryEnhancements(Element typeToEnhance) {
         final MetaAnnotationsImpl metaAnnotations = discovery.getMetaAnnotations();
         final Set<MetaAnnotationImpl> qualifiers = metaAnnotations.getQualifiers();
+        final Set<MetaAnnotationImpl> interceptorBindings = metaAnnotations.getInterceptorBindings();
 
         for (MetaAnnotationImpl annotation : qualifiers) {
             final String annotationName = annotation.getName();
@@ -337,6 +343,51 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 }
             }
         }
+        for (MetaAnnotationImpl annotation : interceptorBindings) {
+            final String annotationName = annotation.getName();
+            if (typeToEnhance.hasDeclaredAnnotation(annotationName)) {
+                final AnnotationValue<Annotation> annotationValue = typeToEnhance.getAnnotation(annotationName);
+                if (annotationValue != null) {
+                    final AnnotationValueBuilder<Annotation> annotationBuilder =
+                            AnnotationValue.builder(annotationValue, RetentionPolicy.RUNTIME);
+                    final String[] nonBindingMembers = annotation.getNonBindingMembers();
+                    if (ArrayUtils.isNotEmpty(nonBindingMembers)) {
+                        annotationBuilder.member(AnnotationUtil.NON_BINDING_ATTRIBUTE, nonBindingMembers);
+                    }
+                    AnnotationValue<Annotation> rewrittenAnnotationValue = annotationBuilder.build();
+                    AnnotationValue<Annotation> bindingValues = bindingValues(rewrittenAnnotationValue);
+
+                    final List<AnnotationValue<?>> stereotypes = new ArrayList<>();
+                    if (annotationValue.getStereotypes() != null) {
+                        for (AnnotationValue<?> stereotype : annotationValue.getStereotypes()) {
+                            if (!AnnotationUtil.ANN_INTERCEPTOR_BINDING.equals(stereotype.getAnnotationName())) {
+                                stereotypes.add(stereotype);
+                            }
+                        }
+                    }
+                    for (AnnotationValue<?> interceptorBinding : InterceptorBindingTransformer.INTERCEPTOR_BINDING_VALUES) {
+                        stereotypes.add(AnnotationValue.builder(interceptorBinding, RetentionPolicy.RUNTIME)
+                                .member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(annotationName))
+                                .member(InterceptorBindingQualifier.META_BINDING_VALUES, bindingValues)
+                                .build());
+                    }
+                    typeToEnhance.annotate(AnnotationValue.builder(rewrittenAnnotationValue, RetentionPolicy.RUNTIME)
+                            .replaceStereotypes(stereotypes)
+                            .build());
+                }
+            }
+        }
+    }
+
+    private AnnotationValue<Annotation> bindingValues(AnnotationValue<?> annotationValue) {
+        Map<CharSequence, Object> values = new LinkedHashMap<>(annotationValue.getValues());
+        values.remove(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+        for (String nonBinding : annotationValue.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)) {
+            values.remove(nonBinding);
+        }
+        return AnnotationValue.<Annotation>builder(annotationValue.getAnnotationName())
+                .members(values)
+                .build();
     }
 
     /**
@@ -763,7 +814,8 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
             List<String> requiredQualifiers = syntheticInjectionPointQualifiers(injectionPoint);
             int candidates = 0;
             for (BeanElement beanElement : beanElements) {
-                if (matchesRequiredType(beanElement, requiredType)
+                if (isCandidateBean(beanElement)
+                        && matchesRequiredType(beanElement, requiredType)
                         && matchesRequiredQualifiers(beanElement, requiredQualifiers)) {
                     candidates++;
                 }
@@ -773,7 +825,8 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                         + "Unsatisfied synthetic injection point for " + requiredTypeName, syntheticBeanBuilder.getBeanType());
             } else if (candidates > 1) {
                 visitorContext.fail(DEPLOYMENT_EXCEPTION_MARKER
-                        + "Ambiguous synthetic injection point for " + requiredTypeName, syntheticBeanBuilder.getBeanType());
+                        + "Ambiguous synthetic injection point for " + requiredTypeName,
+                        syntheticBeanBuilder.getBeanType());
             }
         }
     }
@@ -925,7 +978,8 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         }
         int candidates = 0;
         for (BeanElement beanElement : beanElements) {
-            if (matchesRequiredType(beanElement, requiredType)
+            if (isCandidateBean(beanElement)
+                    && matchesRequiredType(beanElement, requiredType)
                     && matchesRequiredQualifiers(beanElement, parameterElement)) {
                 candidates++;
             }
@@ -949,6 +1003,10 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
     private boolean isBuiltinSyntheticInjectionPointType(String typeName) {
         return typeName.equals("jakarta.enterprise.inject.spi.InjectionPoint")
                 || isBuiltinLookupType(typeName);
+    }
+
+    private boolean isCandidateBean(BeanElement beanElement) {
+        return !beanElement.getProducingElement().getName().contains("$Definition$Intercepted");
     }
 
     private boolean matchesRequiredType(BeanElement beanElement, ClassElement requiredType) {

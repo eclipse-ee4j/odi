@@ -219,6 +219,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         }
         configureInterceptorBindings(visitorContext, scannedClass);
         this.registry.runEnhancement(scannedClass, scannedClass, visitorContext);
+        this.registry.runDiscoveryEnhancements(scannedClass);
         boolean isInterceptor = scannedClass.hasAnnotation(Interceptor.class);
         if (isInterceptor) {
             InterceptorVisitor.addInterceptor(
@@ -402,10 +403,14 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         }
         return element.getDeclaredAnnotationNames()
                 .stream()
-                .anyMatch(annotationName -> interceptorBindings.stream().anyMatch(binding -> binding.getName().equals(annotationName))
-                        || visitorContext.getClassElement(annotationName)
-                        .map(annotation -> annotation.hasDeclaredAnnotation(InterceptorBinding.class))
-                        .orElse(false));
+                .anyMatch(annotationName -> hasInterceptorBinding(visitorContext, annotationName));
+    }
+
+    private boolean hasInterceptorBinding(VisitorContext visitorContext, String annotationName) {
+        return interceptorBindings.stream().anyMatch(binding -> binding.getName().equals(annotationName))
+                || visitorContext.getClassElement(annotationName)
+                .map(annotation -> annotation.hasDeclaredAnnotation(InterceptorBinding.class))
+                .orElse(false);
     }
 
     private boolean isNormalScopedBean(VisitorContext visitorContext, ClassElement beanElement) {

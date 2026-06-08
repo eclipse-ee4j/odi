@@ -77,7 +77,8 @@ final class ExecutableObserverMethod<B, E> extends AbstractOdiObserverMethod<E> 
 
     @Override
     public Class<?> getBeanClass() {
-        return executableMethod.getDeclaringType();
+        return observesMethodAnnotationValue.classValue("beanClass")
+                .orElseGet(() -> beanDefinition.getDeclaringType().orElse(beanDefinition.getBeanType()));
     }
 
     @Override

@@ -44,6 +44,11 @@ public @interface ObservesMethod {
     Class<?> declaringType() default Object.class;
 
     /**
+     * @return The observed bean class.
+     */
+    Class<?> beanClass() default Object.class;
+
+    /**
      * @return The event arg index
      */
     int eventArgumentIndex() default 0;
