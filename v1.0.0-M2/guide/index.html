@@ -1,0 +1,909 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>ODI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="../css/main.css" type="text/css" media="screen, print" title="Style" charset="utf-8" />
+    <link rel="stylesheet" href="../css/custom.css" type="text/css" media="screen, print" title="Style" charset="utf-8" />
+    <link rel="stylesheet" href="../css/pdf.css" type="text/css" media="print" title="PDF" charset="utf-8" />
+    <link rel="stylesheet" href="../css/highlight/agate.css">
+    <script src="../js/highlight.pack.js"></script>
+    <script src="../js/guide.js"></script>
+    <script src="../js/multi-language-sample.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <link rel="stylesheet" href="../css/multi-language-sample.css"/>
+    <script src="../js/docs.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
+    <script type="text/javascript">
+        function addJsClass(el) {
+            var classes = document.body.className.split(" ");
+            classes.push("js");
+            document.body.className = classes.join(" ");
+        }
+    </script>
+    <style type="text/css">
+        .lang-java { display: block }; .lang-python { display: block }; .lang-kotlin { display: block }; .lang-groovy { display: block }; 
+    </style>
+</head>
+
+<body class="body" id="docs" onload="addJsClass();" onhashchange="highlightMenu()">
+
+<div id="table-of-content-nav-link" class="desktop">
+    <a id="theme-switcher" title="Switch to dark theme" href="javascript:switchTheme(true)"><i class="fa fa-moon-o"></i></a>
+    <a title="Collapse/Open Table of contents" title="Hide Table of Contents" href="javascript:hideTableOfContents();" class="button">[ + ]</a>
+</div>
+
+<div id="main">
+    <div id="navigation" class="no-print">
+        <div class="navTitle">
+            <span id="logo"><a href="http://micronaut.io" title="Go to Micronaut Website"><img src="../img/micronaut-logo-white.svg" alt="Micronaut"/></a></span>
+        </div>
+        <div class="navLinks">
+            <ul>
+                    <li><div id="nav-summary" onmouseover="toggleNavSummary(false)" onmouseout="toggleNavSummary(true)" class="desktop">
+                            <a href="../guide/index.html" class="button">Table of contents</a>
+                            <div id="nav-summary-childs" style="display:none;">
+                                
+                                <div class="toc-item" style="margin-left:0"><a href="#introduction"><strong>1</strong><span>Introduction</span></a></div>
+                                
+                                <div class="toc-item" style="margin-left:0"><a href="#setup"><strong>2</strong><span>Setup</span></a></div>
+                                
+                                <div class="toc-item" style="margin-left:0"><a href="#quickStart"><strong>3</strong><span>Quick Start</span></a></div>
+                                
+                                <div class="toc-item" style="margin-left:0"><a href="#buildTimeExtensions"><strong>4</strong><span>Build-Time Extensions</span></a></div>
+                                
+                                <div class="toc-item" style="margin-left:0"><a href="#cdiLite"><strong>5</strong><span>CDI Lite Support</span></a></div>
+                                
+                                <div class="toc-item" style="margin-left:0"><a href="#implementationNotes"><strong>6</strong><span>Implementation Notes</span></a></div>
+                                
+                                <div class="toc-item" style="margin-left:0"><a href="#releaseHistory"><strong>7</strong><span>Release History</span></a></div>
+                                
+                                <div class="toc-item" style="margin-left:0"><a href="#repository"><strong>8</strong><span>Repository</span></a></div>
+                                
+                            </div>
+                        </div>
+                    </li>
+
+                <li id="table-of-content-nav-link-mobile" class="mobile">
+                    <a title="Scroll to Table of contents" href="javascript:scrollToTop();" class="button">Toc</a>
+                </li>
+                <li class="desktop">
+                    <a title="Go to API documentation" href="../api/index.html" class="button">API Reference</a>
+                </li>
+                <li class="mobile">
+                    <a title="Go to API documentation" href="../api/index.html" class="button">API</a>
+                </li>
+                <li class="desktop">
+                    <a title="Go to Configuration Reference documentation" href="../guide/configurationreference.html" class="button">Configuration Reference</a>
+                </li>
+                <li class="mobile">
+                    <a title="Go to Configuration Reference documentation" href="../guide/configurationreference.html" class="button">Conf</a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+    
+    <div id="table-of-content">
+        <div class="toc-content">
+
+        <h2>Table of Contents</h2>
+        
+        <div class="toc-item" style="margin-left:0px" id="toc-item-introduction"><a href="#introduction"><strong>1</strong><span>Introduction</span></a></div>
+        
+        <div class="toc-item" style="margin-left:0px" id="toc-item-setup"><a href="#setup"><strong>2</strong><span>Setup</span></a></div>
+        
+        <div class="toc-item" style="margin-left:0px" id="toc-item-quickStart"><a href="#quickStart"><strong>3</strong><span>Quick Start</span></a></div>
+        
+        <div class="toc-item" style="margin-left:0px" id="toc-item-buildTimeExtensions"><a href="#buildTimeExtensions"><strong>4</strong><span>Build-Time Extensions</span></a></div>
+        
+        <div class="toc-item" style="margin-left:0px" id="toc-item-cdiLite"><a href="#cdiLite"><strong>5</strong><span>CDI Lite Support</span></a></div>
+        
+        <div class="toc-item" style="margin-left:0px" id="toc-item-implementationNotes"><a href="#implementationNotes"><strong>6</strong><span>Implementation Notes</span></a></div>
+        
+        <div class="toc-item" style="margin-left:0px" id="toc-item-releaseHistory"><a href="#releaseHistory"><strong>7</strong><span>Release History</span></a></div>
+        
+        <div class="toc-item" style="margin-left:0px" id="toc-item-repository"><a href="#repository"><strong>8</strong><span>Repository</span></a></div>
+        
+        </div>
+    </div>
+    
+    <div class="docs-content">
+    <div class="project">
+        <h1>ODI</h1>
+        <p></p>
+        <p>CDI Lite implementation backed by Micronaut</p>
+        <p><strong>Version:</strong> 1.0.0-M2 </p>
+    </div>
+    
+<h1 id="introduction"><a class="anchor" href="#introduction"></a>1 Introduction</h1>
+
+<div class='contribute-btn'>
+    <button type='button' class='btn btn-default' onclick='window.location.href="https://github.com/eclipse-ee4j/odi/edit/HEAD/src/main/docs/guide/introduction.adoc"'>
+        <i class='fa fa-pencil-square-o'></i> Improve this doc
+    </button>
+</div>
+
+
+<div class="paragraph">
+<p>ODI is a CDI Lite implementation backed by Micronaut&#8217;s compile-time dependency injection infrastructure.</p>
+</div>
+<div class="paragraph">
+<p>The runtime uses CDI APIs while the build uses an annotation processor to generate Micronaut bean definitions and proxy classes. Applications keep the ODI processor on the annotation processor path and run with the ODI CDI runtime plus the Jakarta CDI API.</p>
+</div>
+<div class="paragraph">
+<p>The implementation targets CDI Lite. CDI Full runtime extension points, decorators, and passivation are intentionally outside the runtime surface.</p>
+</div>
+
+<h1 id="setup"><a class="anchor" href="#setup"></a>2 Setup</h1>
+
+<div class='contribute-btn'>
+    <button type='button' class='btn btn-default' onclick='window.location.href="https://github.com/eclipse-ee4j/odi/edit/HEAD/src/main/docs/guide/setup.adoc"'>
+        <i class='fa fa-pencil-square-o'></i> Improve this doc
+    </button>
+</div>
+
+
+<div class="paragraph">
+<p>Add the CDI processor to the annotation processor path and keep the CDI runtime on the application classpath.</p>
+</div>
+<div class="paragraph">
+<p>Build-compatible extension artifacts are compile-time inputs. Add extension libraries to the annotation processor path, and also to the implementation/runtime classpath when the application uses extension-provided annotations, creators, or runtime types.</p>
+</div>
+<div class="paragraph">
+<p>Gradle:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencies {
+    annotationProcessor("org.eclipse.odi:micronaut-odi-processor-cdi:&lt;version&gt;")
+
+    implementation("org.eclipse.odi:micronaut-odi-cdi:&lt;version&gt;")
+    implementation("jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0")
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Maven:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.eclipse.odi&lt;/groupId&gt;
+        &lt;artifactId&gt;micronaut-odi-cdi&lt;/artifactId&gt;
+        &lt;version&gt;${odi.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;jakarta.enterprise&lt;/groupId&gt;
+        &lt;artifactId&gt;jakarta.enterprise.cdi-api&lt;/artifactId&gt;
+        &lt;version&gt;4.1.0&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+
+&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+            &lt;configuration&gt;
+                &lt;annotationProcessorPaths&gt;
+                    &lt;path&gt;
+                        &lt;groupId&gt;org.eclipse.odi&lt;/groupId&gt;
+                        &lt;artifactId&gt;micronaut-odi-processor-cdi&lt;/artifactId&gt;
+                        &lt;version&gt;${odi.version}&lt;/version&gt;
+                    &lt;/path&gt;
+                &lt;/annotationProcessorPaths&gt;
+            &lt;/configuration&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;</code></pre>
+</div>
+</div>
+
+<h1 id="quickStart"><a class="anchor" href="#quickStart"></a>3 Quick Start</h1>
+
+<div class='contribute-btn'>
+    <button type='button' class='btn btn-default' onclick='window.location.href="https://github.com/eclipse-ee4j/odi/edit/HEAD/src/main/docs/guide/quickStart.adoc"'>
+        <i class='fa fa-pencil-square-o'></i> Improve this doc
+    </button>
+</div>
+
+
+<div class="paragraph">
+<p>The Java example in <code>docs-examples/cdi-lite-java</code> demonstrates constructor injection, qualifiers, producer methods, programmatic lookup with <code>Instance&lt;T&gt;</code>, events, and CDI SE bootstrap.</p>
+</div>
+<div class="paragraph">
+<p>Define a contract and a qualifier-specific implementation:</p>
+</div>
+<div class="listingblock multi-language-sample">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package org.eclipse.odi.docs.cdi;
+
+/**
+ * Contract implemented by payment processor beans.
+ */
+public interface PaymentProcessor {
+
+    /**
+     * Charges a payment.
+     *
+     * @param payment payment request
+     * @return approved payment result
+     */
+    PaymentResult charge(Payment payment);
+}
+
+package org.eclipse.odi.docs.cdi;
+
+import jakarta.enterprise.util.AnnotationLiteral;
+import jakarta.inject.Qualifier;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+/**
+ * Qualifier used to select the credit-card implementation of {@link PaymentProcessor}.
+ */
+@Qualifier
+@Retention(RUNTIME)
+@Target({TYPE, METHOD, FIELD, PARAMETER})
+public @interface CreditCard {
+
+    /**
+     * Runtime literal used for programmatic lookup with {@code Instance.select(...)}.
+     */
+    final class Literal extends AnnotationLiteral&lt;CreditCard&gt; implements CreditCard {
+        /**
+         * Singleton literal instance.
+         */
+        public static final Literal INSTANCE = new Literal();
+        private static final long serialVersionUID = 1L;
+
+        private Literal() {
+        }
+    }
+}
+
+package org.eclipse.odi.docs.cdi;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.odi.docs.cdi.extension.PaymentGateway;
+
+/**
+ * Credit-card payment processor selected by the CDI qualifier and the
+ * extension-defined gateway qualifier.
+ */
+@CreditCard
+@PaymentGateway("credit-card")
+@ApplicationScoped
+public class CreditCardProcessor implements PaymentProcessor {
+
+    /**
+     * Creates the credit-card processor.
+     */
+    public CreditCardProcessor() {
+    }
+
+    @Override
+    public PaymentResult charge(Payment payment) {
+        return new PaymentResult("cc-" + payment.accountId(), payment.cents());
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Producer methods can supply values used by other beans:</p>
+</div>
+<div class="listingblock multi-language-sample">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package org.eclipse.odi.docs.cdi;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Named;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * Produces shared payment resources and observes approved-payment events.
+ */
+@ApplicationScoped
+public class PaymentResources {
+    private final AtomicInteger approvedPayments = new AtomicInteger();
+
+    /**
+     * Creates payment resources for the example.
+     */
+    public PaymentResources() {
+    }
+
+    @Produces
+    @Named("currency")
+    String currencyCode() {
+        return "USD";
+    }
+
+    void onPaymentApproved(@Observes PaymentApproved event) {
+        approvedPayments.incrementAndGet();
+    }
+
+    /**
+     * Returns how many payment approval events this bean observed.
+     *
+     * @return number of observed payment approvals
+     */
+    public int approvedPayments() {
+        return approvedPayments.get();
+    }
+}
+
+package org.eclipse.odi.docs.cdi;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+
+import java.util.Locale;
+
+/**
+ * Formats payment results using a produced currency code.
+ */
+@ApplicationScoped
+public class ReceiptFormatter {
+    private final String currency;
+
+    /**
+     * Creates a receipt formatter.
+     *
+     * @param currency currency code produced by {@link PaymentResources}
+     */
+    @Inject
+    public ReceiptFormatter(@Named("currency") String currency) {
+        this.currency = currency;
+    }
+
+    /**
+     * Formats a payment result as a receipt.
+     *
+     * @param result approved payment result
+     * @return formatted receipt
+     */
+    public Receipt format(PaymentResult result) {
+        String total = String.format(Locale.ROOT, "%s %.2f", currency, result.cents() / 100.0);
+        return new Receipt(result.reference(), total);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Constructor injection, <code>Instance&lt;T&gt;</code> lookup, and CDI events work together in a normal application bean:</p>
+</div>
+<div class="listingblock multi-language-sample">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package org.eclipse.odi.docs.cdi;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
+
+/**
+ * Application service that demonstrates constructor injection, programmatic
+ * lookup with {@link Instance}, and event publication.
+ */
+@ApplicationScoped
+public class CheckoutService {
+    private final Instance&lt;PaymentProcessor&gt; processors;
+    private final ReceiptFormatter receiptFormatter;
+    private final Event&lt;PaymentApproved&gt; paymentApproved;
+
+    /**
+     * Creates the checkout service.
+     *
+     * @param processors all payment processors, queried by qualifier at runtime
+     * @param receiptFormatter formatter used to produce user-facing receipts
+     * @param paymentApproved event emitter for approved payments
+     */
+    @Inject
+    public CheckoutService(
+            @Any Instance&lt;PaymentProcessor&gt; processors,
+            ReceiptFormatter receiptFormatter,
+            Event&lt;PaymentApproved&gt; paymentApproved) {
+        this.processors = processors;
+        this.receiptFormatter = receiptFormatter;
+        this.paymentApproved = paymentApproved;
+    }
+
+    /**
+     * Charges the account and returns a formatted receipt.
+     *
+     * @param accountId account identifier to charge
+     * @param cents amount to charge in cents
+     * @return formatted receipt for the approved payment
+     */
+    public Receipt checkout(String accountId, int cents) {
+        Payment payment = new Payment(accountId, cents);
+        PaymentProcessor processor = processors.select(CreditCard.Literal.INSTANCE).get();
+        PaymentResult result = processor.charge(payment);
+        paymentApproved.fire(new PaymentApproved(result.reference(), result.cents()));
+        return receiptFormatter.format(result);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Start CDI SE with <code>SeContainerInitializer</code> and resolve the entry-point bean:</p>
+</div>
+<div class="listingblock multi-language-sample">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package org.eclipse.odi.docs.cdi;
+
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
+
+/**
+ * Minimal CDI SE entry point for the documentation example.
+ */
+public final class CheckoutApplication {
+
+    private CheckoutApplication() {
+    }
+
+    /**
+     * Starts a CDI SE container, resolves the checkout service, and performs one payment.
+     *
+     * @param args command-line arguments, unused by this example
+     */
+    public static void main(String[] args) {
+        try (SeContainer container = SeContainerInitializer.newInstance().initialize()) {
+            CheckoutService checkoutService = container.select(CheckoutService.class).get();
+            Receipt receipt = checkoutService.checkout("acct-100", 4999);
+            System.out.println(receipt);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+
+<h1 id="buildTimeExtensions"><a class="anchor" href="#buildTimeExtensions"></a>4 Build-Time Extensions</h1>
+
+<div class='contribute-btn'>
+    <button type='button' class='btn btn-default' onclick='window.location.href="https://github.com/eclipse-ee4j/odi/edit/HEAD/src/main/docs/guide/buildTimeExtensions.adoc"'>
+        <i class='fa fa-pencil-square-o'></i> Improve this doc
+    </button>
+</div>
+
+
+<div class="paragraph">
+<p>CDI build-compatible extensions run during annotation processing. Make the extension artifact discoverable from <code>META-INF/services/jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension</code> on the annotation processor path. If application code also uses annotations, synthetic bean creators, or runtime types from the extension artifact, keep that artifact on the application classpath too.</p>
+</div>
+<div class="paragraph">
+<p>Gradle:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-groovy hljs" data-lang="groovy">dependencies {
+    annotationProcessor("org.eclipse.odi:micronaut-odi-processor-cdi:&lt;version&gt;")
+    annotationProcessor("com.example:payment-cdi-extension:&lt;version&gt;")
+
+    implementation("org.eclipse.odi:micronaut-odi-cdi:&lt;version&gt;")
+    implementation("com.example:payment-cdi-extension:&lt;version&gt;")
+    implementation("jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add("-Amicronaut.cdi.build.compatible.extensions=true")
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Maven:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.eclipse.odi&lt;/groupId&gt;
+        &lt;artifactId&gt;micronaut-odi-cdi&lt;/artifactId&gt;
+        &lt;version&gt;${odi.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.example&lt;/groupId&gt;
+        &lt;artifactId&gt;payment-cdi-extension&lt;/artifactId&gt;
+        &lt;version&gt;${payment.extension.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+
+&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+            &lt;configuration&gt;
+                &lt;annotationProcessorPaths&gt;
+                    &lt;path&gt;
+                        &lt;groupId&gt;org.eclipse.odi&lt;/groupId&gt;
+                        &lt;artifactId&gt;micronaut-odi-processor-cdi&lt;/artifactId&gt;
+                        &lt;version&gt;${odi.version}&lt;/version&gt;
+                    &lt;/path&gt;
+                    &lt;path&gt;
+                        &lt;groupId&gt;com.example&lt;/groupId&gt;
+                        &lt;artifactId&gt;payment-cdi-extension&lt;/artifactId&gt;
+                        &lt;version&gt;${payment.extension.version}&lt;/version&gt;
+                    &lt;/path&gt;
+                &lt;/annotationProcessorPaths&gt;
+                &lt;compilerArgs&gt;
+                    &lt;arg&gt;-Amicronaut.cdi.build.compatible.extensions=true&lt;/arg&gt;
+                &lt;/compilerArgs&gt;
+            &lt;/configuration&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The Java docs example keeps the extension in a separate Gradle module. The extension module contributes a marker annotation and a synthetic runtime bean:</p>
+</div>
+<div class="listingblock multi-language-sample">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package org.eclipse.odi.docs.cdi.extension;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Marker annotation that the build-compatible extension registers as a CDI
+ * qualifier during the discovery phase.
+ */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE})
+public @interface PaymentGateway {
+    /**
+     * Identifies the logical payment gateway.
+     *
+     * @return the logical gateway name
+     */
+    String value();
+}
+
+package org.eclipse.odi.docs.cdi.extension;
+
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.build.compatible.spi.Parameters;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+/**
+ * Synthetic bean produced by {@link PaymentBuildExtension}.
+ *
+ * &lt;p&gt;The bean is not declared by application source. Instead, the extension
+ * synthesizes it during annotation processing and passes the discovered gateway
+ * names to {@link Creator} as build-time parameters.&lt;/p&gt;
+ */
+public final class PaymentCatalog {
+    private final Set&lt;String&gt; gateways;
+
+    private PaymentCatalog(Set&lt;String&gt; gateways) {
+        this.gateways = Collections.unmodifiableSet(new LinkedHashSet&lt;&gt;(gateways));
+    }
+
+    /**
+     * Returns the gateway names discovered by the build-compatible extension.
+     *
+     * @return the gateway names discovered by the build-compatible extension
+     */
+    public Set&lt;String&gt; gateways() {
+        return gateways;
+    }
+
+    /**
+     * Checks whether a gateway was discovered by the extension.
+     *
+     * @param gateway gateway name to check
+     * @return whether the gateway was discovered at build time
+     */
+    public boolean contains(String gateway) {
+        return gateways.contains(gateway);
+    }
+
+    /**
+     * Runtime creator used by ODI to instantiate the synthetic bean.
+     */
+    public static final class Creator implements SyntheticBeanCreator&lt;PaymentCatalog&gt; {
+        /**
+         * Creates the synthetic bean creator.
+         */
+        public Creator() {
+        }
+
+        @Override
+        public PaymentCatalog create(Instance&lt;Object&gt; lookup, Parameters params) {
+            String[] gatewayNames = params.get("gateways", String[].class);
+            return new PaymentCatalog(new LinkedHashSet&lt;&gt;(Arrays.asList(gatewayNames)));
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The service descriptor contains the extension implementation class:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">org.eclipse.odi.docs.cdi.extension.PaymentBuildExtension</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The extension registers the marker annotation as a CDI qualifier during discovery, collects annotated payment gateway beans during registration, and synthesizes a <code>PaymentCatalog</code> bean:</p>
+</div>
+<div class="listingblock multi-language-sample">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package org.eclipse.odi.docs.cdi.extension;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Default;
+import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
+import jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension;
+import jakarta.enterprise.inject.build.compatible.spi.Discovery;
+import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
+import jakarta.enterprise.inject.build.compatible.spi.Registration;
+import jakarta.enterprise.inject.build.compatible.spi.Synthesis;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticComponents;
+
+import java.util.Set;
+import java.util.TreeSet;
+
+/**
+ * Build-compatible extension used by the documentation example.
+ *
+ * &lt;p&gt;The extension shows the usual CDI Lite extension flow: discovery registers
+ * extension-provided annotations, registration observes application beans, and
+ * synthesis contributes runtime beans derived from build-time metadata.&lt;/p&gt;
+ */
+public class PaymentBuildExtension implements BuildCompatibleExtension {
+    private final Set&lt;String&gt; gateways = new TreeSet&lt;&gt;();
+
+    /**
+     * Creates the example build-compatible extension.
+     */
+    public PaymentBuildExtension() {
+    }
+
+    /**
+     * Promotes {@link PaymentGateway} to a CDI qualifier before bean discovery
+     * completes, so application injection points can select gateway-specific
+     * {@code PaymentProcessor} beans with the annotation.
+     *
+     * @param metaAnnotations mutable build-time meta-annotation registry
+     */
+    @Discovery
+    void registerPaymentGatewayQualifier(MetaAnnotations metaAnnotations) {
+        metaAnnotations.addQualifier(PaymentGateway.class);
+    }
+
+    /**
+     * Collects every class bean annotated with {@link PaymentGateway}. The
+     * collected values are later passed to a synthetic runtime bean.
+     *
+     * @param bean bean metadata exposed by the registration phase
+     */
+    @Registration(types = Object.class)
+    void collectPaymentGatewayBeans(BeanInfo bean) {
+        if (bean.isClassBean() &amp;&amp; bean.declaringClass().hasAnnotation(PaymentGateway.class)) {
+            gateways.add(bean.declaringClass()
+                    .annotation(PaymentGateway.class)
+                    .value()
+                    .asString());
+        }
+    }
+
+    /**
+     * Registers a synthetic {@link PaymentCatalog} bean containing the gateway
+     * names collected during registration.
+     *
+     * @param components synthetic component registry
+     */
+    @Synthesis
+    void registerPaymentCatalog(SyntheticComponents components) {
+        components.addBean(PaymentCatalog.class)
+                .type(PaymentCatalog.class)
+                .scope(ApplicationScoped.class)
+                .qualifier(Default.class)
+                .withParam("gateways", gateways.toArray(String[]::new))
+                .createWith(PaymentCatalog.Creator.class);
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Application code can then use the extension-defined qualifier and inject the synthetic bean:</p>
+</div>
+<div class="listingblock multi-language-sample">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package org.eclipse.odi.docs.cdi;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.odi.docs.cdi.extension.PaymentGateway;
+
+/**
+ * Credit-card payment processor selected by the CDI qualifier and the
+ * extension-defined gateway qualifier.
+ */
+@CreditCard
+@PaymentGateway("credit-card")
+@ApplicationScoped
+public class CreditCardProcessor implements PaymentProcessor {
+
+    /**
+     * Creates the credit-card processor.
+     */
+    public CreditCardProcessor() {
+    }
+
+    @Override
+    public PaymentResult charge(Payment payment) {
+        return new PaymentResult("cc-" + payment.accountId(), payment.cents());
+    }
+}
+
+package org.eclipse.odi.docs.cdi;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.odi.docs.cdi.extension.PaymentCatalog;
+import org.eclipse.odi.docs.cdi.extension.PaymentGateway;
+
+import java.util.Set;
+
+/**
+ * Application bean that consumes extension-provided CDI metadata.
+ *
+ * &lt;p&gt;The constructor proves that {@link PaymentGateway} was registered as a
+ * qualifier at build time. The injected {@link PaymentCatalog} proves that the
+ * extension synthesized a runtime bean from the beans it saw during
+ * registration.&lt;/p&gt;
+ */
+@ApplicationScoped
+public class GatewayCatalogService {
+    private final PaymentProcessor processor;
+    private final PaymentCatalog catalog;
+
+    /**
+     * Creates a service using the extension-defined qualifier and synthetic bean.
+     *
+     * @param processor selected with the extension-defined qualifier
+     * @param catalog synthetic bean created by the build-compatible extension
+     */
+    @Inject
+    public GatewayCatalogService(
+            @PaymentGateway("credit-card") PaymentProcessor processor,
+            PaymentCatalog catalog) {
+        this.processor = processor;
+        this.catalog = catalog;
+    }
+
+    /**
+     * Returns the gateway names collected by the extension.
+     *
+     * @return gateway names collected by the extension
+     */
+    public Set&lt;String&gt; gateways() {
+        return catalog.gateways();
+    }
+
+    /**
+     * Charges through the processor selected by {@link PaymentGateway}.
+     *
+     * @param accountId account identifier used by the example processor
+     * @param cents amount to charge
+     * @return payment reference produced by the selected processor
+     */
+    public String chargeReference(String accountId, int cents) {
+        return processor.charge(new Payment(accountId, cents)).reference();
+    }
+}</code></pre>
+</div>
+</div>
+
+<h1 id="cdiLite"><a class="anchor" href="#cdiLite"></a>5 CDI Lite Support</h1>
+
+<div class='contribute-btn'>
+    <button type='button' class='btn btn-default' onclick='window.location.href="https://github.com/eclipse-ee4j/odi/edit/HEAD/src/main/docs/guide/cdiLite.adoc"'>
+        <i class='fa fa-pencil-square-o'></i> Improve this doc
+    </button>
+</div>
+
+
+<div class="paragraph">
+<p>ODI focuses on CDI Lite. The supported programming model includes bean-defining annotations, constructor and field injection, qualifiers, producer methods and fields, disposers, observer methods, events, interceptors, <code>Instance&lt;T&gt;</code> lookup, the CDI SE bootstrap API, and build-compatible extensions.</p>
+</div>
+<div class="paragraph">
+<p>CDI Full features that depend on runtime extension processing or container services are not part of the target runtime surface. That includes portable runtime extensions, decorators, passivation, and APIs that require a full <code>BeanManager</code> implementation.</p>
+</div>
+<div class="paragraph">
+<p>The CDI Lite TCK runner is configured to exclude CDI Full coverage while exercising the CDI Lite behavior implemented by ODI.</p>
+</div>
+
+<h1 id="implementationNotes"><a class="anchor" href="#implementationNotes"></a>6 Implementation Notes</h1>
+
+<div class='contribute-btn'>
+    <button type='button' class='btn btn-default' onclick='window.location.href="https://github.com/eclipse-ee4j/odi/edit/HEAD/src/main/docs/guide/implementationNotes.adoc"'>
+        <i class='fa fa-pencil-square-o'></i> Improve this doc
+    </button>
+</div>
+
+
+<div class="paragraph">
+<p>ODI delegates bean discovery and dependency injection mechanics to Micronaut&#8217;s compile-time model.</p>
+</div>
+<div class="paragraph">
+<p>The CDI annotation processor maps CDI annotations onto Micronaut metadata and emits bean definitions during compilation. At runtime, <code>micronaut-odi-cdi</code> adapts the generated definitions to CDI APIs such as <code>SeContainer</code>, <code>CDI</code>, <code>BeanContainer</code>, <code>Instance&lt;T&gt;</code>, and event dispatch.</p>
+</div>
+<div class="paragraph">
+<p>This split keeps the processor out of the runtime classpath. Applications should depend on <code>micronaut-odi-processor-cdi</code> only as an annotation processor and use <code>micronaut-odi-cdi</code> as the runtime implementation.</p>
+</div>
+<div class="paragraph">
+<p>Build-compatible extensions run during annotation processing. Generated proxies and supporting metadata are available to the runtime without requiring CDI Full runtime extension discovery.</p>
+</div>
+
+<h1 id="releaseHistory"><a class="anchor" href="#releaseHistory"></a>7 Release History</h1>
+
+<div class='contribute-btn'>
+    <button type='button' class='btn btn-default' onclick='window.location.href="https://github.com/eclipse-ee4j/odi/edit/HEAD/src/main/docs/guide/releaseHistory.adoc"'>
+        <i class='fa fa-pencil-square-o'></i> Improve this doc
+    </button>
+</div>
+
+
+<div class="sect1">
+<h2 id="_1_0_0_snapshot">1.0.0-SNAPSHOT</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Initial CDI Lite documentation and Java documentation example.</p>
+</div>
+</div>
+</div>
+
+<h1 id="repository"><a class="anchor" href="#repository"></a>8 Repository</h1>
+
+<div class='contribute-btn'>
+    <button type='button' class='btn btn-default' onclick='window.location.href="https://github.com/eclipse-ee4j/odi/edit/HEAD/src/main/docs/guide/repository.adoc"'>
+        <i class='fa fa-pencil-square-o'></i> Improve this doc
+    </button>
+</div>
+
+
+<div class="paragraph">
+<p>The ODI source code is hosted at <a href="https://github.com/eclipse-ee4j/odi">eclipse-ee4j/odi</a>.</p>
+</div>
+<div class="paragraph">
+<p>Use the repository issue tracker for bug reports and feature requests.</p>
+</div>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+</script>
+</body>
+</html>
