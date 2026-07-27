@@ -4,7 +4,7 @@ Open DI (ODI) is a CDI Lite implementation backed by Micronaut's compile-time de
 
 ODI targets CDI Lite rather than the CDI Full runtime extension, decorator, and passivation surface. The implementation uses Micronaut bean definitions, annotation processing, generated proxies, and build-compatible extensions to provide CDI APIs on top of a Micronaut-backed runtime.
 
-The ODI guide is published at <https://eclipse-ee4j.github.io/odi/guide/>.
+The ODI guide is published at <https://eclipse-ee4j.github.io/odi/latest/guide/>.
 
 The CDI Lite TCK passes with CDI Full exclusions only.
 
