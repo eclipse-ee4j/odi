@@ -94,12 +94,3 @@ jobs:
           BRANCH: gh-pages
           FOLDER: build/docs
           VERSION: ${{ github.event.release.tag_name }}
-
-      - name: Package release artifacts
-        run: tar -czf "odi-${RELEASE_VERSION}.tar.gz" --exclude=.git .
-
-      - name: Upload release artifacts
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.event.release.tag_name }}
-          files: odi-${{ github.event.release.tag_name }}.tar.gz

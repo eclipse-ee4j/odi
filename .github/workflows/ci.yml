@@ -170,8 +170,10 @@ jobs:
             git -C "${docs_dir}" remote add origin "${repository_url}"
           fi
 
-          find "${docs_dir}" -mindepth 1 -maxdepth 1 ! -name .git ! -name tck-results -exec rm -rf {} +
-          cp -R docs-site/. "${docs_dir}/"
+          snapshot_dir="${docs_dir}/guide/snapshot"
+          rm -rf "${snapshot_dir}"
+          mkdir -p "${snapshot_dir}"
+          cp -R docs-site/. "${snapshot_dir}/"
           touch "${docs_dir}/.nojekyll"
 
           git -C "${docs_dir}" add -A
