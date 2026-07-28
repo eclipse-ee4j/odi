@@ -27,6 +27,8 @@ import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.context.spi.AlterableContext;
 import jakarta.enterprise.inject.Stereotype;
@@ -38,6 +40,7 @@ import org.eclipse.odi.cdi.processor.CdiUtil;
 
 @Internal
 final class MetaAnnotationsImpl implements MetaAnnotations {
+    private static final String DEPLOYMENT_EXCEPTION_MARKER = "[ODI_DEPLOYMENT_EXCEPTION] ";
 //    private List<ContextConfig> contextBuilders = new ArrayList<>();
     private final Set<MetaAnnotationImpl> interceptorBindings = new HashSet<>();
     private final Set<MetaAnnotationImpl> qualifiers = new HashSet<>();
@@ -111,6 +114,11 @@ final class MetaAnnotationsImpl implements MetaAnnotations {
     private void addContext(Class<? extends Annotation> scopeAnnotation,
                             Boolean isNormal,
                             Class<? extends AlterableContext> contextClass) {
+        if (scopeAnnotation == ApplicationScoped.class || scopeAnnotation == Dependent.class) {
+            visitorContext.fail(DEPLOYMENT_EXCEPTION_MARKER
+                    + "Cannot register a custom context for built-in scope: " + scopeAnnotation.getName(), null);
+            return;
+        }
         final ClassElement scopeElement = visitorContext.getClassElement(scopeAnnotation)
                 .orElseThrow(() -> new RuntimeException("Scope type [" + scopeAnnotation.getName() + "] must be on the application classpath"));
         if (isNormal != null) {

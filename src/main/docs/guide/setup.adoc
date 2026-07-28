@@ -10,7 +10,7 @@ dependencies {
     annotationProcessor("org.eclipse.odi:micronaut-odi-processor-cdi:<version>")
 
     implementation("org.eclipse.odi:micronaut-odi-cdi:<version>")
-    implementation("jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0")
+    implementation("jakarta.cdi:jakarta.cdi-api:5.0.0.Beta1")
 }
 ----
 
@@ -25,9 +25,9 @@ Maven:
         <version>${odi.version}</version>
     </dependency>
     <dependency>
-        <groupId>jakarta.enterprise</groupId>
-        <artifactId>jakarta.enterprise.cdi-api</artifactId>
-        <version>4.1.0</version>
+        <groupId>jakarta.cdi</groupId>
+        <artifactId>jakarta.cdi-api</artifactId>
+        <version>5.0.0.Beta1</version>
     </dependency>
 </dependencies>
 

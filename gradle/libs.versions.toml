@@ -4,7 +4,7 @@ micronaut-docs = "2.0.0"
 
 groovy = "5.0.4"
 
-cdi = "4.1.0"
+cdi = "5.0.0.Beta1"
 javax-annotation = "1.3.2"
 
 # Testing
@@ -17,13 +17,13 @@ jupiter = "5.12.2"
 
 [libraries]
 
-cdi-api = { module = 'jakarta.enterprise:jakarta.enterprise.cdi-api', version.ref = "cdi" }
-cdi-lang-model = { module = 'jakarta.enterprise:jakarta.enterprise.lang-model', version.ref = "cdi" }
+cdi-api = { module = 'jakarta.cdi:jakarta.cdi-api', version.ref = "cdi" }
+cdi-lang-model = { module = 'jakarta.cdi:jakarta.cdi-lang-model-api', version.ref = "cdi" }
 javax-annotation-api = { module = "javax.annotation:javax.annotation-api", version.ref = "javax-annotation" }
 
-cdi-tck-api = { module = 'jakarta.enterprise:cdi-tck-api', version.ref = "cdi" }
-cdi-tck-impl = { module = 'jakarta.enterprise:cdi-tck-core-impl', version.ref = "cdi" }
-cdi-tck-lang-model = { module = 'jakarta.enterprise:cdi-tck-lang-model', version.ref = "cdi" }
+cdi-tck-api = { module = 'jakarta.cdi:jakarta.cdi-tck-api', version.ref = "cdi" }
+cdi-tck-impl = { module = 'jakarta.cdi:jakarta.cdi-tck-core-impl', version.ref = "cdi" }
+cdi-tck-lang-model = { module = 'jakarta.cdi:jakarta.cdi-tck-lang-model', version.ref = "cdi" }
 
 # Testing
 

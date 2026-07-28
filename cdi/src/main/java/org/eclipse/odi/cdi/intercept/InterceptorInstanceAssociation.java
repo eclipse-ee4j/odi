@@ -190,7 +190,12 @@ final class InterceptorInstanceAssociation implements BeanCreatedEventListener<O
     private static AnnotationValue<?> bindingValues(Annotation annotation) {
         AnnotationValue<?> annotationValue = AnnotationReflection.toAnnotationValue(annotation);
         String[] nonBindingMembers = annotationValue.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE);
-        Map<CharSequence, Object> values = new LinkedHashMap<>(annotationValue.getValues());
+        Map<CharSequence, Object> values = new LinkedHashMap<>();
+        Map<CharSequence, Object> defaultValues = annotationValue.getDefaultValues();
+        if (defaultValues != null) {
+            values.putAll(defaultValues);
+        }
+        values.putAll(annotationValue.getValues());
         values.remove(AnnotationUtil.NON_BINDING_ATTRIBUTE);
         for (String nonBindingMember : nonBindingMembers) {
             values.remove(nonBindingMember);

@@ -74,6 +74,17 @@ public class BuildCompatibleFaultToleranceOperationProvider implements FaultTole
         @Override
         public BuildCompatibleFaultToleranceOperationProvider create(Instance<Object> lookup, Parameters params) {
             String[] faultToleranceClasses = params.get("classes", String[].class);
+            if (faultToleranceClasses.length > 0) {
+                if (BuildCompatibleFaultToleranceExtension.MUTATED_ARRAY_VALUE.equals(faultToleranceClasses[0])) {
+                    throw new AssertionError("Synthetic bean parameter arrays must be copied when registered");
+                }
+                String original = faultToleranceClasses[0];
+                faultToleranceClasses[0] = BuildCompatibleFaultToleranceExtension.MUTATED_ARRAY_VALUE;
+                if (BuildCompatibleFaultToleranceExtension.MUTATED_ARRAY_VALUE.equals(params.get("classes", String[].class)[0])) {
+                    throw new AssertionError("Synthetic bean parameter arrays must be copied when read");
+                }
+                faultToleranceClasses[0] = original;
+            }
 
             List<Throwable> allExceptions = new ArrayList<>();
             Map<CacheKey, FaultToleranceOperation> operationCache = new HashMap<>(faultToleranceClasses.length);

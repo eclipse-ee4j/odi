@@ -16,6 +16,8 @@
 package org.eclipse.odi.cdi;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import io.micronaut.context.BeanProvider;
 import io.micronaut.context.Qualifier;
@@ -24,14 +26,21 @@ import io.micronaut.context.event.BeanPreDestroyEventListener;
 import io.micronaut.core.type.Argument;
 import io.micronaut.core.util.CollectionUtils;
 import io.micronaut.inject.BeanDefinition;
+import jakarta.enterprise.context.AutoClose;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.build.compatible.spi.Parameters;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
+import jakarta.enterprise.inject.build.compatible.spi.SyntheticInjections;
 import jakarta.inject.Singleton;
+import org.eclipse.odi.cdi.context.DependentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("CdiManagedBeanInconsistencyInspection")
 @Singleton
 final class SyntheticDisposer implements BeanPreDestroyEventListener<Object> {
+    private static final Logger LOG = LoggerFactory.getLogger(SyntheticDisposer.class);
+
     private final BeanProvider<OdiBeanContainer> beanContainer;
 
     SyntheticDisposer(BeanProvider<OdiBeanContainer> beanContainer) {
@@ -55,20 +64,63 @@ final class SyntheticDisposer implements BeanPreDestroyEventListener<Object> {
                 if (o instanceof BeanDefinition) {
                     BeanDefinition<SyntheticBeanDisposer<Object>> definition = (BeanDefinition<SyntheticBeanDisposer<Object>>) o;
 
-                    definition.findMethod("dispose", bean.getClass(), Instance.class, Parameters.class)
-                            .ifPresent(disposalMethod -> beanContainer.get().fulfillAndExecuteMethod(
-                                    definition,
-                                    disposalMethod,
-                                    argument1 -> {
-                                        if (argument1.isInstance(bean)) {
-                                            return bean;
-                                        }
-                                        return null;
-                                    }
-                            ));
+                    definition.findMethod("dispose", bean.getClass(), SyntheticInjections.class, Parameters.class)
+                            .or(() -> definition.findMethod("dispose", bean.getClass(), Instance.class, Parameters.class))
+                            .ifPresent(disposalMethod -> {
+                                OdiSyntheticInjections injections = syntheticInjections(beanDefinition);
+                                try {
+                                    beanContainer.get().fulfillAndExecuteMethod(
+                                            definition,
+                                            disposalMethod,
+                                            argument1 -> {
+                                                if (argument1.isInstance(bean)) {
+                                                    return bean;
+                                                }
+                                                if (argument1.getType() == SyntheticInjections.class) {
+                                                    return injections;
+                                                }
+                                                return null;
+                                            }
+                                    );
+                                } finally {
+                                    injections.destroy();
+                                }
+                            });
                 }
             }
         }
+        closeAutoCloseSyntheticBean(beanDefinition, bean);
         return bean;
+    }
+
+    private void closeAutoCloseSyntheticBean(BeanDefinition<?> beanDefinition, Object bean) {
+        if (bean instanceof AutoCloseable autoCloseable
+                && beanDefinition.hasAnnotation(AutoClose.class)
+                && OdiUtils.getSyntheticParameters(beanDefinition).containsKey(OdiSyntheticParameters.BEAN_TYPE)) {
+            try {
+                autoCloseable.close();
+            } catch (Exception e) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Error auto-closing synthetic bean [{}]: {}", beanDefinition.getBeanType().getName(), e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private OdiSyntheticInjections syntheticInjections(BeanDefinition<?> beanDefinition) {
+        Map<String, Object> syntheticParameters = OdiUtils.getSyntheticParameters(beanDefinition);
+        Object value = syntheticParameters.get(OdiSyntheticParameters.INJECTION_POINTS);
+        List<OdiSyntheticInjectionPoint> injectionPoints = value instanceof List<?> list
+                ? (List<OdiSyntheticInjectionPoint>) list
+                : List.of();
+        return new OdiSyntheticInjections(
+                beanContainer.get(),
+                injectionPoints,
+                new DependentContext(null),
+                null,
+                beanDefinition,
+                false
+        );
     }
 }

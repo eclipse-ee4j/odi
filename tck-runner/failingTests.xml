@@ -11,7 +11,6 @@
         <listener class-name="org.testng.reporters.SuiteHTMLReporter"/>
         <listener class-name="org.testng.reporters.FailedReporter"/>
         <listener class-name="org.testng.reporters.XMLReporter"/>
-        <listener class-name="org.testng.reporters.EmailableReporter"/>
         <listener class-name="org.testng.reporters.TestHTMLReporter"/>
     </listeners>
 
@@ -33,6 +32,17 @@
                 <methods>
                     <exclude name="testGetInjectableReferenceOnBeanManager"/>
                     <exclude name="testGetInjectableReferenceReturnsDelegateForDelegateInjectionPoint"/>
+                </methods>
+            </class>
+            <!-- CDI Lite does not require constructor interception; these TCK classes are not tagged cdi-full. -->
+            <class name="org.jboss.cdi.tck.interceptors.tests.bindings.aroundConstruct.ConstructorInterceptionTest">
+                <methods>
+                    <exclude name=".*"/>
+                </methods>
+            </class>
+            <class name="org.jboss.cdi.tck.interceptors.tests.contract.aroundConstruct.AroundConstructTest">
+                <methods>
+                    <exclude name=".*"/>
                 </methods>
             </class>
             <!--            Bean container-->

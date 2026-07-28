@@ -15,6 +15,7 @@
  */
 package org.eclipse.odi.cdi;
 
+import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.exceptions.BeanCreationException;
@@ -58,7 +59,15 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
 
     private OdiBeanContainer getBeanContainer() {
         if (beanContainer == null) {
-            beanContainer = beanContext.getBean(OdiBeanContainer.class);
+            if (beanContext instanceof ApplicationContext) {
+                OdiSeContainer container = OdiSeContainer.findRegistered((ApplicationContext) beanContext);
+                if (container != null) {
+                    beanContainer = container.beanContainer();
+                }
+            }
+            if (beanContainer == null) {
+                beanContainer = beanContext.getBean(OdiBeanContainer.class);
+            }
         }
         return beanContainer;
     }
@@ -108,6 +117,9 @@ final class OdiCustomScopeRegistry implements CustomScopeRegistry {
                     try {
                         final CreatedBean<T> createdBean = creationContext.create();
                         ((OdiCreationalContext<T>) creationalContext).setCreatedBean(createdBean);
+                        if (createdBean.bean() == null && OdiBeanImpl.isIllegalNullProduct(creationContext.definition())) {
+                            throw new IllegalProductException("Producer bean returned null for non-dependent bean: " + creationContext.definition().getBeanType().getName());
+                        }
                         return createdBean.bean();
                     } catch (BeanCreationException e) {
                         if (OdiBeanImpl.isNullProducerResult(creationContext.definition(), e)) {

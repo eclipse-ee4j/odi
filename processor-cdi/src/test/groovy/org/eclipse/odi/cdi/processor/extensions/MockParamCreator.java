@@ -29,7 +29,7 @@ public class MockParamCreator {
             public <T> T get(String key, Class<T> type) {
                 final AnnotationValue<Property> av = map.get(key);
                 if (av != null) {
-                    return av.getValue(type).orElse(null);
+                    return av.getValue(type).map(MockParamCreator::copyArray).orElse(null);
                 }
                 return null;
             }
@@ -38,10 +38,42 @@ public class MockParamCreator {
             public <T> T get(String key, Class<T> type, T defaultValue) {
                 final AnnotationValue<Property> av = map.get(key);
                 if (av != null) {
-                    return av.getValue(type).orElse(defaultValue);
+                    return av.getValue(type).map(MockParamCreator::copyArray).orElse(defaultValue);
                 }
                 return defaultValue;
             }
         };
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T copyArray(T value) {
+        if (value instanceof boolean[]) {
+            return (T) ((boolean[]) value).clone();
+        }
+        if (value instanceof byte[]) {
+            return (T) ((byte[]) value).clone();
+        }
+        if (value instanceof short[]) {
+            return (T) ((short[]) value).clone();
+        }
+        if (value instanceof int[]) {
+            return (T) ((int[]) value).clone();
+        }
+        if (value instanceof long[]) {
+            return (T) ((long[]) value).clone();
+        }
+        if (value instanceof char[]) {
+            return (T) ((char[]) value).clone();
+        }
+        if (value instanceof float[]) {
+            return (T) ((float[]) value).clone();
+        }
+        if (value instanceof double[]) {
+            return (T) ((double[]) value).clone();
+        }
+        if (value instanceof Object[]) {
+            return (T) ((Object[]) value).clone();
+        }
+        return value;
     }
 }

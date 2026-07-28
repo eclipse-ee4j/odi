@@ -1,6 +1,8 @@
 name: CDI Lite TCK run
 on:
   workflow_dispatch:
+  push:
+  pull_request:
 jobs:
   tck:
     name: CDI Lite TCK / JDK 25

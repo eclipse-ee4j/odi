@@ -15,6 +15,7 @@
  */
 package org.eclipse.odi.cdi;
 
+import io.micronaut.aop.InterceptedProxy;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.exceptions.BeanInstantiationException;
@@ -35,7 +36,9 @@ import io.micronaut.inject.FieldInjectionPoint;
 import io.micronaut.inject.MethodInjectionPoint;
 import io.micronaut.inject.ProxyBeanDefinition;
 import jakarta.annotation.Priority;
+import jakarta.enterprise.context.AutoClose;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.Eager;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
@@ -44,6 +47,7 @@ import jakarta.enterprise.inject.CreationException;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.IllegalProductException;
 import jakarta.enterprise.inject.Produces;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.enterprise.inject.Stereotype;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.InjectionPoint;
@@ -107,6 +111,9 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
 
     @Override
     public Class<?> getBeanClass() {
+        if (OdiUtils.getSyntheticParameters(definition).containsKey(OdiSyntheticParameters.BEAN_TYPE)) {
+            return definition.getBeanType();
+        }
         return definition.getDeclaringType().orElseGet(() -> {
             if (definition instanceof AdvisedBeanType) {
                 return ((AdvisedBeanType<?>) definition).getInterceptedType();
@@ -155,11 +162,18 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
         BeanDefinition<T> creationDefinition = getCreationDefinition();
         try {
             BeanRegistration<T> beanRegistration = beanContext.getBeanRegistration(creationDefinition);
+            if (beanRegistration.getBean() == null && isIllegalNullProduct(creationDefinition)) {
+                throw new IllegalProductException("Producer bean returned null for non-dependent bean: " + creationDefinition.getBeanType().getName());
+            }
+            if (isIllegalNullProduct(creationDefinition)) {
+                forceProxyTargetCreation(beanRegistration.getBean(), creationDefinition);
+            }
             if (creationalContext != null) {
                 creationalContext.push(beanRegistration.bean());
                 if (creationalContext instanceof OdiCreationalContext) {
                     OdiCreationalContext<T> odiCreationalContext = (OdiCreationalContext<T>) creationalContext;
                     odiCreationalContext.setCreatedBean(beanRegistration);
+                    OdiSyntheticInjections.releaseCreatorInjections(creationDefinition, odiCreationalContext);
                 }
             }
             return beanRegistration.getBean();
@@ -203,18 +217,28 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
         }
     }
 
-    private BeanDefinition<T> getCreationDefinition() {
-        if (definition instanceof ProxyBeanDefinition && definition.hasAnnotation(Produces.class)) {
-            return beanContext.getProxyTargetBeanDefinition(
-                    ((ProxyBeanDefinition<T>) definition).getTargetType(),
-                    definition.getDeclaredQualifier()
-            );
+    private void forceProxyTargetCreation(T bean, BeanDefinition<T> definition) {
+        if (bean instanceof InterceptedProxy<?> interceptedProxy && interceptedProxy.interceptedTarget() == null) {
+            throw new IllegalProductException("Producer bean returned null for non-dependent bean: " + definition.getBeanType().getName());
         }
+    }
+
+    static boolean isIllegalNullProduct(BeanDefinition<?> definition) {
+        return isProducerDefinition(definition)
+                && MetaAnnotationSupport.resolveDeclaredScope(definition.getAnnotationMetadata()) != Dependent.class;
+    }
+
+    private static boolean isProducerDefinition(BeanDefinition<?> definition) {
+        return definition.hasAnnotation(Produces.class)
+                || definition.hasDeclaredAnnotation(Produces.class);
+    }
+
+    private BeanDefinition<T> getCreationDefinition() {
         return definition;
     }
 
     static boolean isNullProducerResult(BeanDefinition<?> definition, Throwable exception) {
-        if (!definition.hasAnnotation(Produces.class)) {
+        if (!isProducerDefinition(definition)) {
             return false;
         }
         Throwable current = exception;
@@ -461,6 +485,21 @@ public class OdiBeanImpl<T> implements OdiBean<T>, Prioritized {
     @Override
     public boolean isAlternative() {
         return definition.hasAnnotation(Alternative.class) || definition.hasStereotype(Alternative.class);
+    }
+
+    @Override
+    public boolean isReserve() {
+        return definition.hasDeclaredAnnotation(Reserve.class) || definition.hasDeclaredStereotype(Reserve.class);
+    }
+
+    @Override
+    public boolean isEager() {
+        return definition.hasAnnotation(Eager.class) || definition.hasStereotype(Eager.class);
+    }
+
+    @Override
+    public boolean isAutoClose() {
+        return definition.hasAnnotation(AutoClose.class) || definition.hasStereotype(AutoClose.class);
     }
 
     @Override

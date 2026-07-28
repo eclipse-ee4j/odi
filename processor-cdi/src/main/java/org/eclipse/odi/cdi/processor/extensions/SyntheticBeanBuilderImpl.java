@@ -17,8 +17,11 @@ package org.eclipse.odi.cdi.processor.extensions;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -26,7 +29,10 @@ import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.visitor.VisitorContext;
+import jakarta.enterprise.context.AutoClose;
+import jakarta.enterprise.context.Eager;
 import jakarta.enterprise.inject.Alternative;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanCreator;
 import jakarta.enterprise.inject.build.compatible.spi.SyntheticBeanDisposer;
@@ -43,6 +49,7 @@ final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder impleme
     private final ClassElement beanType;
     private final VisitorContext localVisitorContext;
     private final Set<ClassElement> exposedTypes = new HashSet<>();
+    private final List<SyntheticInjectionPoint> injectionPoints = new ArrayList<>();
     private Class<? extends SyntheticBeanDisposer<T>> disposerClass;
     private Class<? extends SyntheticBeanCreator<T>> creatorClass;
 
@@ -68,6 +75,10 @@ final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder impleme
 
     public Class<? extends SyntheticBeanCreator<T>> getCreatorClass() {
         return creatorClass;
+    }
+
+    public List<SyntheticInjectionPoint> getInjectionPoints() {
+        return Collections.unmodifiableList(injectionPoints);
     }
 
     @Override
@@ -121,13 +132,39 @@ final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder impleme
 
     @Override
     public SyntheticBeanBuilder<T> alternative(boolean isAlternative) {
-        addAnnotation(Alternative.class);
+        if (isAlternative) {
+            addAnnotation(Alternative.class);
+        }
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> reserve(boolean isReserve) {
+        if (isReserve) {
+            addAnnotation(Reserve.class);
+        }
         return this;
     }
 
     @Override
     public SyntheticBeanBuilder<T> priority(int priority) {
         super.priority(priority);
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> eager(boolean isEager) {
+        if (isEager) {
+            addAnnotation(Eager.class);
+        }
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> autoClose(boolean isAutoClose) {
+        if (isAutoClose) {
+            addAnnotation(AutoClose.class);
+        }
         return this;
     }
 
@@ -283,6 +320,53 @@ final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder impleme
     }
 
     @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Class<?> type) {
+        return withInjectionPoint(type, new Annotation[0]);
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Class<?> type, Annotation... qualifiers) {
+        Objects.requireNonNull(type, "Injection point type cannot be null");
+        injectionPoints.add(new SyntheticInjectionPoint(ClassElement.of(type), List.of(qualifiers), List.of()));
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Class<?> type, AnnotationInfo... qualifiers) {
+        Objects.requireNonNull(type, "Injection point type cannot be null");
+        injectionPoints.add(new SyntheticInjectionPoint(ClassElement.of(type), List.of(), List.of(qualifiers)));
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Type type) {
+        return withInjectionPoint(type, new Annotation[0]);
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Type type, Annotation... qualifiers) {
+        injectionPoints.add(new SyntheticInjectionPoint(toClassElement(type), List.of(qualifiers), List.of()));
+        return this;
+    }
+
+    @Override
+    public SyntheticBeanBuilder<T> withInjectionPoint(Type type, AnnotationInfo... qualifiers) {
+        injectionPoints.add(new SyntheticInjectionPoint(toClassElement(type), List.of(), List.of(qualifiers)));
+        return this;
+    }
+
+    private ClassElement toClassElement(Type type) {
+        Objects.requireNonNull(type, "Injection point type cannot be null");
+        if (type instanceof ClassTypeImpl classType) {
+            return classType.getClassElement();
+        }
+        if (type instanceof ParameterizedTypeImpl parameterizedType) {
+            return parameterizedType.getClassElement();
+        }
+        throw new IllegalArgumentException("Unsupported synthetic injection point type: " + type);
+    }
+
+    @Override
     public SyntheticBeanBuilder<T> createWith(Class<? extends SyntheticBeanCreator<T>> creatorClass) {
         this.creatorClass = creatorClass;
         return this;
@@ -306,5 +390,14 @@ final class SyntheticBeanBuilderImpl<T> extends AbstractSyntheticBuilder impleme
     @Override
     public DeclarationInfo info() {
         throw new IllegalStateException("Not a declaration");
+    }
+
+    record SyntheticInjectionPoint(ClassElement type,
+                                   List<Annotation> qualifiers,
+                                   List<AnnotationInfo> qualifierInfos) {
+        SyntheticInjectionPoint {
+            qualifiers = qualifiers == null ? List.of() : Arrays.asList(qualifiers.toArray(Annotation[]::new));
+            qualifierInfos = qualifierInfos == null ? List.of() : Arrays.asList(qualifierInfos.toArray(AnnotationInfo[]::new));
+        }
     }
 }

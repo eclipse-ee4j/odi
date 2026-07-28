@@ -71,6 +71,55 @@ class MonitoringInterceptor {
         bean.@$interceptors[0][0].aroundInvoke.name == 'monitorInvocation'
     }
 
+    void 'test around invoke interceptor binding with member'() {
+        given:
+        def context = buildContext('''
+package intertest;
+
+import jakarta.enterprise.context.Dependent;
+import jakarta.interceptor.*;
+import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.*;
+
+@Dependent
+class Test {
+    @Counted(Mode.INCREASE)
+    public int count() {
+        return 10;
+    }
+}
+
+@Counted(Mode.INCREASE)
+@Interceptor
+class CountInterceptor {
+    @AroundInvoke
+    public Object around(InvocationContext ctx) throws Exception {
+        return ((Integer) ctx.proceed()) + 10;
+    }
+}
+
+@InterceptorBinding
+@Target({TYPE, METHOD})
+@Retention(RUNTIME)
+@interface Counted {
+    Mode value();
+}
+
+enum Mode {
+    INCREASE,
+    DECREASE
+}
+''')
+
+        when:
+        def bean = getBean(context, 'intertest.Test')
+
+        then:
+        bean instanceof Intercepted
+        bean.count() == 20
+    }
+
     void 'test fail compilation for intercepted bean without bean constructor'() {
         when:
         buildContext('''

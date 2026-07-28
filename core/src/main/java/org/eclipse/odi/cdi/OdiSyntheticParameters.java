@@ -30,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Internal
 public final class OdiSyntheticParameters {
     public static final String PROPERTY = "org.eclipse.odi.synthetic.parameters";
+    public static final String INJECTION_POINTS = "org.eclipse.odi.synthetic.injection.points";
+    public static final String BEAN_TYPE = "org.eclipse.odi.synthetic.bean.type";
 
     private static final Map<String, Map<String, Object>> PARAMETERS = new ConcurrentHashMap<>();
 
@@ -38,12 +40,45 @@ public final class OdiSyntheticParameters {
 
     public static String register(Map<String, Object> parameters) {
         String id = UUID.randomUUID().toString();
-        PARAMETERS.put(id, Collections.unmodifiableMap(new LinkedHashMap<>(parameters)));
+        Map<String, Object> copy = new LinkedHashMap<>(parameters.size());
+        parameters.forEach((key, value) -> copy.put(key, copyArray(value)));
+        PARAMETERS.put(id, Collections.unmodifiableMap(copy));
         return id;
     }
 
     public static Map<String, Object> find(String id) {
         Map<String, Object> parameters = PARAMETERS.get(id);
         return parameters == null ? Collections.emptyMap() : parameters;
+    }
+
+    private static Object copyArray(Object value) {
+        if (value instanceof boolean[]) {
+            return ((boolean[]) value).clone();
+        }
+        if (value instanceof byte[]) {
+            return ((byte[]) value).clone();
+        }
+        if (value instanceof short[]) {
+            return ((short[]) value).clone();
+        }
+        if (value instanceof int[]) {
+            return ((int[]) value).clone();
+        }
+        if (value instanceof long[]) {
+            return ((long[]) value).clone();
+        }
+        if (value instanceof char[]) {
+            return ((char[]) value).clone();
+        }
+        if (value instanceof float[]) {
+            return ((float[]) value).clone();
+        }
+        if (value instanceof double[]) {
+            return ((double[]) value).clone();
+        }
+        if (value instanceof Object[]) {
+            return ((Object[]) value).clone();
+        }
+        return value;
     }
 }

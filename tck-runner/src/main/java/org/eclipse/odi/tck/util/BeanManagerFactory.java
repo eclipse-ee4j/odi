@@ -16,8 +16,6 @@
 package org.eclipse.odi.tck.util;
 
 import io.micronaut.context.annotation.Factory;
-import jakarta.el.ELResolver;
-import jakarta.el.ExpressionFactory;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.context.spi.Context;
 import jakarta.enterprise.context.spi.Contextual;
@@ -115,16 +113,6 @@ public class BeanManagerFactory {
 
             @Override
             public int getInterceptorBindingHashCode(Annotation interceptorBinding) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public ELResolver getELResolver() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public ExpressionFactory wrapExpressionFactory(ExpressionFactory expressionFactory) {
                 throw new UnsupportedOperationException();
             }
 
@@ -282,6 +270,11 @@ public class BeanManagerFactory {
                                            Type observedEventType,
                                            Set<Annotation> observedEventQualifiers) {
                 return beanContainer().isMatchingEvent(eventType, eventQualifiers, observedEventType, observedEventQualifiers);
+            }
+
+            @Override
+            public <T> T unwrapClientProxy(T instance) {
+                return beanContainer().unwrapClientProxy(instance);
             }
         };
     }

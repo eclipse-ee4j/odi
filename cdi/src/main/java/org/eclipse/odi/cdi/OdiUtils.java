@@ -63,12 +63,7 @@ public final class OdiUtils {
                 );
             }
         }
-        Map<String, Object> syntheticParameters = map.getOrDefault(
-                OdiSyntheticParameters.PROPERTY,
-                AnnotationValue.builder(Property.class).build()
-        ).stringValue()
-                .map(OdiSyntheticParameters::find)
-                .orElse(Map.of());
+        Map<String, Object> syntheticParameters = getSyntheticParameters(map);
         return new Parameters() {
             @Override
             public <T> T get(String key, Class<T> type) {
@@ -77,7 +72,7 @@ public final class OdiUtils {
                 }
                 final AnnotationValue<Property> av = map.get(key);
                 if (av != null) {
-                    return av.getValue(type).orElse(null);
+                    return av.getValue(type).map(OdiUtils::copyArray).orElse(null);
                 }
                 return null;
             }
@@ -90,11 +85,33 @@ public final class OdiUtils {
                 }
                 final AnnotationValue<Property> av = map.get(key);
                 if (av != null) {
-                    return av.getValue(type).orElse(defaultValue);
+                    return av.getValue(type).map(OdiUtils::copyArray).orElse(defaultValue);
                 }
                 return defaultValue;
             }
         };
+    }
+
+    public static Map<String, Object> getSyntheticParameters(BeanDefinition<?> declaringBean) {
+        final List<AnnotationValue<Property>> values = declaringBean.getAnnotationValuesByType(Property.class);
+        Map<String, AnnotationValue<Property>> map = new LinkedHashMap<>(values.size());
+        if (!values.isEmpty()) {
+            for (AnnotationValue<Property> value : values) {
+                value.stringValue("name").ifPresent(n ->
+                    map.put(n, value)
+                );
+            }
+        }
+        return getSyntheticParameters(map);
+    }
+
+    private static Map<String, Object> getSyntheticParameters(Map<String, AnnotationValue<Property>> map) {
+        return map.getOrDefault(
+                OdiSyntheticParameters.PROPERTY,
+                AnnotationValue.builder(Property.class).build()
+        ).stringValue()
+                .map(OdiSyntheticParameters::find)
+                .orElse(Map.of());
     }
 
     private static <T> T convert(Object value, Class<T> type) {
@@ -102,7 +119,7 @@ public final class OdiUtils {
             return null;
         }
         if (type.isInstance(value)) {
-            return type.cast(value);
+            return type.cast(copyArray(value));
         }
         if (type == Invoker[].class && value instanceof InvokerInfo[]) {
             InvokerInfo[] infos = (InvokerInfo[]) value;
@@ -117,5 +134,37 @@ public final class OdiUtils {
             return type.cast(invokers);
         }
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T copyArray(T value) {
+        if (value instanceof boolean[]) {
+            return (T) ((boolean[]) value).clone();
+        }
+        if (value instanceof byte[]) {
+            return (T) ((byte[]) value).clone();
+        }
+        if (value instanceof short[]) {
+            return (T) ((short[]) value).clone();
+        }
+        if (value instanceof int[]) {
+            return (T) ((int[]) value).clone();
+        }
+        if (value instanceof long[]) {
+            return (T) ((long[]) value).clone();
+        }
+        if (value instanceof char[]) {
+            return (T) ((char[]) value).clone();
+        }
+        if (value instanceof float[]) {
+            return (T) ((float[]) value).clone();
+        }
+        if (value instanceof double[]) {
+            return (T) ((double[]) value).clone();
+        }
+        if (value instanceof Object[]) {
+            return (T) ((Object[]) value).clone();
+        }
+        return value;
     }
 }

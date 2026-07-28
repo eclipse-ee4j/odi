@@ -16,8 +16,12 @@ import java.util.Set;
  * synthesizes it during annotation processing and passes the discovered gateway
  * names to {@link Creator} as build-time parameters.</p>
  */
-public final class PaymentCatalog {
+public class PaymentCatalog {
     private final Set<String> gateways;
+
+    protected PaymentCatalog() {
+        this.gateways = Collections.emptySet();
+    }
 
     private PaymentCatalog(Set<String> gateways) {
         this.gateways = Collections.unmodifiableSet(new LinkedHashSet<>(gateways));

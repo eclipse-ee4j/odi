@@ -29,12 +29,15 @@ import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.CreationException;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.Prioritized;
 import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Member;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -42,6 +45,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
@@ -57,6 +61,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     private final InjectionPoint injectionPoint;
     @Nullable
     private final Qualifier<T> qualifier;
+    private final boolean allowDynamicInjectionPoint;
     @Nullable
     private OdiBean<T> bean;
 
@@ -68,7 +73,17 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     Argument<T> beanType,
                     @Nullable InjectionPoint injectionPoint,
                     @Nullable Qualifier<T> qualifier) {
-        this(beanContainer, context, beanType, injectionPoint, qualifier, new HashMap<>());
+        this(beanContainer, context, beanType, injectionPoint, qualifier, true);
+    }
+
+    OdiInstanceImpl(OdiBeanContainer beanContainer,
+                    @Nullable
+                    Context context,
+                    Argument<T> beanType,
+                    @Nullable InjectionPoint injectionPoint,
+                    @Nullable Qualifier<T> qualifier,
+                    boolean allowDynamicInjectionPoint) {
+        this(beanContainer, context, beanType, injectionPoint, qualifier, allowDynamicInjectionPoint, new HashMap<>());
     }
 
     private OdiInstanceImpl(OdiBeanContainer beanContainer,
@@ -77,12 +92,14 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                             Argument<T> beanType,
                             @Nullable InjectionPoint injectionPoint,
                             @Nullable Qualifier<T> qualifier,
+                            boolean allowDynamicInjectionPoint,
                             Map<Object, CreationalContext<?>> created) {
         this.beanContainer = beanContainer;
         this.context = context == null ? NoOpDependentContext.INSTANCE : context;
         this.beanType = beanType;
         this.qualifier = qualifier;
         this.injectionPoint = injectionPoint;
+        this.allowDynamicInjectionPoint = allowDynamicInjectionPoint;
         this.created = created;
     }
 
@@ -114,6 +131,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                     argument,
                     selectInjectionPoint(argument, qualifierAnnotations),
                     withQualifier(qualifier),
+                    allowDynamicInjectionPoint,
                     created
             );
         }
@@ -127,6 +145,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                 beanType,
                 selectInjectionPoint(beanType, qualifiers),
                 withAnnotations(qualifiers),
+                allowDynamicInjectionPoint,
                 created
         );
     }
@@ -168,6 +187,7 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
 
     @Override
     public void destroy(T instance) {
+        Objects.requireNonNull(instance, "instance");
         CreationalContext<?> creationalContext = created.remove(instance);
         if (creationalContext != null) {
             creationalContext.release();
@@ -250,13 +270,29 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
                 .filter(bean -> getPriority(bean) > 0)
                 .collect(Collectors.toList());
         if (prioritizedAlternatives.isEmpty()) {
+            List<OdiBean<T>> nonReserve = beans.stream()
+                    .filter(bean -> !bean.isReserve())
+                    .collect(Collectors.toList());
+            if (!nonReserve.isEmpty() && nonReserve.size() < beans.size()) {
+                return nonReserve;
+            }
+            if (beans.stream().allMatch(Bean::isReserve)) {
+                return highestPriorityBeans(beans);
+            }
             return beans.stream().collect(Collectors.toList());
         }
-        int highestPriority = prioritizedAlternatives.stream()
+        return highestPriorityBeans(prioritizedAlternatives);
+    }
+
+    private List<OdiBean<T>> highestPriorityBeans(Collection<OdiBean<T>> beans) {
+        int highestPriority = beans.stream()
                 .mapToInt(this::getPriority)
                 .max()
                 .orElse(0);
-        return prioritizedAlternatives.stream()
+        if (highestPriority <= 0) {
+            return List.of();
+        }
+        return beans.stream()
                 .filter(bean -> getPriority(bean) == highestPriority)
                 .sorted(Comparator.comparing(bean -> bean.getBeanClass().getName()))
                 .collect(Collectors.toList());
@@ -279,7 +315,12 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     }
 
     private T create(OdiBean<T> resolvedBean, CreationalContext<T> creationalContext) {
-        if (injectionPoint == null || resolvedBean.getScope() != Dependent.class) {
+        if (resolvedBean.getScope() != Dependent.class) {
+            @SuppressWarnings("unchecked")
+            T reference = (T) beanContainer.getReference(resolvedBean, beanType.getType(), creationalContext);
+            return reference;
+        }
+        if (injectionPoint == null) {
             return context.get(resolvedBean, creationalContext);
         }
         return OdiCurrentInjectionPoint.call(
@@ -292,13 +333,26 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
     @Nullable
     private InjectionPoint selectInjectionPoint(Argument<?> selectedBeanType, @Nullable Annotation[] qualifierAnnotations) {
         if (!(injectionPoint instanceof OdiInjectionPoint)) {
-            return injectionPoint;
+            return injectionPoint == null && allowDynamicInjectionPoint
+                    ? new DynamicInjectionPoint(selectedBeanType.asType(), selectedQualifiers(qualifierAnnotations))
+                    : injectionPoint;
         }
         OdiInjectionPoint odiInjectionPoint = (OdiInjectionPoint) injectionPoint;
         Set<Annotation> selectedQualifiers = qualifierAnnotations == null
                 ? null
                 : mergeQualifiers(injectionPoint.getQualifiers(), qualifierAnnotations);
         return odiInjectionPoint.withArgument(selectedBeanType, selectedQualifiers);
+    }
+
+    private static Set<Annotation> selectedQualifiers(@Nullable Annotation[] qualifierAnnotations) {
+        if (qualifierAnnotations == null || qualifierAnnotations.length == 0) {
+            return Set.of(jakarta.enterprise.inject.Default.Literal.INSTANCE);
+        }
+        Set<Annotation> qualifiers = new LinkedHashSet<>();
+        for (Annotation qualifierAnnotation : qualifierAnnotations) {
+            qualifiers.add(qualifierAnnotation);
+        }
+        return qualifiers;
     }
 
     private static Set<Annotation> mergeQualifiers(Set<Annotation> existingQualifiers, Annotation[] selectedQualifiers) {
@@ -333,6 +387,44 @@ final class OdiInstanceImpl<T> implements OdiInstance<T> {
             return Qualifiers.byQualifiers(qualifier, (Qualifier) newQualifier);
         }
         return (Qualifier<K>) qualifier;
+    }
+
+    private record DynamicInjectionPoint(Type type, Set<Annotation> qualifiers) implements InjectionPoint {
+
+        @Override
+        public Type getType() {
+            return type;
+        }
+
+        @Override
+        public Set<Annotation> getQualifiers() {
+            return qualifiers;
+        }
+
+        @Override
+        public Bean<?> getBean() {
+            return null;
+        }
+
+        @Override
+        public Member getMember() {
+            return null;
+        }
+
+        @Override
+        public Annotated getAnnotated() {
+            return null;
+        }
+
+        @Override
+        public boolean isDelegate() {
+            return false;
+        }
+
+        @Override
+        public boolean isTransient() {
+            return false;
+        }
     }
 
 }

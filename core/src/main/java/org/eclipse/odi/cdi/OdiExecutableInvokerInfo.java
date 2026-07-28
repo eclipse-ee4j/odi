@@ -36,6 +36,9 @@ public final class OdiExecutableInvokerInfo implements InvokerInfo, Invoker<Obje
     private final boolean[] argumentLookups;
 
     private boolean instanceLookup;
+    private String asyncReturnHandlerClassName;
+    private String asyncParameterHandlerClassName;
+    private int asyncParameterIndex = -1;
 
     public OdiExecutableInvokerInfo(String beanClassName,
                                     String methodDeclaringClassName,
@@ -46,8 +49,8 @@ public final class OdiExecutableInvokerInfo implements InvokerInfo, Invoker<Obje
         this.beanClassName = beanClassName;
         this.methodDeclaringClassName = methodDeclaringClassName;
         this.methodName = methodName;
-        this.parameterTypeNames = parameterTypeNames;
-        this.parameterArrayDimensions = parameterArrayDimensions;
+        this.parameterTypeNames = parameterTypeNames.clone();
+        this.parameterArrayDimensions = parameterArrayDimensions.clone();
         this.staticMethod = staticMethod;
         this.argumentLookups = new boolean[parameterTypeNames.length];
     }
@@ -65,11 +68,11 @@ public final class OdiExecutableInvokerInfo implements InvokerInfo, Invoker<Obje
     }
 
     public String[] getParameterTypeNames() {
-        return parameterTypeNames;
+        return parameterTypeNames.clone();
     }
 
     public int[] getParameterArrayDimensions() {
-        return parameterArrayDimensions;
+        return parameterArrayDimensions.clone();
     }
 
     public boolean isStaticMethod() {
@@ -82,6 +85,27 @@ public final class OdiExecutableInvokerInfo implements InvokerInfo, Invoker<Obje
 
     public boolean isArgumentLookup(int index) {
         return argumentLookups[index];
+    }
+
+    public String getAsyncReturnHandlerClassName() {
+        return asyncReturnHandlerClassName;
+    }
+
+    public String getAsyncParameterHandlerClassName() {
+        return asyncParameterHandlerClassName;
+    }
+
+    public int getAsyncParameterIndex() {
+        return asyncParameterIndex;
+    }
+
+    public void asyncReturnHandler(String handlerClassName) {
+        this.asyncReturnHandlerClassName = handlerClassName;
+    }
+
+    public void asyncParameterHandler(String handlerClassName, int parameterIndex) {
+        this.asyncParameterHandlerClassName = handlerClassName;
+        this.asyncParameterIndex = parameterIndex;
     }
 
     @Override

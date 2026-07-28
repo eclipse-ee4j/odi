@@ -17,6 +17,7 @@ package org.eclipse.odi.cdi.processor.visitors;
 
 import io.micronaut.inject.ast.ClassElement;
 import io.micronaut.inject.ast.ElementQuery;
+import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.context.annotation.Executable;
@@ -57,11 +58,11 @@ public class DisposesMethodVisitor extends ParameterAnnotationInjectableMethodVi
 
         // Skip validating for beans with qualifiers
         if (!parameterElement.hasDeclaredStereotype(io.micronaut.core.annotation.AnnotationUtil.QUALIFIER)) {
-            Optional<MethodElement> producerMethod = validateMatchingProduces(methodElement, context, disposedType);
-            if (producerMethod.isEmpty()) {
+            Optional<MemberElement> producer = validateMatchingProduces(methodElement, context, disposedType);
+            if (producer.isEmpty()) {
                 return;
             }
-            producerMethod.get().annotate(AnnotationUtil.ANN_DISPOSER_METHOD);
+            producer.get().annotate(AnnotationUtil.ANN_DISPOSER_METHOD);
         }
 
         this.disposerMethods.add(methodElement);
@@ -71,7 +72,7 @@ public class DisposesMethodVisitor extends ParameterAnnotationInjectableMethodVi
         }
     }
 
-    private Optional<MethodElement> validateMatchingProduces(MethodElement element, VisitorContext context, ClassElement disposedType) {
+    private Optional<MemberElement> validateMatchingProduces(MethodElement element, VisitorContext context, ClassElement disposedType) {
         if (!disposerMethods.isEmpty()) {
             for (MethodElement disposerMethod : disposerMethods) {
                 final Optional<ParameterElement> disposerParam = Arrays.stream(disposerMethod.getParameters())
@@ -90,20 +91,28 @@ public class DisposesMethodVisitor extends ParameterAnnotationInjectableMethodVi
         }
 
         // now validate if a bean producing method is present
-        final Optional<MethodElement> producerMethod = currentClass.getEnclosedElement(
+        Optional<MemberElement> producer = currentClass.getEnclosedElement(
                 ElementQuery.ALL_METHODS
                         .onlyConcrete()
                         .annotated((annotationMetadata -> annotationMetadata.hasDeclaredAnnotation(Produces.class)))
                         .filter((methodElement -> disposedType.isAssignable(methodElement.getGenericReturnType())))
-        );
+        ).map(method -> (MemberElement) method);
 
-        if (producerMethod.isEmpty()) {
+        if (producer.isEmpty()) {
+            producer = currentClass.getEnclosedElement(
+                    ElementQuery.ALL_FIELDS
+                            .annotated((annotationMetadata -> annotationMetadata.hasDeclaredAnnotation(Produces.class)))
+                            .filter((fieldElement -> disposedType.isAssignable(fieldElement.getGenericField())))
+            ).map(field -> (MemberElement) field);
+        }
+
+        if (producer.isEmpty()) {
             context.fail(
                     "No associated @Produces method found for @Disposes method. A method with a @Disposes parameter"
-                            + " must declare a method annotated with @Produces that has the same type as the "
+                            + " must declare a method or field annotated with @Produces that has the same type as the "
                             + "parameter. See " + CdiUtil.SPEC_LOCATION + "#disposer_method_resolution",
                     element);
         }
-        return producerMethod;
+        return producer;
     }
 }

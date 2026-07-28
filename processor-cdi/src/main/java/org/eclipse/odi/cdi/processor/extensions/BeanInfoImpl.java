@@ -28,9 +28,12 @@ import io.micronaut.inject.ast.beans.BeanElement;
 import io.micronaut.inject.ast.beans.BeanElementBuilder;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.context.NormalScope;
+import jakarta.enterprise.context.AutoClose;
+import jakarta.enterprise.context.Eager;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.ObservesAsync;
 import jakarta.enterprise.inject.Alternative;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
 import jakarta.enterprise.inject.build.compatible.spi.DisposerInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InjectionPointInfo;
@@ -206,12 +209,27 @@ class BeanInfoImpl implements BeanInfo {
     }
 
     @Override
+    public boolean isReserve() {
+        return beanElement.hasDeclaredAnnotation(Reserve.class) || beanElement.hasDeclaredStereotype(Reserve.class);
+    }
+
+    @Override
     public Integer priority() {
         final OptionalInt i = beanElement.intValue(Order.class);
         if (i.isPresent()) {
             return -i.getAsInt();
         }
         return null;
+    }
+
+    @Override
+    public boolean isEager() {
+        return beanElement.hasAnnotation(Eager.class) || beanElement.hasStereotype(Eager.class);
+    }
+
+    @Override
+    public boolean isAutoClose() {
+        return beanElement.hasAnnotation(AutoClose.class) || beanElement.hasStereotype(AutoClose.class);
     }
 
     @Override

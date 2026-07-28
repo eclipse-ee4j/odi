@@ -21,6 +21,7 @@ import io.micronaut.inject.ast.EnumConstantElement;
 import io.micronaut.inject.ast.FieldElement;
 import io.micronaut.inject.ast.MemberElement;
 import io.micronaut.inject.ast.PackageElement;
+import io.micronaut.inject.ast.PropertyElement;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
@@ -33,7 +34,6 @@ import jakarta.enterprise.lang.model.types.TypeVariable;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -122,6 +122,14 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
     }
 
     @Override
+    public Collection<ClassInfo> permittedSubclasses() {
+        return classElement.getPermittedSubclasses()
+                .stream()
+                .map(element -> new ClassInfoImpl(element, types, visitorContext))
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    @Override
     public boolean isPlainClass() {
         return !isInterface() && !isEnum() && !isAnnotation() && !isRecord();
     }
@@ -154,6 +162,11 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
     @Override
     public boolean isFinal() {
         return classElement.isFinal();
+    }
+
+    @Override
+    public boolean isSealed() {
+        return classElement.isSealed();
     }
 
     @Override
@@ -191,8 +204,22 @@ final class ClassInfoImpl extends DeclarationInfoImpl implements ClassInfo {
 
     @Override
     public Collection<RecordComponentInfo> recordComponents() {
-        // TODO
-        return Collections.emptyList();
+        if (!isRecord()) {
+            return List.of();
+        }
+        return classElement.getBeanProperties()
+                .stream()
+                .map(this::toRecordComponentInfo)
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    private RecordComponentInfo toRecordComponentInfo(PropertyElement propertyElement) {
+        return new RecordComponentInfoImpl(
+                this,
+                propertyElement,
+                types,
+                visitorContext
+        );
     }
 
     private ClassInfoImpl getDeclaringType(ClassElement declaringType) {

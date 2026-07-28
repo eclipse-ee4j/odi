@@ -11,6 +11,8 @@ dependencies {
     api(project(":micronaut-odi-core"))
     api(libs.cdi.api)
 
+    compileOnly(mn.micronaut.core.reactive)
+
     testAnnotationProcessor(project(":micronaut-odi-processor-cdi"))
 
     testImplementation(libs.javax.annotation.api)

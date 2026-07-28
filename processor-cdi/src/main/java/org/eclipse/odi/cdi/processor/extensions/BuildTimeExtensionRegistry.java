@@ -16,6 +16,8 @@
 package org.eclipse.odi.cdi.processor.extensions;
 
 import io.micronaut.context.LifeCycle;
+import io.micronaut.core.annotation.AnnotationClassValue;
+import io.micronaut.core.annotation.AnnotationMetadata;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.AnnotationValueBuilder;
@@ -36,6 +38,7 @@ import io.micronaut.inject.ast.ElementQuery;
 import io.micronaut.inject.ast.MethodElement;
 import io.micronaut.inject.ast.ParameterElement;
 import io.micronaut.inject.ast.beans.BeanElement;
+import io.micronaut.inject.qualifiers.InterceptorBindingQualifier;
 import io.micronaut.inject.visitor.VisitorContext;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.inject.build.compatible.spi.BeanInfo;
@@ -47,6 +50,7 @@ import jakarta.enterprise.inject.build.compatible.spi.Enhancement;
 import jakarta.enterprise.inject.build.compatible.spi.FieldConfig;
 import jakarta.enterprise.inject.build.compatible.spi.InterceptorInfo;
 import jakarta.enterprise.inject.build.compatible.spi.InvokerFactory;
+import jakarta.enterprise.inject.build.compatible.spi.InvokerValidation;
 import jakarta.enterprise.inject.build.compatible.spi.Messages;
 import jakarta.enterprise.inject.build.compatible.spi.MetaAnnotations;
 import jakarta.enterprise.inject.build.compatible.spi.MethodConfig;
@@ -60,13 +64,16 @@ import jakarta.enterprise.inject.build.compatible.spi.SyntheticObserverBuilder;
 import jakarta.enterprise.inject.build.compatible.spi.Types;
 import jakarta.enterprise.inject.build.compatible.spi.Validation;
 import jakarta.enterprise.inject.spi.DeploymentException;
+import jakarta.enterprise.util.TypeLiteral;
 import jakarta.enterprise.lang.model.declarations.ClassInfo;
 import jakarta.enterprise.lang.model.declarations.DeclarationInfo;
 import jakarta.enterprise.lang.model.declarations.FieldInfo;
 import jakarta.enterprise.lang.model.declarations.MethodInfo;
 import jakarta.enterprise.lang.model.types.Type;
+import jakarta.enterprise.invoke.AsyncHandler;
 import jakarta.interceptor.Interceptor;
 import org.eclipse.odi.cdi.OdiExecutableInvokerInfo;
+import org.eclipse.odi.cdi.processor.transformers.InterceptorBindingTransformer;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.RetentionPolicy;
@@ -76,7 +83,9 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -99,6 +108,9 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
     private final List<String> loadErrors = new ArrayList<>();
     private final List<BeanElement> beanElements = new ArrayList<>();
     private final List<InvokerRegistration> invokers = new ArrayList<>();
+    private List<AsyncHandlerMetadata> returnAsyncHandlers;
+    private List<AsyncHandlerMetadata> parameterAsyncHandlers;
+    private boolean asyncHandlersValidated;
     private DiscoveryImpl discovery;
     private static final String DEPLOYMENT_EXCEPTION_MARKER = "[ODI_DEPLOYMENT_EXCEPTION] ";
     private static final String DEFAULT_QUALIFIER = "jakarta.enterprise.inject.Default";
@@ -299,6 +311,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
     public void runDiscoveryEnhancements(Element typeToEnhance) {
         final MetaAnnotationsImpl metaAnnotations = discovery.getMetaAnnotations();
         final Set<MetaAnnotationImpl> qualifiers = metaAnnotations.getQualifiers();
+        final Set<MetaAnnotationImpl> interceptorBindings = metaAnnotations.getInterceptorBindings();
 
         for (MetaAnnotationImpl annotation : qualifiers) {
             final String annotationName = annotation.getName();
@@ -330,6 +343,51 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 }
             }
         }
+        for (MetaAnnotationImpl annotation : interceptorBindings) {
+            final String annotationName = annotation.getName();
+            if (typeToEnhance.hasDeclaredAnnotation(annotationName)) {
+                final AnnotationValue<Annotation> annotationValue = typeToEnhance.getAnnotation(annotationName);
+                if (annotationValue != null) {
+                    final AnnotationValueBuilder<Annotation> annotationBuilder =
+                            AnnotationValue.builder(annotationValue, RetentionPolicy.RUNTIME);
+                    final String[] nonBindingMembers = annotation.getNonBindingMembers();
+                    if (ArrayUtils.isNotEmpty(nonBindingMembers)) {
+                        annotationBuilder.member(AnnotationUtil.NON_BINDING_ATTRIBUTE, nonBindingMembers);
+                    }
+                    AnnotationValue<Annotation> rewrittenAnnotationValue = annotationBuilder.build();
+                    AnnotationValue<Annotation> bindingValues = bindingValues(rewrittenAnnotationValue);
+
+                    final List<AnnotationValue<?>> stereotypes = new ArrayList<>();
+                    if (annotationValue.getStereotypes() != null) {
+                        for (AnnotationValue<?> stereotype : annotationValue.getStereotypes()) {
+                            if (!AnnotationUtil.ANN_INTERCEPTOR_BINDING.equals(stereotype.getAnnotationName())) {
+                                stereotypes.add(stereotype);
+                            }
+                        }
+                    }
+                    for (AnnotationValue<?> interceptorBinding : InterceptorBindingTransformer.INTERCEPTOR_BINDING_VALUES) {
+                        stereotypes.add(AnnotationValue.builder(interceptorBinding, RetentionPolicy.RUNTIME)
+                                .member(AnnotationMetadata.VALUE_MEMBER, new AnnotationClassValue<>(annotationName))
+                                .member(InterceptorBindingQualifier.META_BINDING_VALUES, bindingValues)
+                                .build());
+                    }
+                    typeToEnhance.annotate(AnnotationValue.builder(rewrittenAnnotationValue, RetentionPolicy.RUNTIME)
+                            .replaceStereotypes(stereotypes)
+                            .build());
+                }
+            }
+        }
+    }
+
+    private AnnotationValue<Annotation> bindingValues(AnnotationValue<?> annotationValue) {
+        Map<CharSequence, Object> values = new LinkedHashMap<>(annotationValue.getValues());
+        values.remove(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+        for (String nonBinding : annotationValue.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)) {
+            values.remove(nonBinding);
+        }
+        return AnnotationValue.<Annotation>builder(annotationValue.getAnnotationName())
+                .members(values)
+                .build();
     }
 
     /**
@@ -344,7 +402,6 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         for (BuildCompatibleExtensionEntry entry : buildTimeExtensions) {
             final BuildCompatibleExtension extension = entry.extension;
             final List<Method> processingMethods = entry.registrationMethods;
-            methods:
             for (Method processingMethod : processingMethods) {
                 if (processingMethod.getParameterTypes().length == 0) {
                     visitorContext.fail("Registration method '"
@@ -352,13 +409,7 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                                                 + "' of extension: " + extension.getClass().getName() + " specifies no parameters", beanElement);
                     continue;
                 }
-                final Class<?>[] types = processingMethod.getAnnotation(Registration.class).types();
-                for (Class<?> et : types) {
-                    if (et != null && beanTypes.stream().anyMatch(ce -> ce.isAssignable(et))) {
-                        runRegistration(extension, processingMethod, beanElement, visitorContext);
-                        continue methods;
-                    }
-                }
+                runRegistration(extension, processingMethod, beanElement, visitorContext);
             }
         }
     }
@@ -409,6 +460,8 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                             parameters[i] = new MessagesImpl(visitorContext);
                         } else if (Types.class == parameterType) {
                             parameters[i] = new TypesImpl(visitorContext);
+                        } else if (InvokerValidation.class == parameterType) {
+                            parameters[i] = new InvokerValidationImpl(visitorContext, this);
                         } else {
                             unsupportedParameter(
                                 null,
@@ -526,14 +579,20 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 throw new BuildTimeExtensionException("At least 1 parameter of type BeanInfo, ObserverInfo or InterceptorInfo is required");
             } else {
                 final Class<?> type = extensionParameter.type;
+                List<RegistrationType> registrationTypes = registrationTypes(registrationMethod, visitorContext);
+                if (registrationTypes == null) {
+                    return;
+                }
                 final BeanInfoImpl beanInfo = new BeanInfoImpl(
                         beanElement,
                         visitorContext
                 );
-                if (BeanInfo.class == type) {
+                if (BeanInfo.class == type && matchesBeanRegistration(beanElement, registrationTypes)) {
                     parameters[extensionParameter.index] = beanInfo;
                     invokeExtensionMethod(extension, registrationMethod, parameters);
-                } else if (InterceptorInfo.class == type && beanElement.hasDeclaredAnnotation(Interceptor.class)) {
+                } else if (InterceptorInfo.class == type
+                        && beanElement.hasDeclaredAnnotation(Interceptor.class)
+                        && matchesBeanRegistration(beanElement, registrationTypes)) {
                     parameters[extensionParameter.index] = new InterceptorInfoImpl(
                             beanElement,
                             visitorContext
@@ -542,6 +601,9 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 } else if (ObserverInfo.class == type) {
                     List<ObserverInfo> observerInfos = beanInfo.observers();
                     for (ObserverInfo observerInfo : observerInfos) {
+                        if (!matchesObserverRegistration(observerInfo, registrationTypes)) {
+                            continue;
+                        }
                         parameters[extensionParameter.index] = observerInfo;
                         invokeExtensionMethod(extension, registrationMethod, parameters);
                     }
@@ -559,6 +621,132 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                     "Error running build time registration in method '"
             );
 
+        }
+    }
+
+    @Nullable
+    private List<RegistrationType> registrationTypes(Method registrationMethod, VisitorContext visitorContext) {
+        List<RegistrationType> registrationTypes = new ArrayList<>();
+        for (Class<?> type : registrationMethod.getAnnotation(Registration.class).types()) {
+            if (type == null) {
+                continue;
+            }
+            ClassElement typeElement = visitorContext.getClassElement(type).orElse(ClassElement.of(type));
+            if (typeElement.isAssignable(TypeLiteral.class)) {
+                Map<String, ClassElement> typeArguments = typeElement.getTypeArguments(TypeLiteral.class);
+                if (typeArguments.size() != 1 || typeElement.isRawType()) {
+                    visitorContext.fail("Registration type literal must declare exactly one type argument: " + type.getName(), null);
+                    return null;
+                }
+                ClassElement literalType = typeArguments.values().iterator().next();
+                if (containsInvalidRegistrationTypeArgument(literalType)) {
+                    visitorContext.fail("Registration type literal must not contain type variables or wildcards: " + type.getName(), null);
+                    return null;
+                }
+                registrationTypes.add(new RegistrationType(literalType));
+            } else {
+                registrationTypes.add(new RegistrationType(typeElement));
+            }
+        }
+        return registrationTypes;
+    }
+
+    private boolean containsInvalidRegistrationTypeArgument(ClassElement type) {
+        if (type.isTypeVariable()
+                || type.isGenericPlaceholder()
+                || type.isWildcard()
+                || type.hasUnresolvedTypes()) {
+            return true;
+        }
+        for (ClassElement typeArgument : type.getBoundGenericTypes()) {
+            if (containsInvalidRegistrationTypeArgument(typeArgument)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesBeanRegistration(BeanElement beanElement, List<RegistrationType> registrationTypes) {
+        Set<ClassElement> beanTypes = beanElement.getBeanTypes();
+        for (RegistrationType registrationType : registrationTypes) {
+            for (ClassElement beanType : beanTypes) {
+                if (matchesRegistrationType(beanType, registrationType)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesObserverRegistration(ObserverInfo observerInfo, List<RegistrationType> registrationTypes) {
+        ClassElement eventType = classElement(observerInfo.eventType());
+        if (eventType == null) {
+            return false;
+        }
+        for (RegistrationType registrationType : registrationTypes) {
+            if (matchesRegistrationType(eventType, registrationType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Nullable
+    private ClassElement classElement(Type type) {
+        if (type instanceof ClassTypeImpl classType) {
+            return classType.getClassElement();
+        }
+        if (type instanceof ParameterizedTypeImpl parameterizedType) {
+            return parameterizedType.getClassElement();
+        }
+        return null;
+    }
+
+    private boolean matchesRegistrationType(ClassElement candidateType, RegistrationType registrationType) {
+        if (!candidateType.isAssignable(registrationType.rawTypeName())) {
+            return false;
+        }
+        List<? extends ClassElement> requiredTypeArguments = registrationType.typeArguments();
+        if (requiredTypeArguments.isEmpty()) {
+            return true;
+        }
+        List<? extends ClassElement> candidateTypeArguments = candidateType.getTypeArguments(registrationType.rawTypeName())
+                .values()
+                .stream()
+                .toList();
+        if (candidateTypeArguments.isEmpty()) {
+            candidateTypeArguments = candidateType.getBoundGenericTypes();
+        }
+        return typeArgumentsEqual(candidateTypeArguments, requiredTypeArguments);
+    }
+
+    private boolean typeArgumentsEqual(List<? extends ClassElement> candidateTypeArguments,
+                                       List<? extends ClassElement> requiredTypeArguments) {
+        if (candidateTypeArguments.size() != requiredTypeArguments.size()) {
+            return false;
+        }
+        for (int i = 0; i < requiredTypeArguments.size(); i++) {
+            if (!typeArgumentEqual(candidateTypeArguments.get(i), requiredTypeArguments.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean typeArgumentEqual(ClassElement candidateTypeArgument, ClassElement requiredTypeArgument) {
+        if (!candidateTypeArgument.getName().equals(requiredTypeArgument.getName())) {
+            return false;
+        }
+        return typeArgumentsEqual(candidateTypeArgument.getBoundGenericTypes(), requiredTypeArgument.getBoundGenericTypes());
+    }
+
+    private record RegistrationType(ClassElement type) {
+        String rawTypeName() {
+            return type.getName();
+        }
+
+        List<? extends ClassElement> typeArguments() {
+            return type.getBoundGenericTypes();
         }
     }
 
@@ -592,7 +780,11 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
     }
 
     void validateInvokers(VisitorContext visitorContext) {
+        validateAsyncHandlers(visitorContext);
+        List<AsyncHandlerMetadata> returnHandlers = returnAsyncHandlers(visitorContext);
+        List<AsyncHandlerMetadata> parameterHandlers = parameterAsyncHandlers(visitorContext);
         for (InvokerRegistration invoker : invokers) {
+            configureAsyncHandlers(invoker.invokerInfo, invoker.methodElement, returnHandlers, parameterHandlers);
             ParameterElement[] parameters = invoker.methodElement.getParameters();
             for (int i = 0; i < parameters.length; i++) {
                 if (invoker.invokerInfo.isArgumentLookup(i)) {
@@ -600,6 +792,180 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 }
             }
         }
+    }
+
+    void validateAsyncHandlers(VisitorContext visitorContext) {
+        if (asyncHandlersValidated) {
+            return;
+        }
+        asyncHandlersValidated = true;
+        validateDuplicateAsyncHandlers(visitorContext, returnAsyncHandlers(visitorContext), AsyncHandler.ReturnType.class);
+        validateDuplicateAsyncHandlers(visitorContext, parameterAsyncHandlers(visitorContext), AsyncHandler.ParameterType.class);
+    }
+
+    void validateSyntheticInjectionPoints(VisitorContext visitorContext,
+                                          SyntheticBeanBuilderImpl<?> syntheticBeanBuilder) {
+        for (SyntheticBeanBuilderImpl.SyntheticInjectionPoint injectionPoint : syntheticBeanBuilder.getInjectionPoints()) {
+            ClassElement requiredType = injectionPoint.type();
+            String requiredTypeName = requiredType.getName();
+            if (isBuiltinSyntheticInjectionPointType(requiredTypeName)) {
+                continue;
+            }
+            List<String> requiredQualifiers = syntheticInjectionPointQualifiers(injectionPoint);
+            int candidates = 0;
+            for (BeanElement beanElement : beanElements) {
+                if (isCandidateBean(beanElement)
+                        && matchesRequiredType(beanElement, requiredType)
+                        && matchesRequiredQualifiers(beanElement, requiredQualifiers)) {
+                    candidates++;
+                }
+            }
+            if (candidates == 0) {
+                visitorContext.fail(DEPLOYMENT_EXCEPTION_MARKER
+                        + "Unsatisfied synthetic injection point for " + requiredTypeName, syntheticBeanBuilder.getBeanType());
+            } else if (candidates > 1) {
+                visitorContext.fail(DEPLOYMENT_EXCEPTION_MARKER
+                        + "Ambiguous synthetic injection point for " + requiredTypeName,
+                        syntheticBeanBuilder.getBeanType());
+            }
+        }
+    }
+
+    private List<AsyncHandlerMetadata> returnAsyncHandlers(VisitorContext visitorContext) {
+        if (returnAsyncHandlers == null) {
+            returnAsyncHandlers = asyncHandlers(visitorContext, AsyncHandler.ReturnType.class);
+        }
+        return returnAsyncHandlers;
+    }
+
+    private List<AsyncHandlerMetadata> parameterAsyncHandlers(VisitorContext visitorContext) {
+        if (parameterAsyncHandlers == null) {
+            parameterAsyncHandlers = asyncHandlers(visitorContext, AsyncHandler.ParameterType.class);
+        }
+        return parameterAsyncHandlers;
+    }
+
+    protected SoftServiceLoader<?> findAsyncHandlers(Class<?> handlerType) {
+        return SoftServiceLoader.load(handlerType);
+    }
+
+    private List<AsyncHandlerMetadata> asyncHandlers(VisitorContext visitorContext, Class<?> handlerInterface) {
+        List<AsyncHandlerMetadata> result = new ArrayList<>();
+        for (ServiceDefinition<?> definition : findAsyncHandlers(handlerInterface)) {
+            java.util.Optional<ClassElement> handlerElement = visitorContext.getClassElement(definition.getName());
+            if (handlerElement.isEmpty()) {
+                visitorContext.fail("Async handler provider [" + definition.getName() + "] is not available", null);
+                continue;
+            }
+            asyncHandlerMetadata(visitorContext, handlerElement.get(), handlerInterface.getName())
+                    .ifPresent(result::add);
+        }
+        return result;
+    }
+
+    boolean hasAsyncHandler(VisitorContext visitorContext, String asyncTypeName) {
+        return returnAsyncHandlers(visitorContext)
+                .stream()
+                .anyMatch(handler -> handler.asyncTypeName.equals(asyncTypeName))
+                || parameterAsyncHandlers(visitorContext)
+                .stream()
+                .anyMatch(handler -> handler.asyncTypeName.equals(asyncTypeName));
+    }
+
+    private java.util.Optional<AsyncHandlerMetadata> asyncHandlerMetadata(VisitorContext visitorContext,
+                                                                          ClassElement handlerElement,
+                                                                          String handlerInterfaceName) {
+        if (!directlyImplements(handlerElement, handlerInterfaceName)) {
+            visitorContext.fail("Async handler [" + handlerElement.getName() + "] must directly implement ["
+                    + handlerInterfaceName + "]", handlerElement);
+            return java.util.Optional.empty();
+        }
+        if (directlyImplements(handlerElement, AsyncHandler.ReturnType.class.getName())
+                && directlyImplements(handlerElement, AsyncHandler.ParameterType.class.getName())) {
+            visitorContext.fail("Async handler [" + handlerElement.getName()
+                    + "] must not implement both AsyncHandler.ReturnType and AsyncHandler.ParameterType", handlerElement);
+            return java.util.Optional.empty();
+        }
+        Map<String, ClassElement> typeArguments = handlerElement.getTypeArguments(handlerInterfaceName);
+        if (typeArguments.size() != 1 || handlerElement.isRawType()) {
+            visitorContext.fail("Async handler [" + handlerElement.getName()
+                    + "] must declare exactly one async type argument for [" + handlerInterfaceName + "]", handlerElement);
+            return java.util.Optional.empty();
+        }
+        ClassElement asyncType = typeArguments.values().iterator().next();
+        if (asyncType.isArray()
+                || asyncType.isTypeVariable()
+                || asyncType.isGenericPlaceholder()
+                || asyncType.isWildcard()
+                || asyncType.hasUnresolvedTypes()) {
+            visitorContext.fail("Async handler [" + handlerElement.getName()
+                    + "] declares an invalid async type [" + asyncType.getName() + "]", handlerElement);
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of(new AsyncHandlerMetadata(handlerElement.getName(), asyncType.getName()));
+    }
+
+    private boolean directlyImplements(ClassElement handlerElement, String handlerInterfaceName) {
+        return handlerElement.getInterfaces()
+                .stream()
+                .anyMatch(interfaceElement -> typeNameEquals(interfaceElement.getName(), handlerInterfaceName));
+    }
+
+    private boolean typeNameEquals(String left, String right) {
+        return left.equals(right)
+                || left.replace('$', '.').equals(right.replace('$', '.'));
+    }
+
+    private void validateDuplicateAsyncHandlers(VisitorContext visitorContext,
+                                                List<AsyncHandlerMetadata> handlers,
+                                                Class<?> handlerInterface) {
+        for (int i = 0; i < handlers.size(); i++) {
+            AsyncHandlerMetadata left = handlers.get(i);
+            for (int j = i + 1; j < handlers.size(); j++) {
+                AsyncHandlerMetadata right = handlers.get(j);
+                if (left.asyncTypeName.equals(right.asyncTypeName)
+                        && !left.handlerClassName.equals(right.handlerClassName)) {
+                    visitorContext.fail(DEPLOYMENT_EXCEPTION_MARKER
+                            + "Multiple async handlers of type [" + handlerInterface.getName()
+                            + "] declare async type [" + left.asyncTypeName + "]", null);
+                    return;
+                }
+            }
+        }
+    }
+
+    private void configureAsyncHandlers(OdiExecutableInvokerInfo invokerInfo,
+                                        MethodElement methodElement,
+                                        List<AsyncHandlerMetadata> returnHandlers,
+                                        List<AsyncHandlerMetadata> parameterHandlers) {
+        String returnTypeName = methodElement.getReturnType().getType().getName();
+        for (AsyncHandlerMetadata handler : returnHandlers) {
+            if (handler.asyncTypeName.equals(returnTypeName)) {
+                invokerInfo.asyncReturnHandler(handler.handlerClassName);
+                return;
+            }
+        }
+        for (AsyncHandlerMetadata handler : parameterHandlers) {
+            int parameterIndex = uniqueParameterIndex(methodElement, handler.asyncTypeName);
+            if (parameterIndex >= 0) {
+                invokerInfo.asyncParameterHandler(handler.handlerClassName, parameterIndex);
+                return;
+            }
+        }
+    }
+
+    private int uniqueParameterIndex(MethodElement methodElement, String typeName) {
+        int index = -1;
+        ParameterElement[] parameters = methodElement.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            if (parameters[i].getType().getName().equals(typeName)) {
+                if (index >= 0) {
+                    return -1;
+                }
+                index = i;
+            }
+        }
+        return index;
     }
 
     private void validateArgumentLookup(VisitorContext visitorContext,
@@ -612,7 +978,8 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         }
         int candidates = 0;
         for (BeanElement beanElement : beanElements) {
-            if (matchesRequiredType(beanElement, requiredType)
+            if (isCandidateBean(beanElement)
+                    && matchesRequiredType(beanElement, requiredType)
                     && matchesRequiredQualifiers(beanElement, parameterElement)) {
                 candidates++;
             }
@@ -633,11 +1000,35 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
                 || typeName.equals("jakarta.enterprise.inject.Instance");
     }
 
+    private boolean isBuiltinSyntheticInjectionPointType(String typeName) {
+        return typeName.equals("jakarta.enterprise.inject.spi.InjectionPoint")
+                || isBuiltinLookupType(typeName);
+    }
+
+    private boolean isCandidateBean(BeanElement beanElement) {
+        return !beanElement.getProducingElement().getName().contains("$Definition$Intercepted");
+    }
+
     private boolean matchesRequiredType(BeanElement beanElement, ClassElement requiredType) {
         String requiredTypeName = requiredType.getName();
         return beanElement.getBeanTypes()
                 .stream()
                 .anyMatch(beanType -> beanType.getName().equals(requiredTypeName));
+    }
+
+    private List<String> syntheticInjectionPointQualifiers(SyntheticBeanBuilderImpl.SyntheticInjectionPoint injectionPoint) {
+        List<String> requiredQualifiers = new ArrayList<>();
+        for (Annotation qualifier : injectionPoint.qualifiers()) {
+            requiredQualifiers.add(qualifier.annotationType().getName());
+        }
+        injectionPoint.qualifierInfos()
+                .stream()
+                .map(jakarta.enterprise.lang.model.AnnotationInfo::name)
+                .forEach(requiredQualifiers::add);
+        if (requiredQualifiers.isEmpty()) {
+            requiredQualifiers = Collections.singletonList(DEFAULT_QUALIFIER);
+        }
+        return requiredQualifiers;
     }
 
     private boolean matchesRequiredQualifiers(BeanElement beanElement, ParameterElement parameterElement) {
@@ -646,6 +1037,10 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         if (requiredQualifiers.isEmpty()) {
             requiredQualifiers = Collections.singletonList(DEFAULT_QUALIFIER);
         }
+        return matchesRequiredQualifiers(beanElement, requiredQualifiers);
+    }
+
+    private boolean matchesRequiredQualifiers(BeanElement beanElement, List<String> requiredQualifiers) {
         Collection<String> beanQualifiers = beanElement.getQualifiers();
         if (requiredQualifiers.size() == 1 && requiredQualifiers.contains(ANY_QUALIFIER)) {
             return true;
@@ -789,6 +1184,9 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         this.buildTimeExtensions.clear();
         this.beanElements.clear();
         this.invokers.clear();
+        this.returnAsyncHandlers = null;
+        this.parameterAsyncHandlers = null;
+        this.asyncHandlersValidated = false;
         return this;
     }
 
@@ -799,6 +1197,16 @@ public class BuildTimeExtensionRegistry implements LifeCycle<BuildTimeExtensionR
         private InvokerRegistration(OdiExecutableInvokerInfo invokerInfo, MethodElement methodElement) {
             this.invokerInfo = invokerInfo;
             this.methodElement = methodElement;
+        }
+    }
+
+    private static final class AsyncHandlerMetadata {
+        final String handlerClassName;
+        final String asyncTypeName;
+
+        private AsyncHandlerMetadata(String handlerClassName, String asyncTypeName) {
+            this.handlerClassName = handlerClassName;
+            this.asyncTypeName = asyncTypeName;
         }
     }
 

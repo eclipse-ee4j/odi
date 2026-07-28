@@ -51,9 +51,9 @@ public class ObservesAsyncMethodVisitor extends ParameterAnnotationInjectableMet
         }
         methodElement.annotate(AnnotationUtil.ANN_OBSERVES_METHOD, annotationValueBuilder -> {
             annotationValueBuilder.member("declaringType", new AnnotationClassValue<>(methodElement.getDeclaringType().getName()));
+            annotationValueBuilder.member("beanClass", new AnnotationClassValue<>(currentClass.getName()));
             annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(methodElement.getParameters()).indexOf(parameterElement));
             AnnotationValue<ObservesAsync> observesAnnotation = parameterElement.getAnnotation(ObservesAsync.class);
-            annotationValueBuilder.member("eventArgumentIndex", Arrays.asList(methodElement.getParameters()).indexOf(parameterElement));
             annotationValueBuilder.member("staticMethod", methodElement.isStatic());
             annotationValueBuilder.member("async", true);
             observesAnnotation.enumValue("notifyObserver", Reception.class)

@@ -107,6 +107,8 @@ final class ArchiveCompiler {
                         sourceFiles,
                         deploymentClassNames
                 );
+            } else if (path.startsWith("/WEB-INF/classes") && entry.getValue().getAsset() != null) {
+                copyClassResource(path, entry.getValue());
             } else if (path.startsWith("/WEB-INF/lib") && path.endsWith(".jar")) {
                 String jarFile = path.replace("/WEB-INF/lib", "");
                 Path jarFilePath = deploymentDir.lib.resolve(jarFile.substring(1)); // jarFile begins with `/`
@@ -121,6 +123,15 @@ final class ArchiveCompiler {
 
         doCompile(sourceFiles, deploymentClassNames, deploymentDir.target.toFile());
         setupCdiProviderService();
+    }
+
+    private void copyClassResource(String path, Node node) throws IOException {
+        String resource = path.replace("/WEB-INF/classes/", "");
+        Path resourcePath = deploymentDir.target.resolve(resource);
+        Files.createDirectories(resourcePath.getParent());
+        try (InputStream in = node.getAsset().openStream()) {
+            Files.copy(in, resourcePath);
+        }
     }
 
     private void compileClassPath() throws ArchiveCompilationException, ArchiveCompilerException, IOException {
@@ -203,6 +214,12 @@ final class ArchiveCompiler {
             object.get().contains("jakarta.enterprise.inject.build.compatible.spi.BuildCompatibleExtension")
         );
         boolean hasBuildExtensions = !extension.isEmpty();
+        boolean hasAsyncHandlers = !deploymentArchive.getContent(object ->
+                object.get().contains("jakarta.enterprise.invoke.AsyncHandler$ReturnType")
+                        || object.get().contains("jakarta.enterprise.invoke.AsyncHandler$ParameterType")
+                        || object.get().contains("jakarta.enterprise.invoke.AsyncHandler.ReturnType")
+                        || object.get().contains("jakarta.enterprise.invoke.AsyncHandler.ParameterType")
+        ).isEmpty();
         try (StandardJavaFileManager mgr = compiler.getStandardFileManager(diagnostics, null, null)) {
             final String targetDir = outputDir.getAbsolutePath();
             List<String> args = new ArrayList<>(compileOptions(targetDir, deploymentClassNames));
@@ -212,9 +229,25 @@ final class ArchiveCompiler {
                 // run without processors since extensions have to be applied on the compiled code
                 task.setProcessors(Collections.emptyList());
             } else {
+                if (hasAsyncHandlers) {
+                    ClassLoader classLoader = new DeploymentClassLoader(deploymentDir);
+                    BuildTimeExtensionRegistry.setInstance(new BuildTimeExtensionRegistry() {
+                        @Override
+                        protected SoftServiceLoader<?> findAsyncHandlers(Class<?> handlerType) {
+                            return SoftServiceLoader.load(handlerType, classLoader);
+                        }
+                    });
+                }
                 task.setProcessors(getAnnotationProcessors());
             }
-            Boolean success = callTask(task, args);
+            Boolean success;
+            try {
+                success = callTask(task, args);
+            } finally {
+                if (hasAsyncHandlers && !hasBuildExtensions) {
+                    BuildTimeExtensionRegistry.setInstance(null);
+                }
+            }
             if (!Boolean.TRUE.equals(success)) {
                 outputDiagnostics(diagnostics);
             } else if (hasBuildExtensions) {
@@ -248,6 +281,11 @@ final class ArchiveCompiler {
                     @Override
                     protected SoftServiceLoader<BuildCompatibleExtension> findExtensions() {
                         return buildExtensionLoader;
+                    }
+
+                    @Override
+                    protected SoftServiceLoader<?> findAsyncHandlers(Class<?> handlerType) {
+                        return SoftServiceLoader.load(handlerType, classLoader);
                     }
                 });
                 try {
@@ -305,6 +343,8 @@ final class ArchiveCompiler {
         List<String> args = new ArrayList<>();
         args.add("-d");
         args.add(targetDir);
+        args.add("-classpath");
+        args.add(targetDir + File.pathSeparator + System.getProperty("java.class.path"));
         args.add("-verbose");
         if (!deploymentClassNames.isEmpty()) {
             args.add("-A" + CdiUtil.BEAN_CLASSES_OPTION + "=" + String.join(",", deploymentClassNames));

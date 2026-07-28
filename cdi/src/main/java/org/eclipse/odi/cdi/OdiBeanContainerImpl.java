@@ -23,7 +23,6 @@ import io.micronaut.context.BeanResolutionContext;
 import io.micronaut.context.DefaultBeanResolutionContext;
 import io.micronaut.context.Qualifier;
 import io.micronaut.core.annotation.AnnotationMetadata;
-import io.micronaut.core.annotation.AnnotationMetadataProvider;
 import io.micronaut.core.annotation.AnnotationUtil;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Order;
@@ -45,6 +44,7 @@ import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.Reserve;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.UnproxyableResolutionException;
 import jakarta.enterprise.inject.spi.Bean;
@@ -54,7 +54,6 @@ import jakarta.enterprise.inject.spi.ObserverMethod;
 import jakarta.enterprise.inject.spi.Prioritized;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import org.eclipse.odi.cdi.annotation.ObservesMethod;
 import org.eclipse.odi.cdi.annotation.reflect.AnnotationReflection;
 import org.eclipse.odi.cdi.context.DependentContext;
 import org.eclipse.odi.cdi.context.SingletonContext;
@@ -82,8 +81,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 final class OdiBeanContainerImpl implements OdiBeanContainer {
-    private static final String JAKARTA_INTERCEPTOR_BINDING = "jakarta.interceptor.InterceptorBinding";
-    private static final String MICRONAUT_INTERCEPTOR_BINDING = "io.micronaut.aop.InterceptorBinding";
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     private final ApplicationContext applicationContext;
     private final OdiSeContainer container;
@@ -91,6 +89,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
     private final OdiAnnotations odiAnnotations;
     private OdiObserverMethodRegistry observerMethodRegistry;
     private Event<Object> objectEvent;
+    private Map<String, String[]> interceptorNonBindingMembers;
 
     OdiBeanContainerImpl(OdiSeContainer container, OdiAnnotations odiAnnotations, ApplicationContext applicationContext) {
         this.container = container;
@@ -132,11 +131,11 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                             arguments
                     )) {
                         if (argument.getType() == Instance.class) {
-                            Instance<?> instance = createInstance(dependentContext).select(argument.getFirstTypeVariable()
+                            Instance<?> instance = createInstance(dependentContext, false).select(argument.getFirstTypeVariable()
                                     .orElseThrow(() -> new IllegalArgumentException("Expected the type of Instance!")));
                             values[i] = instance;
                         } else {
-                            Instance<?> instance = createInstance(dependentContext).select(argument);
+                            Instance<?> instance = createInstance(dependentContext, false).select(argument);
                             values[i] = instance.get();
                         }
                     }
@@ -177,35 +176,8 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                             executableMethod.getMethodName(),
                             executableMethod.getArgumentTypes()
                     );
-                    if (shouldInvokeObserverOnProxyTarget(beanDefinition, proxyDefinition, executableMethod)
-                            && proxyBean instanceof InterceptedProxy<?> interceptedProxy) {
-                        return new MethodInvocation<>((B) interceptedProxy.interceptedTarget(), executableMethod);
-                    }
                     return new MethodInvocation<>(proxyBean, proxyMethod.orElse(executableMethod));
                 });
-    }
-
-    private boolean shouldInvokeObserverOnProxyTarget(BeanDefinition<?> beanDefinition,
-                                                      BeanDefinition<?> proxyDefinition,
-                                                      ExecutableMethod<?, ?> executableMethod) {
-        return executableMethod.hasAnnotation(ObservesMethod.class)
-                && !hasCdiInterceptorBinding(beanDefinition)
-                && !hasCdiInterceptorBinding(proxyDefinition)
-                && !hasCdiInterceptorBinding(executableMethod);
-    }
-
-    private boolean hasCdiInterceptorBinding(AnnotationMetadataProvider metadataProvider) {
-        AnnotationMetadata annotationMetadata = metadataProvider.getAnnotationMetadata();
-        return hasCdiInterceptorBinding(annotationMetadata, JAKARTA_INTERCEPTOR_BINDING)
-                || hasCdiInterceptorBinding(annotationMetadata, MICRONAUT_INTERCEPTOR_BINDING);
-    }
-
-    private boolean hasCdiInterceptorBinding(AnnotationMetadata annotationMetadata, String stereotype) {
-        return annotationMetadata
-                .getAnnotationNamesByStereotype(stereotype)
-                .stream()
-                .anyMatch(annotationName -> !JAKARTA_INTERCEPTOR_BINDING.equals(annotationName)
-                        && !MICRONAUT_INTERCEPTOR_BINDING.equals(annotationName));
     }
 
     private record MethodInvocation<B, R>(B bean, ExecutableMethod<B, R> executableMethod) {
@@ -269,6 +241,9 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
     }
 
     private static boolean isEnabledBeanDefinition(BeanDefinition<?> beanDefinition) {
+        if (isReserve(beanDefinition) && getPriority(beanDefinition) <= 0) {
+            return false;
+        }
         return !beanDefinition.hasStereotype(Alternative.class) || getPriority(beanDefinition) > 0;
     }
 
@@ -300,7 +275,37 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     .limit(1)
                     .collect(Collectors.toList());
         }
+        List<BeanDefinition<T>> nonReserve = beanDefinitions
+                .stream()
+                .filter(bd -> !isReserve(bd))
+                .collect(Collectors.toList());
+        if (!nonReserve.isEmpty() && nonReserve.size() < beanDefinitions.size()) {
+            return nonReserve;
+        }
+        if (beanDefinitions.stream().allMatch(OdiBeanContainerImpl::isReserve)) {
+            return highestUniquePriority(beanDefinitions);
+        }
         return beanDefinitions;
+    }
+
+    private static <T> List<BeanDefinition<T>> highestUniquePriority(Collection<BeanDefinition<T>> beanDefinitions) {
+        List<BeanDefinition<T>> sorted = beanDefinitions.stream()
+                .filter(beanDefinition -> getPriority(beanDefinition) > 0)
+                .sorted(Comparator.<BeanDefinition<T>>comparingInt(OdiBeanContainerImpl::getPriority).reversed())
+                .collect(Collectors.toList());
+        if (sorted.isEmpty()) {
+            return List.of();
+        }
+        if (sorted.size() == 1 || getPriority(sorted.get(0)) != getPriority(sorted.get(1))) {
+            return List.of(sorted.get(0));
+        }
+        return sorted.stream()
+                .filter(beanDefinition -> getPriority(beanDefinition) == getPriority(sorted.get(0)))
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isReserve(BeanDefinition<?> beanDefinition) {
+        return beanDefinition.hasDeclaredAnnotation(Reserve.class) || beanDefinition.hasDeclaredStereotype(Reserve.class);
     }
 
     private static int getPriority(BeanDefinition<?> beanDefinition) {
@@ -337,9 +342,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
             }
             Class<? extends Annotation> scope = odiBean.getScope();
             Object instance;
-            if (odiAnnotations.isDependent(scope)) {
-                instance = odiBean.create(creationalContext);
-            } else if (odiBean.isProxy()) {
+            if (odiBean.isProxy()) {
                 BeanRegistration<Object> beanRegistration = getBeanContext().getBeanRegistration(odiBean.getBeanDefinition());
                 instance = beanRegistration.getBean();
                 if (creationalContext instanceof OdiCreationalContext) {
@@ -347,9 +350,30 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     odiCreationalContext.push(instance);
                     odiCreationalContext.setCreatedBean(beanRegistration);
                 }
+            } else if (odiAnnotations.isDependent(scope)) {
+                instance = odiBean.create(creationalContext);
             } else {
-                Context context = getContext(scope);
-                instance = context.get(odiBean, creationalContext);
+                if (odiAnnotations.isNormalScope(scope)) {
+                    Optional<BeanDefinition<Object>> proxyBeanDefinition = findProxyBeanDefinitionForReference(
+                            (Class<Object>) beanType,
+                            odiBean.getBeanDefinition().getDeclaredQualifier()
+                    );
+                    if (proxyBeanDefinition.isPresent()) {
+                        BeanRegistration<Object> beanRegistration = getBeanContext().getBeanRegistration(proxyBeanDefinition.get());
+                        instance = beanRegistration.getBean();
+                        if (creationalContext instanceof OdiCreationalContext) {
+                            OdiCreationalContext<Object> odiCreationalContext = (OdiCreationalContext<Object>) creationalContext;
+                            odiCreationalContext.push(instance);
+                            odiCreationalContext.setCreatedBean(beanRegistration);
+                        }
+                    } else {
+                        Context context = getContext(scope);
+                        instance = context.get(odiBean, creationalContext);
+                    }
+                } else {
+                    Context context = getContext(scope);
+                    instance = context.get(odiBean, creationalContext);
+                }
             }
             if (instance == null) {
                 return null;
@@ -361,6 +385,18 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         } else {
             throw new IllegalArgumentException("Unsupported by bean type: " + bean.getClass());
         }
+    }
+
+    private Optional<BeanDefinition<Object>> findProxyBeanDefinitionForReference(Class<Object> beanType,
+                                                                                Qualifier<Object> qualifier) {
+        Optional<BeanDefinition<Object>> proxyBeanDefinition = applicationContext.findProxyBeanDefinition(
+                Argument.of(beanType),
+                qualifier
+        );
+        if (proxyBeanDefinition.isPresent() || qualifier == null) {
+            return proxyBeanDefinition;
+        }
+        return applicationContext.findProxyBeanDefinition(Argument.of(beanType), null);
     }
 
     @Override
@@ -420,7 +456,45 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
                     .findFirst()
                     .orElse(null);
         }
+        List<Bean<? extends X>> nonReserve = beans.stream()
+                .filter(bean -> !isReserve(bean))
+                .collect(Collectors.toList());
+        if (!nonReserve.isEmpty() && nonReserve.size() < beans.size()) {
+            if (nonReserve.size() == 1) {
+                return nonReserve.iterator().next();
+            }
+            throw new AmbiguousResolutionException("Multiple beans are eligible for injection: " + nonReserve);
+        }
+        List<Bean<? extends X>> reserves = beans.stream()
+                .filter(OdiBeanContainerImpl::isReserve)
+                .collect(Collectors.toList());
+        if (reserves.size() == beans.size()) {
+            List<Bean<? extends X>> highestPriorityReserves = highestPriorityBeans(reserves);
+            if (highestPriorityReserves.size() == 1) {
+                return highestPriorityReserves.iterator().next();
+            }
+            if (!highestPriorityReserves.isEmpty()) {
+                throw new AmbiguousResolutionException("Multiple beans are eligible for injection: " + highestPriorityReserves);
+            }
+        }
         throw new AmbiguousResolutionException("Multiple beans are eligible for injection: " + beans);
+    }
+
+    private static <X> List<Bean<? extends X>> highestPriorityBeans(Collection<Bean<? extends X>> beans) {
+        int highestPriority = beans.stream()
+                .mapToInt(OdiBeanContainerImpl::getPriority)
+                .max()
+                .orElse(0);
+        if (highestPriority <= 0) {
+            return List.of();
+        }
+        return beans.stream()
+                .filter(bean -> getPriority(bean) == highestPriority)
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isReserve(Bean<?> bean) {
+        return bean instanceof OdiBean<?> odiBean && isReserve(odiBean.getBeanDefinition());
     }
 
     private static int getPriority(Bean<?> bean) {
@@ -482,7 +556,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         }
     }
 
-    private static boolean interceptorBindingsMatch(Interceptor<?> interceptor, Annotation... requiredBindings) {
+    private boolean interceptorBindingsMatch(Interceptor<?> interceptor, Annotation... requiredBindings) {
         Set<Annotation> interceptorBindings = interceptor.getInterceptorBindings();
         if (interceptorBindings.isEmpty()) {
             return false;
@@ -495,7 +569,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         return true;
     }
 
-    private static boolean containsInterceptorBinding(Annotation[] requiredBindings, Annotation interceptorBinding) {
+    private boolean containsInterceptorBinding(Annotation[] requiredBindings, Annotation interceptorBinding) {
         Class<? extends Annotation> interceptorBindingType = AnnotationUtils.findAnnotationClass(interceptorBinding);
         for (Annotation requiredBinding : requiredBindings) {
             if (AnnotationUtils.findAnnotationClass(requiredBinding).equals(interceptorBindingType)
@@ -506,7 +580,7 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         return false;
     }
 
-    private static boolean interceptorBindingValuesMatch(Annotation requiredBinding, Annotation interceptorBinding) {
+    private boolean interceptorBindingValuesMatch(Annotation requiredBinding, Annotation interceptorBinding) {
         if (requiredBinding.equals(interceptorBinding) || interceptorBinding.equals(requiredBinding)) {
             return true;
         }
@@ -515,10 +589,16 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         return requiredBindingValues.equals(interceptorBindingValues);
     }
 
-    private static AnnotationValue<?> bindingValues(Annotation annotation) {
+    private AnnotationValue<?> bindingValues(Annotation annotation) {
         AnnotationValue<?> annotationValue = AnnotationReflection.toAnnotationValue(annotation);
-        String[] nonBindingMembers = annotationValue.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE);
-        Map<CharSequence, Object> values = new LinkedHashMap<>(annotationValue.getValues());
+        Set<String> nonBindingMembers = new LinkedHashSet<>(List.of(annotationValue.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE)));
+        Collections.addAll(nonBindingMembers, interceptorNonBindingMembers(annotationValue.getAnnotationName()));
+        Map<CharSequence, Object> values = new LinkedHashMap<>();
+        Map<CharSequence, Object> defaultValues = annotationValue.getDefaultValues();
+        if (defaultValues != null) {
+            values.putAll(defaultValues);
+        }
+        values.putAll(annotationValue.getValues());
         values.remove(AnnotationUtil.NON_BINDING_ATTRIBUTE);
         for (String nonBindingMember : nonBindingMembers) {
             values.remove(nonBindingMember);
@@ -526,6 +606,26 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
         return AnnotationValue.builder(annotationValue.getAnnotationName())
                 .members(values)
                 .build();
+    }
+
+    private String[] interceptorNonBindingMembers(String annotationName) {
+        Map<String, String[]> members = interceptorNonBindingMembers;
+        if (members == null) {
+            members = new LinkedHashMap<>();
+            for (BeanDefinition<Interceptor> interceptorDefinition : applicationContext.getBeanDefinitions(Interceptor.class)) {
+                for (String bindingName : interceptorDefinition.getAnnotationMetadata().getAnnotationNamesByStereotype(jakarta.interceptor.InterceptorBinding.class)) {
+                    AnnotationValue<Annotation> binding = interceptorDefinition.getAnnotation(bindingName);
+                    if (binding != null) {
+                        String[] nonBinding = binding.stringValues(AnnotationUtil.NON_BINDING_ATTRIBUTE);
+                        if (nonBinding.length > 0) {
+                            members.putIfAbsent(bindingName, nonBinding);
+                        }
+                    }
+                }
+            }
+            interceptorNonBindingMembers = members;
+        }
+        return members.getOrDefault(annotationName, EMPTY_STRING_ARRAY);
     }
 
     @Override
@@ -605,7 +705,58 @@ final class OdiBeanContainerImpl implements OdiBeanContainer {
 
     @Override
     public OdiInstance<Object> createInstance(Context context) {
-        return container.select(context);
+        return createInstance(context, true);
+    }
+
+    private OdiInstance<Object> createInstance(Context context, boolean allowDynamicInjectionPoint) {
+        return new OdiInstanceImpl<>(
+                this,
+                context,
+                Argument.OBJECT_ARGUMENT,
+                null,
+                (Qualifier<Object>) null,
+                allowDynamicInjectionPoint
+        );
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T unwrapClientProxy(T instance) {
+        if (!(instance instanceof InterceptedProxy<?> interceptedProxy)) {
+            return instance;
+        }
+        Optional<BeanDefinition<T>> proxyBeanDefinition = applicationContext.findBeanRegistration(instance)
+                .map(BeanRegistration::getBeanDefinition)
+                .filter(BeanDefinition::isProxy);
+        if (proxyBeanDefinition.isEmpty()) {
+            proxyBeanDefinition = applicationContext.findBeanDefinition((Class<T>) instance.getClass(), null)
+                    .filter(BeanDefinition::isProxy);
+        }
+        if (proxyBeanDefinition.isEmpty()) {
+            return (T) interceptedProxy.interceptedTarget();
+        }
+        BeanDefinition<T> proxyDefinition = proxyBeanDefinition.get();
+        OdiBean<T> proxyBean = getBean(proxyDefinition);
+        OdiBean<T> targetBean = proxyBean.getProxyTargetBean();
+        Context context = getSingleActiveContextForUnwrap(targetBean.getScope());
+        T target = context.get(targetBean);
+        if (target == null) {
+            target = context.get(targetBean, createCreationalContext(targetBean));
+        }
+        return target;
+    }
+
+    private Context getSingleActiveContextForUnwrap(Class<? extends Annotation> scopeType) {
+        List<Context> activeContexts = getContexts(scopeType).stream()
+                .filter(Context::isActive)
+                .collect(Collectors.toList());
+        if (activeContexts.isEmpty()) {
+            throw new ContextNotActiveException("No context active for scope: " + scopeType.getSimpleName());
+        }
+        if (activeContexts.size() > 1) {
+            throw new IllegalStateException("More than one active context for scope: " + scopeType.getSimpleName());
+        }
+        return activeContexts.get(0);
     }
 
     @Override

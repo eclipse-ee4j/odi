@@ -15,6 +15,7 @@
  */
 package org.eclipse.odi.cdi.processor.extensions;
 
+import io.micronaut.aop.Around;
 import io.micronaut.aop.InterceptorBindingDefinitions;
 import io.micronaut.context.annotation.Executable;
 import io.micronaut.core.annotation.AnnotationClassValue;
@@ -34,6 +35,7 @@ import io.micronaut.inject.ast.beans.BeanElementBuilder;
 import io.micronaut.inject.ast.beans.BeanMethodElement;
 import io.micronaut.inject.visitor.TypeElementVisitor;
 import io.micronaut.inject.visitor.VisitorContext;
+import io.micronaut.runtime.context.scope.ScopedProxy;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.NormalScope;
 import jakarta.enterprise.event.Observes;
@@ -58,6 +60,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -155,6 +158,7 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
     public void finish(VisitorContext visitorContext) {
         if (!hasErrors && !finished) {
             finished = true;
+            registry.validateAsyncHandlers(visitorContext);
             if (applicationClassElement != null) {
                 final Set<String> scannedClassNames = this.discovery
                         .getScannedClasses()
@@ -210,8 +214,12 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
     }
 
     private void handleScannedClass(VisitorContext visitorContext, ClassElement scannedClass) {
+        if (isVetoed(scannedClass)) {
+            return;
+        }
         configureInterceptorBindings(visitorContext, scannedClass);
         this.registry.runEnhancement(scannedClass, scannedClass, visitorContext);
+        this.registry.runDiscoveryEnhancements(scannedClass);
         boolean isInterceptor = scannedClass.hasAnnotation(Interceptor.class);
         if (isInterceptor) {
             InterceptorVisitor.addInterceptor(
@@ -289,6 +297,14 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         registry.runDiscoveryEnhancements(beanElementBuilder);
         CdiUtil.visitBeanDefinition(visitorContext, beanElementBuilder);
         registry.runDiscoveryEnhancements(beanElementBuilder);
+        if (isNormalScopedBean(visitorContext, scannedClass)) {
+            beanElementBuilder.intercept(AnnotationValue.builder(Around.class)
+                    .member("proxyTarget", true)
+                    .member("lazy", true)
+                    .build());
+            beanElementBuilder.annotate(ScopedProxy.class);
+            beanElementBuilder.annotate(AnnotationUtil.SCOPE);
+        }
         if (!isInterceptor && !scannedClass.isFinal()) {
             if (hasInterceptorBinding(visitorContext, scannedClass)) {
                 beanElementBuilder.intercept();
@@ -323,6 +339,11 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
                 .produceBeans(producesMethods, producesConfigurer)
                 .produceBeans(producesFields, producesConfigurer)
                 .inject();
+    }
+
+    private boolean isVetoed(ClassElement scannedClass) {
+        return scannedClass.hasAnnotation(io.micronaut.core.annotation.Vetoed.class)
+                || scannedClass.hasAnnotation(jakarta.enterprise.inject.Vetoed.class);
     }
 
     @SuppressWarnings("unchecked")
@@ -382,10 +403,25 @@ public final class BuildTimeExtensionVisitor implements TypeElementVisitor<Objec
         }
         return element.getDeclaredAnnotationNames()
                 .stream()
-                .anyMatch(annotationName -> interceptorBindings.stream().anyMatch(binding -> binding.getName().equals(annotationName))
-                        || visitorContext.getClassElement(annotationName)
-                        .map(annotation -> annotation.hasDeclaredAnnotation(InterceptorBinding.class))
-                        .orElse(false));
+                .anyMatch(annotationName -> hasInterceptorBinding(visitorContext, annotationName));
+    }
+
+    private boolean hasInterceptorBinding(VisitorContext visitorContext, String annotationName) {
+        return interceptorBindings.stream().anyMatch(binding -> binding.getName().equals(annotationName))
+                || visitorContext.getClassElement(annotationName)
+                .map(annotation -> annotation.hasDeclaredAnnotation(InterceptorBinding.class))
+                .orElse(false);
+    }
+
+    private boolean isNormalScopedBean(VisitorContext visitorContext, ClassElement beanElement) {
+        if (beanElement.hasStereotype(NormalScope.class)) {
+            return true;
+        }
+        return beanElement.getAnnotationNames()
+                .stream()
+                .map(visitorContext::getClassElement)
+                .flatMap(Optional::stream)
+                .anyMatch(annotationType -> annotationType.hasAnnotation(NormalScope.class) || annotationType.hasStereotype(NormalScope.class));
     }
 
     private static void handleObservesMethod(ClassElement classElement, MethodElement methodElement, VisitorContext visitorContext) {

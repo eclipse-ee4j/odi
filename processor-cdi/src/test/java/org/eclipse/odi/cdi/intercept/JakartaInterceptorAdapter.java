@@ -102,12 +102,17 @@ public final class JakartaInterceptorAdapter<B>
         return beanRegistration.getBeanDefinition()
                 .findMethod(
                         aroundInvokeMethod,
-                        javax.interceptor.InvocationContext.class
+                        jakarta.interceptor.InvocationContext.class
+                ).or(() -> beanRegistration.getBeanDefinition()
+                        .findMethod(
+                                aroundInvokeMethod,
+                                javax.interceptor.InvocationContext.class
+                        )
                 ).orElseGet(() ->
-                                    beanRegistration.getBeanDefinition().getRequiredMethod(
-                                            aroundInvokeMethod,
-                                            jakarta.interceptor.InvocationContext.class
-                                    )
+                        beanRegistration.getBeanDefinition().getRequiredMethod(
+                                aroundInvokeMethod,
+                                jakarta.interceptor.InvocationContext.class
+                        )
                 );
     }
 
@@ -176,7 +181,7 @@ public final class JakartaInterceptorAdapter<B>
         }
     }
 
-    final class InvocationContextAdapter implements javax.interceptor.InvocationContext {
+    final class InvocationContextAdapter implements jakarta.interceptor.InvocationContext, javax.interceptor.InvocationContext {
         private final InvocationContext<?, ?> invocationContext;
 
         InvocationContextAdapter(InvocationContext<?, ?> invocationContext) {
